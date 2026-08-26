@@ -42,6 +42,7 @@ const legalDocuments = {
       <p class="legal-status">当前为产品原型。运营主体、联系地址和生效日期须在正式上线前补充，并由中国大陆执业律师复核。</p>
       <h3>产品定位</h3><p>拼个实习提供同学之间的经历交流和联系撮合，不是招聘机构，也不提供录用、背调或能力认证。</p>
       <h3>用户责任</h3><p>用户应提交真实、合法且已脱敏的内容，不得伪造简历、冒用他人经历、骚扰诈骗，或上传雇主商业秘密和未公开资料。</p>
+      <h3>公开资料</h3><p>完成注册后，你提供的昵称、经历、擅长方向和交流目标会进入“自由探索”，方便其他用户发现并联系你；平台不会在公开资料中展示学校或邮箱。</p>
       <h3>账号与服务</h3><p>平台可对违规内容采取隐藏、限制联系或停用账号等措施。付费服务的价格、有效期和退款规则应在购买前单独明示。</p>
     `,
   },
@@ -50,7 +51,7 @@ const legalDocuments = {
     body: `
       <p class="legal-status">运营主体待正式上线前补充。本摘要不能替代上线版完整隐私政策。</p>
       <h3>必要信息</h3><p>邮箱用于注册、发送匹配结果和安全通知；经历、项目、标签和寻找目标用于生成匹配。未经双方同意，不向其他用户公开邮箱。</p>
-      <h3>可选公开</h3><p>公开个人资料、展示学校、接收活动邮件和用于模型改进均为独立可选授权，可在“资料与授权”中随时关闭。</p>
+      <h3>公开范围</h3><p>注册用户的昵称、经历、擅长方向和交流目标会用于匹配并展示在“自由探索”；学校和邮箱不会公开。活动邮件为独立可选授权，可随时关闭。</p>
       <h3>保存与删除</h3><p>正式上线前需明确各类数据的保存期限、第三方处理方、跨境情况和联系方式。用户应能撤回可选授权，并申请注销账号及删除数据。</p>
     `,
   },
@@ -350,14 +351,11 @@ function openRegistrationGate(context = 'match') {
       <input id="registrationInvite" type="text" autocomplete="off" placeholder="例如 PINGO-8K2M">
       <div class="consent-group">
         <h3>注册所必需</h3>
-        <label class="check-row" for="requiredConsent"><input id="requiredConsent" type="checkbox"><span>我已满 18 周岁，并同意<button type="button" class="inline-legal" data-legal="terms">《用户协议》</button><button type="button" class="inline-legal" data-legal="privacy">《隐私政策》</button><button type="button" class="inline-legal" data-legal="community">《社区规范》</button>。</span></label>
+        <label class="check-row" for="requiredConsent"><input id="requiredConsent" type="checkbox"><span>我已满 18 周岁，同意资料进入“自由探索”，并同意<button type="button" class="inline-legal" data-legal="terms">《用户协议》</button><button type="button" class="inline-legal" data-legal="privacy">《隐私政策》</button><button type="button" class="inline-legal" data-legal="community">《社区规范》</button>。</span></label>
       </div>
       <div class="consent-group">
         <h3>可选授权 <em>默认不勾选，不影响注册</em></h3>
-        <label class="check-row" for="publicConsent"><input id="publicConsent" type="checkbox"><span>允许我的资料出现在“自由探索”中。</span></label>
-        <label class="check-row" for="schoolConsent"><input id="schoolConsent" type="checkbox"><span>允许在公开资料中展示学校。</span></label>
         <label class="check-row" for="marketingConsent"><input id="marketingConsent" type="checkbox"><span>接收每周匹配和活动邮件。</span></label>
-        <label class="check-row" for="modelConsent"><input id="modelConsent" type="checkbox"><span>允许将脱敏后的内容用于改进匹配模型。</span></label>
       </div>
       <p class="form-error" id="registrationError" role="alert"></p>
       <button class="primary-button" type="submit"><span>注册并继续</span><span class="arrow">→</span></button>
@@ -381,10 +379,8 @@ function openRegistrationGate(context = 'match') {
     localStorage.setItem('pingo-matched', '1');
     localStorage.setItem('pingo-consent-version', 'prototype-2026-08-26');
     localStorage.setItem('pingo-consent-at', new Date().toISOString());
-    localStorage.setItem('pingo-public-profile', document.querySelector('#publicConsent').checked ? '1' : '0');
-    localStorage.setItem('pingo-show-school', document.querySelector('#schoolConsent').checked ? '1' : '0');
+    localStorage.setItem('pingo-public-profile', '1');
     localStorage.setItem('pingo-marketing', document.querySelector('#marketingConsent').checked ? '1' : '0');
-    localStorage.setItem('pingo-model-improvement', document.querySelector('#modelConsent').checked ? '1' : '0');
     closeSheet();
     applyRegisteredState(email);
     if (localStorage.getItem('pingo-match-ready') === '1') showMatchReady();
@@ -467,14 +463,11 @@ function openReportSheet(name = '') {
 
 function openProfileSettings() {
   const settings = [
-    ['pingo-public-profile', '公开个人资料', '允许资料出现在自由探索中'],
-    ['pingo-show-school', '展示学校', '在公开资料中显示学校信息'],
     ['pingo-marketing', '匹配与活动邮件', '接收每周匹配和产品活动通知'],
-    ['pingo-model-improvement', '改进匹配模型', '允许使用脱敏内容优化匹配'],
   ];
   openSheet(`
     <h2 id="sheetTitle">资料与授权</h2>
-    <p>必要的账号和匹配处理不能在这里关闭；可选授权可以随时撤回。</p>
+    <p>公开资料范围遵循用户协议；活动邮件可以随时关闭。</p>
     ${settings.map(([key, title, description]) => `
       <div class="profile-setting">
         <span><strong>${title}</strong><small>${description}</small></span>
@@ -575,7 +568,7 @@ document.querySelector('#aboutButton').addEventListener('click', () => {
     <p>匹配不只看岗位名，更看你们正在做什么、彼此能补上什么。</p>
     <ol>
       <li><div><strong>先写两句话</strong><br><span>填写你的经历、项目经历，以及你想找什么样的人，不需要先注册。</span></div></li>
-      <li><div><strong>等待约 10 秒</strong><br><span>从现有名单中比对学校、方向和可以交换的经验。</span></div></li>
+      <li><div><strong>等待约 10 秒</strong><br><span>从现有名单中比对方向、经历和可以交换的经验。</span></div></li>
       <li><div><strong>注册揭晓第一位</strong><br><span>最高匹配先以蒙版展示，注册后查看完整资料。</span></div></li>
     </ol>
     <p>当前页面使用演示数据，正式版本会接入真实匹配 API。</p>
@@ -686,15 +679,13 @@ memberRows.forEach((row) => {
       return;
     }
     const name = row.dataset.name;
-    const school = row.querySelector('.member-person small').textContent;
     const skill = row.querySelector('.member-skill').textContent;
     const tags = [...row.querySelectorAll('.member-tags i')].map((tag) => tag.textContent).join(' · ');
     openSheet(`
       <h2 id="sheetTitle">${name}</h2>
-      <p>${school}</p>
       <p><strong>擅长：</strong>${skill}</p>
       <p><strong>方向：</strong>${tags}</p>
-      ${name.startsWith('我的') ? '<p class="legal-status">这是你主动发布的公开卡片，可在“资料与授权”中关闭公开展示。</p>' : '<button class="primary-button member-contact-button"><span>发送联系请求</span><span class="arrow">→</span></button><button class="sheet-secondary member-report-button">举报或拉黑</button>'}
+      ${name.startsWith('我的') ? '<p class="legal-status">这是你主动发布的公开卡片。</p>' : '<button class="primary-button member-contact-button"><span>发送联系请求</span><span class="arrow">→</span></button><button class="sheet-secondary member-report-button">举报或拉黑</button>'}
     `);
     document.querySelector('.member-contact-button')?.addEventListener('click', () => openContactRequest(name));
     document.querySelector('.member-report-button')?.addEventListener('click', () => openReportSheet(name));
