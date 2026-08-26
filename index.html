@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f6f8fb" />
     <meta name="description" content="拼个实习，用真实经历找到可以交换工作流的实习搭子。" />
     <title>拼个实习</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=dashboard-final1" />
   </head>
   <body>
     <!--
@@ -30,101 +30,35 @@
       </header>
 
       <main>
-        <section class="login-view" id="loginView" aria-labelledby="loginTitle">
-          <div class="login-copy">
-            <h1 id="loginTitle">先说说你想<br />拼什么实习。</h1>
-            <p>不用先注册。告诉我们你的经历、项目经历，以及你想找什么样的人。</p>
-            <div class="proof-line" aria-label="产品特点">
-              <span>真实群聊需求</span>
-              <i></i>
-              <span>AI 辅助匹配</span>
-              <i></i>
-              <span>彼此经验互补</span>
-            </div>
-          </div>
-
-          <div class="login-stage">
-            <div class="mascot-wrap" aria-hidden="true">
-              <img src="assets/pingo-mascot.webp" alt="" />
-              <div class="float-note note-one">你做模型，我懂业务</div>
-              <div class="float-note note-two">匹配度 92%</div>
-            </div>
+        <section class="login-view onboarding-modal" id="loginView" aria-labelledby="loginTitle" role="dialog" aria-modal="true">
+          <div class="onboarding-modal-panel">
+            <button class="close-button onboarding-close" id="onboardingDismiss" aria-label="暂时跳过" title="暂时跳过">×</button>
+            <div class="modal-brand"><span class="brand-mark" aria-hidden="true"><span></span><span></span></span></div>
             <form class="login-panel" id="loginForm" novalidate>
               <div class="login-heading">
-                <h2>先填两句话</h2>
-                <p>越具体，匹配出来的人越有用</p>
+                <h1 id="loginTitle">先说说你想拼什么实习</h1>
+                <p>填完后，匹配结果会直接出现在这个页面里</p>
               </div>
               <label for="needText">1. 填写你的经历、项目经历</label>
               <textarea class="intake-textarea" id="needText" name="need" placeholder="例如：我在做 ToB AI 营销产品，负责需求拆解和工程落地（如果没有，就填“无”）" required></textarea>
               <label for="personText">2. 你要找什么样的人</label>
               <textarea class="intake-textarea" id="personText" name="person" placeholder="例如：做多模态、搜推或模型微调，有真实项目经验的同学" required></textarea>
               <div class="intake-tags" id="intakeTags" aria-label="选择方向标签">
-                <button type="button" data-tag="AI / 算法">AI / 算法</button>
-                <button type="button" data-tag="产品">产品</button>
-                <button type="button" data-tag="开发">开发</button>
-                <button type="button" data-tag="增长">增长</button>
-                <button type="button" data-tag="ToB">ToB</button>
-                <button type="button" data-tag="求职交流">求职交流</button>
+                <button type="button" data-tag="AI / 算法">AI / 算法</button><button type="button" data-tag="产品">产品</button><button type="button" data-tag="开发">开发</button><button type="button" data-tag="增长">增长</button><button type="button" data-tag="ToB">ToB</button><button type="button" data-tag="求职交流">求职交流</button>
               </div>
+              <div class="intake-safety-note">
+                <strong>提交前请先脱敏</strong>
+                <p>不要填写客户姓名、未公开业务数据、代码、合同或公司内部资料。</p>
+              </div>
+              <p class="legal-hint">点击开始匹配，即表示内容由本人提供或已获授权，并已阅读<button type="button" class="inline-legal" data-legal="privacy">隐私政策摘要</button>和<button type="button" class="inline-legal" data-legal="community">内容规范</button>。</p>
               <p class="form-error" id="formError" role="alert"></p>
-              <button class="primary-button" type="submit">
-                <span>开始匹配</span>
-                <span class="arrow" aria-hidden="true">→</span>
-              </button>
-              <p class="privacy-note">无需注册，先看看匹配结果</p>
+              <button class="primary-button" type="submit"><span>开始匹配</span><span class="arrow" aria-hidden="true">→</span></button>
+              <p class="privacy-note">可以先关闭，浏览部分名单</p>
             </form>
           </div>
         </section>
 
-        <section class="onboarding-view is-hidden" id="onboardingView" aria-labelledby="onboardingTitle">
-          <div class="onboarding-stage">
-            <div class="onboarding-visual" aria-hidden="true">
-              <img src="assets/pingo-mascot.webp" alt="" />
-              <div class="match-orbit orbit-one"><span>L</span></div>
-              <div class="match-orbit orbit-two"><span>C</span></div>
-              <div class="match-orbit orbit-three"><span>Z</span></div>
-            </div>
-
-            <div class="onboarding-content">
-              <div class="onboarding-state" id="matchReadyState">
-                <span class="onboarding-label">名单已准备好</span>
-                <h1 id="onboardingTitle">看看谁最适合<br />和你拼个实习。</h1>
-                <p>我们会从方向、项目阶段和彼此能交换的经验里，选出三位最合适的实习搭子。</p>
-                <button class="primary-button match-start-button" id="startMatchButton">
-                  <span>开始匹配</span><span class="arrow" aria-hidden="true">→</span>
-                </button>
-                <small>大约需要 10 秒</small>
-              </div>
-
-              <div class="onboarding-state is-hidden" id="matchLoadingState" aria-live="polite">
-                <span class="onboarding-label">正在匹配</span>
-                <h1>正在从名单里<br />找懂行的人。</h1>
-                <p class="loading-message" id="loadingMessage">正在读取你的方向</p>
-                <div class="match-progress" aria-hidden="true"><span id="matchProgressBar"></span></div>
-                <div class="loading-meta"><strong id="matchPercent">0%</strong><span>请稍等，不需要刷新页面</span></div>
-              </div>
-
-              <div class="onboarding-state is-hidden" id="matchSuccessState">
-                <span class="onboarding-label success-label">匹配成功</span>
-                <h1>最高匹配度<br />92%。</h1>
-                <p>已经找到最适合你的实习搭子。注册后即可揭晓他的完整资料。</p>
-                <div class="masked-match" aria-label="最高匹配对象，注册后查看">
-                  <div class="masked-person">
-                    <span class="success-avatar tone-blue">L</span>
-                    <span><strong>林 ·</strong><small>多模态算法实习生</small></span>
-                  </div>
-                  <span class="masked-score">92% 匹配</span>
-                  <div class="masked-cover"><span class="lock-icon" aria-hidden="true"></span><strong>注册后揭晓</strong></div>
-                </div>
-                <button class="primary-button match-start-button" id="viewMatchesButton">
-                  <span>注册并查看最高匹配</span><span class="arrow" aria-hidden="true">→</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="results-view is-hidden" id="resultsView" aria-labelledby="resultsTitle">
+        <section class="results-view" id="resultsView" aria-labelledby="resultsTitle">
           <div class="results-intro">
             <div>
               <h1 id="resultsTitle">你的实习搭子</h1>
@@ -139,16 +73,39 @@
           </div>
 
           <section id="matchesPanel" role="tabpanel" aria-labelledby="matchesTab">
+            <div class="dashboard-match-empty" id="dashboardMatchEmpty">
+              <div>
+                <span class="onboarding-label">等待你的经历</span>
+                <h2>你的前三位匹配<br />会出现在这里。</h2>
+                <p>填写两句话，大约 10 秒后得到结果。也可以先去自由探索看看大家。</p>
+                <button class="primary-button dashboard-start" id="dashboardStartButton"><span>填写经历，开始匹配</span><span class="arrow">→</span></button>
+              </div>
+              <img src="assets/pingo-mascot.webp" alt="" aria-hidden="true" />
+            </div>
+
+            <div class="dashboard-match-loading is-hidden" id="dashboardMatchLoading" aria-live="polite">
+              <div class="dashboard-loading-copy">
+                <span class="onboarding-label">正在匹配</span>
+                <h2>正在从名单里找懂行的人。</h2>
+                <p class="loading-message" id="loadingMessage">正在读取你的经历和项目</p>
+                <div class="ai-notice"><span>AI 辅助匹配</span><p>依据项目方向、经验互补和交流目标计算；匹配度不代表能力或录用概率。</p><button type="button" data-legal="algorithm">查看规则</button></div>
+                <div class="match-progress" aria-hidden="true"><span id="matchProgressBar"></span></div>
+                <div class="loading-meta"><strong id="matchPercent">0%</strong><span>可以继续浏览，匹配完成后会提醒你</span></div>
+              </div>
+              <div class="loading-card-stack" aria-hidden="true"><span></span><span></span><span></span></div>
+            </div>
+
+            <div class="dashboard-match-ready is-hidden" id="dashboardMatchReady">
             <div class="unlock-progress" aria-label="解锁进度">
-              <div class="progress-step is-done"><span>1</span><p><strong>注册完成</strong><small>首位搭子已解锁</small></p></div>
+              <div class="progress-step" id="registerProgress"><span>1</span><p><strong>注册揭晓</strong><small>查看第 1 位</small></p></div>
               <div class="progress-line" id="emailProgressLine"></div>
-              <div class="progress-step" id="emailProgress"><span>2</span><p><strong>发出认识邮件</strong><small>解锁第 2 位</small></p></div>
+              <div class="progress-step" id="emailProgress"><span>2</span><p><strong>发送联系请求</strong><small>解锁第 2 位</small></p></div>
               <div class="progress-line" id="inviteProgressLine"></div>
               <div class="progress-step" id="inviteProgress"><span>3</span><p><strong>邀请好友注册</strong><small>解锁第 3 位</small></p></div>
             </div>
 
             <div class="match-deck" id="matchDeck">
-            <article class="match-card is-active" data-index="0">
+            <article class="match-card is-active is-gated" data-index="0">
               <div class="match-topline">
                 <span class="match-number">第 1 位</span>
                 <span class="match-score"><strong>92%</strong> 匹配</span>
@@ -176,9 +133,10 @@
                   <p>AI 营销产品的业务链路与保险行业落地</p>
                 </div>
               </div>
-              <button class="primary-button contact-button" data-name="林屿" data-email="linyu@example.com">
-                <span>发一封认识邮件</span><span class="arrow" aria-hidden="true">→</span>
+              <button class="primary-button contact-button" data-name="林屿">
+                <span>发送联系请求</span><span class="arrow" aria-hidden="true">→</span>
               </button>
+              <button class="first-match-gate" id="firstMatchGate"><span class="lock-icon" aria-hidden="true"></span><strong>注册后查看最高匹配</strong><small>匹配度 92%</small></button>
             </article>
 
             <article class="match-card is-locked" data-index="1">
@@ -190,7 +148,7 @@
               </div>
               <div class="lock-copy">
                 <div class="lock-icon" aria-hidden="true"></div>
-                <h3>发出第一封认识邮件</h3>
+                <h3>发送第一份联系请求</h3>
                 <p>联系第 1 位搭子后解锁</p>
               </div>
             </article>
@@ -227,6 +185,7 @@
                 <button class="demo-unlock is-hidden" id="demoUnlock">演示：好友已注册</button>
               </div>
             </section>
+            </div>
           </section>
 
           <section class="explore-panel is-hidden" id="explorePanel" role="tabpanel" aria-labelledby="exploreTab">
@@ -250,7 +209,7 @@
               <button class="intent-button super-intent" id="superIntentButton">
                 <span class="intent-mark super-mark" aria-hidden="true"></span>
                 <span><strong>无经验，求大佬</strong><small>生成超级卡，获得更多曝光</small></span>
-                <b>超级卡</b>
+                <b>付费推广</b>
                 <i aria-hidden="true">→</i>
               </button>
             </div>
@@ -274,7 +233,7 @@
               <button class="member-row intent-member-row super-member is-hidden" id="superMemberCard" data-published="false" data-tags="求大佬 求职 AI 产品 开发 增长" data-name="我的超级卡">
                 <span class="member-person"><i class="member-avatar super-avatar">我</i><span><strong>我的超级卡</strong><small>24 小时优先展示</small></span></span>
                 <span class="member-skill" id="superCardSkill">正在寻找有经验的同行指点</span>
-                <span class="member-tags"><i class="super-badge">超级卡</i><i id="superCardTag">求大佬</i></span>
+                <span class="member-tags"><i class="super-badge">推广</i><i id="superCardTag">求大佬</i></span>
               </button>
               <button class="member-row" data-tags="AI 求职 VLM 多模态 清华大学" data-name="林屿">
                 <span class="member-person"><i class="member-avatar tone-blue">L</i><span><strong>林屿</strong><small>清华大学 · 研二</small></span></span>
@@ -326,6 +285,7 @@
                 <span class="member-skill">面试复盘、案例分析、求职规划</span>
                 <span class="member-tags"><i>求职交流</i><i>产品</i></span>
               </button>
+              <button class="list-register-gate is-hidden" id="listRegisterGate"><strong>注册后查看完整名单</strong><span>当前筛选还有更多成员 →</span></button>
               <div class="empty-members is-hidden" id="emptyMembers">没有找到符合条件的人，换个标签试试。</div>
             </div>
           </section>
@@ -334,7 +294,11 @@
 
       <footer>
         <span>拼个实习 · 先认真交换，再一起上岸</span>
-        <button id="privacyButton">隐私说明</button>
+        <div class="footer-links">
+          <button id="legalCenterButton">法律中心</button>
+          <button id="privacyButton">隐私说明</button>
+          <button id="reportButton">投诉举报</button>
+        </div>
       </footer>
     </div>
 
@@ -346,6 +310,6 @@
     </aside>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js"></script>
+    <script src="app.js?v=dashboard-final1"></script>
   </body>
 </html>
