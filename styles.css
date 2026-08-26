@@ -321,6 +321,11 @@ input:focus { border-color: var(--blue-strong); box-shadow: 0 0 0 4px rgba(21, 1
 .sheet-choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 18px 0 22px; }
 .sheet-choice { min-height: 44px; padding: 0 12px; border: 1px solid var(--line); border-radius: 9px; background: white; color: #4d535c; cursor: pointer; font-size: 12px; }
 .sheet-choice.is-selected { border-color: var(--ink); background: var(--ink); color: white; }
+.sheet-field-label { display: flex; align-items: center; justify-content: space-between; margin: 16px 0 7px; color: #444951; font-size: 12px; font-weight: 650; }
+.sheet-field-label span { color: var(--faint); font-weight: 400; }
+.profile-textarea { width: 100%; min-height: 108px; resize: vertical; padding: 13px 14px; border: 1px solid #d9dee5; border-radius: 10px; background: white; color: var(--ink); font: inherit; font-size: 13px; line-height: 1.65; }
+.profile-textarea:focus { border-color: var(--blue-strong); box-shadow: 0 0 0 4px rgba(21,152,219,.08); outline: 0; }
+.field-note { margin: 7px 0 14px !important; color: var(--faint) !important; font-size: 10px; }
 .super-sheet-note { margin: 16px 0; padding: 13px 14px; border-radius: 10px; background: #fff0ed; color: #8a4546 !important; font-size: 12px; }
 .check-row { margin: 11px 0; display: grid; grid-template-columns: 18px 1fr; align-items: start; gap: 9px; color: #515760; cursor: pointer; font-size: 11px; line-height: 1.55; }
 .check-row strong { color: var(--ink); }
@@ -339,6 +344,11 @@ input:focus { border-color: var(--blue-strong); box-shadow: 0 0 0 4px rgba(21, 1
 .profile-setting strong, .profile-setting small { display: block; }
 .profile-setting strong { font-size: 12px; }
 .profile-setting small { margin-top: 4px; color: var(--muted); font-size: 10px; }
+.account-email { margin: -5px 0 18px !important; color: var(--faint) !important; font-size: 11px; }
+.profile-summary { margin: 0 0 18px; border-top: 1px solid var(--line); }
+.profile-summary section { padding: 16px 0; border-bottom: 1px solid var(--line); }
+.profile-summary span { display: block; margin-bottom: 7px; color: var(--faint); font-size: 10px; font-weight: 650; }
+.profile-summary p { margin: 0 !important; color: var(--ink) !important; font-size: 13px; line-height: 1.65 !important; white-space: pre-wrap; }
 .toggle { width: 42px; height: 24px; position: relative; flex: 0 0 42px; border: 0; border-radius: 999px; background: #d9dee4; cursor: pointer; }
 .toggle::after { content: ""; width: 18px; height: 18px; position: absolute; left: 3px; top: 3px; border-radius: 50%; background: white; box-shadow: 0 2px 5px rgba(0,0,0,.15); transition: transform 180ms ease; }
 .toggle.is-on { background: var(--ink); }

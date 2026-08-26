@@ -121,6 +121,16 @@ function showToast(message) {
   toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 2300);
 }
 
+function escapeHtml(value = '') {
+  return value.replace(/[&<>'"]/g, (character) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    "'": '&#39;',
+    '"': '&quot;',
+  })[character]);
+}
+
 function openSheet(content) {
   sheetTrigger = document.activeElement;
   sheetContent.innerHTML = content;
@@ -154,6 +164,8 @@ function applyRegisteredState(email) {
 }
 
 function openOnboarding() {
+  if (!needText.value) needText.value = localStorage.getItem('pingo-need') || '';
+  if (!personText.value) personText.value = localStorage.getItem('pingo-person') || '';
   loginView.classList.remove('is-hidden');
   document.body.style.overflow = 'hidden';
   window.setTimeout(() => needText.focus(), 100);
@@ -271,19 +283,27 @@ function showReferralComplete() {
 
 function publishIntentCard(type, topic, options = {}) {
   const isHelper = type === 'helper';
+  const storagePrefix = isHelper ? 'pingo-helper' : 'pingo-super';
   const card = document.querySelector(isHelper ? '#helperMemberCard' : '#superMemberCard');
   const skill = document.querySelector(isHelper ? '#helperCardSkill' : '#superCardSkill');
   const tag = document.querySelector(isHelper ? '#helperCardTag' : '#superCardTag');
+  const customTagElement = document.querySelector(isHelper ? '#helperCustomTag' : '#superCustomTag');
+  const customTag = (options.customTag || '').trim();
+  const content = (options.content || '').trim();
   if (!isHelper) {
     const table = document.querySelector('#memberTable');
     table.insertBefore(card, table.querySelector('.member-table-head').nextElementSibling);
   }
   card.dataset.published = 'true';
-  card.dataset.tags = `${card.dataset.tags} ${topic}`;
-  skill.textContent = isHelper ? `愿意免费分享：${topic}相关经验` : `正在寻找熟悉${topic}的同行指点`;
+  card.dataset.tags = `${isHelper ? '帮助 求职 AI 产品 开发 增长' : '求大佬 求职 AI 产品 开发 增长'} ${topic} ${customTag}`.trim();
+  skill.textContent = content || (isHelper ? `愿意免费分享：${topic}相关经验` : `正在寻找熟悉${topic}的同行指点`);
   tag.textContent = topic;
+  customTagElement.textContent = customTag;
+  customTagElement.classList.toggle('is-hidden', !customTag);
   card.classList.remove('is-hidden');
-  localStorage.setItem(isHelper ? 'pingo-helper-topic' : 'pingo-super-topic', topic);
+  localStorage.setItem(`${storagePrefix}-topic`, topic);
+  localStorage.setItem(`${storagePrefix}-custom-tag`, customTag);
+  localStorage.setItem(`${storagePrefix}-content`, content);
   const sourceButton = isHelper ? helpIntentButton : superIntentButton;
   sourceButton.querySelector('small').textContent = isHelper ? `已发布 · ${topic}` : `曝光中 · ${topic}`;
   if (!options.silent) {
@@ -302,14 +322,26 @@ function publishIntentCard(type, topic, options = {}) {
 function restoreIntentCards() {
   const helperTopic = localStorage.getItem('pingo-helper-topic');
   const superTopic = localStorage.getItem('pingo-super-topic');
-  if (helperTopic) publishIntentCard('helper', helperTopic, { silent: true });
-  if (superTopic) publishIntentCard('super', superTopic, { silent: true });
+  if (helperTopic) publishIntentCard('helper', helperTopic, {
+    silent: true,
+    customTag: localStorage.getItem('pingo-helper-custom-tag') || '',
+    content: localStorage.getItem('pingo-helper-content') || '',
+  });
+  if (superTopic) publishIntentCard('super', superTopic, {
+    silent: true,
+    customTag: localStorage.getItem('pingo-super-custom-tag') || '',
+    content: localStorage.getItem('pingo-super-content') || '',
+  });
 }
 
 function openIntentSheet(type) {
   const isHelper = type === 'helper';
+  const storagePrefix = isHelper ? 'pingo-helper' : 'pingo-super';
   const topics = ['AI / 算法', '产品', '开发', '增长', '求职交流', '面试复盘'];
-  const savedTopic = localStorage.getItem(isHelper ? 'pingo-helper-topic' : 'pingo-super-topic') || topics[0];
+  const savedTopic = localStorage.getItem(`${storagePrefix}-topic`) || topics[0];
+  const savedCustomTag = localStorage.getItem(`${storagePrefix}-custom-tag`) || '';
+  const profileContent = localStorage.getItem(isHelper ? 'pingo-need' : 'pingo-person') || '';
+  const savedContent = localStorage.getItem(`${storagePrefix}-content`) || profileContent;
   openSheet(`
     <h2 id="sheetTitle">${isHelper ? '发布纯帮助卡' : '生成一张超级卡'}</h2>
     <p>${isHelper ? '即使经验不互补，也可以让有具体问题的人找到你。纯帮助不会占用你的三位匹配名额。' : '适合暂时没有经验可以交换、但问题足够具体的用户。超级卡会在自由探索顶部优先展示 24 小时。'}</p>
@@ -317,10 +349,17 @@ function openIntentSheet(type) {
     <div class="sheet-choice-grid" role="group" aria-label="选择方向">
       ${topics.map((topic) => `<button class="sheet-choice${topic === savedTopic ? ' is-selected' : ''}" data-topic="${topic}">${topic}</button>`).join('')}
     </div>
+    <label class="sheet-field-label" for="intentCustomTag">自定义标签 <span>选填</span></label>
+    <input id="intentCustomTag" type="text" maxlength="16" placeholder="例如：保险科技、RAG、AIGC">
+    <label class="sheet-field-label" for="intentContent">${isHelper ? '你愿意分享什么' : '你希望得到什么帮助'}</label>
+    <textarea class="profile-textarea" id="intentContent" maxlength="300" placeholder="先把内容说具体，别人更容易判断是否能帮到你"></textarea>
+    <p class="field-note">已自动带入你档案中的${isHelper ? '经历与项目' : '寻找目标'}，确认或修改后即可发布。</p>
     ${isHelper ? '' : '<label class="check-row" for="promotionAcknowledge"><input id="promotionAcknowledge" type="checkbox"><span>我知道这是带“推广”标识的曝光服务，不会提高匹配分数或保证求职结果。 <button type="button" class="inline-legal" data-legal="paid">查看规则</button></span></label>'}
     <p class="form-error" id="intentError" role="alert"></p>
     <button class="primary-button" id="publishIntent"><span>${isHelper ? '发布纯帮助卡' : '生成推广卡'}</span><span class="arrow">→</span></button>
   `);
+  document.querySelector('#intentCustomTag').value = savedCustomTag;
+  document.querySelector('#intentContent').value = savedContent;
   let selectedTopic = savedTopic;
   document.querySelectorAll('.sheet-choice').forEach((choice) => {
     choice.addEventListener('click', () => {
@@ -329,13 +368,20 @@ function openIntentSheet(type) {
     });
   });
   document.querySelector('#publishIntent').addEventListener('click', () => {
+    const customTag = document.querySelector('#intentCustomTag').value.trim().replace(/^#/, '');
+    const content = document.querySelector('#intentContent').value.trim();
+    if (content !== '无' && content.length < 8) {
+      document.querySelector('#intentError').textContent = '再具体写一点你的经历或希望交流的内容';
+      document.querySelector('#intentContent').focus();
+      return;
+    }
     if (!isHelper && !document.querySelector('#promotionAcknowledge').checked) {
       document.querySelector('#intentError').textContent = '请先确认你已了解推广权益边界';
       return;
     }
     localStorage.setItem('pingo-public-profile', '1');
     closeSheet();
-    publishIntentCard(type, selectedTopic);
+    publishIntentCard(type, selectedTopic, { customTag, content });
   });
 }
 
@@ -500,6 +546,69 @@ function openProfileSettings() {
   });
 }
 
+function openProfileEditor() {
+  const currentNeed = localStorage.getItem('pingo-need') || '';
+  const currentPerson = localStorage.getItem('pingo-person') || '';
+  openSheet(`
+    <h2 id="sheetTitle">编辑我的档案</h2>
+    <p>这两项会用于匹配、个人资料和发布帮助卡，更新后立即生效。</p>
+    <form id="profileForm" novalidate>
+      <label class="sheet-field-label" for="profileNeed">我的经历与项目</label>
+      <textarea class="profile-textarea" id="profileNeed" maxlength="500" placeholder="填写你的经历、负责的项目和擅长的部分"></textarea>
+      <label class="sheet-field-label" for="profilePerson">我想找的人 / 想学习的项目</label>
+      <textarea class="profile-textarea" id="profilePerson" maxlength="500" placeholder="填写你想找什么样的人，以及想了解或学习的项目"></textarea>
+      <p class="form-error" id="profileError" role="alert"></p>
+      <button class="primary-button" type="submit"><span>保存我的档案</span><span class="arrow">→</span></button>
+    </form>
+  `);
+  const profileNeed = document.querySelector('#profileNeed');
+  const profilePerson = document.querySelector('#profilePerson');
+  profileNeed.value = currentNeed;
+  profilePerson.value = currentPerson;
+  document.querySelector('#profileForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const need = profileNeed.value.trim();
+    const person = profilePerson.value.trim();
+    const error = document.querySelector('#profileError');
+    if (need !== '无' && need.length < 8) {
+      error.textContent = '请具体填写经历与项目；如果没有，可以填写“无”';
+      profileNeed.focus();
+      return;
+    }
+    if (person.length < 8) {
+      error.textContent = '再具体说一点你想找的人或想学习的项目';
+      profilePerson.focus();
+      return;
+    }
+    localStorage.setItem('pingo-need', need);
+    localStorage.setItem('pingo-person', person);
+    needText.value = need;
+    personText.value = person;
+
+    const helperTopic = localStorage.getItem('pingo-helper-topic');
+    const helperContent = localStorage.getItem('pingo-helper-content');
+    if (helperTopic && (!helperContent || helperContent === currentNeed)) {
+      publishIntentCard('helper', helperTopic, {
+        silent: true,
+        customTag: localStorage.getItem('pingo-helper-custom-tag') || '',
+        content: need,
+      });
+    }
+    const superTopic = localStorage.getItem('pingo-super-topic');
+    const superContent = localStorage.getItem('pingo-super-content');
+    if (superTopic && (!superContent || superContent === currentPerson)) {
+      publishIntentCard('super', superTopic, {
+        silent: true,
+        customTag: localStorage.getItem('pingo-super-custom-tag') || '',
+        content: person,
+      });
+    }
+
+    closeSheet();
+    showToast('个人档案已更新');
+  });
+}
+
 loginForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const need = needText.value.trim();
@@ -581,16 +690,24 @@ document.querySelector('#reportButton').addEventListener('click', () => openRepo
 
 avatarButton.addEventListener('click', () => {
   const email = localStorage.getItem('pingo-email') || '当前用户';
+  const profileNeed = localStorage.getItem('pingo-need') || '还没有填写经历与项目';
+  const profilePerson = localStorage.getItem('pingo-person') || '还没有填写寻找目标';
   const demoReset = isDemoMode
     ? '<button class="demo-unlock account-reset" id="resetMatchButton">重新体验匹配流程</button>'
     : '';
   openSheet(`
-    <h2 id="sheetTitle">${email}</h2>
-    <p>联系请求只有在对方接受后才会交换联系方式。你可以随时修改公开资料和可选授权。</p>
-    <button class="primary-button" id="profileSettingsButton"><span>资料与授权</span><span class="arrow">→</span></button>
+    <h2 id="sheetTitle">我的档案</h2>
+    <p class="account-email">${escapeHtml(email)}</p>
+    <div class="profile-summary">
+      <section><span>我的经历与项目</span><p>${escapeHtml(profileNeed)}</p></section>
+      <section><span>我想找的人 / 想学习的项目</span><p>${escapeHtml(profilePerson)}</p></section>
+    </div>
+    <button class="primary-button" id="profileEditButton"><span>编辑我的档案</span><span class="arrow">→</span></button>
+    <button class="sheet-secondary" id="profileSettingsButton">通知与账户设置</button>
     <button class="sheet-secondary" id="legalSettingsButton">法律与安全中心</button>
     ${demoReset}
   `);
+  document.querySelector('#profileEditButton').addEventListener('click', openProfileEditor);
   document.querySelector('#profileSettingsButton').addEventListener('click', openProfileSettings);
   document.querySelector('#legalSettingsButton').addEventListener('click', openLegalCenter);
   document.querySelector('#resetMatchButton')?.addEventListener('click', () => {
