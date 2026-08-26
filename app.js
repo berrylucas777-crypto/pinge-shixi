@@ -350,9 +350,7 @@ function openRegistrationGate(context = 'match') {
       <input id="registrationInvite" type="text" autocomplete="off" placeholder="例如 PINGO-8K2M">
       <div class="consent-group">
         <h3>注册所必需</h3>
-        <label class="check-row" for="ageConsent"><input id="ageConsent" type="checkbox"><span><strong>我已满 18 周岁</strong>，能够独立理解并同意平台规则。</span></label>
-        <label class="check-row" for="termsConsent"><input id="termsConsent" type="checkbox"><span>我同意<button type="button" class="inline-legal" data-legal="terms">用户协议</button>。</span></label>
-        <label class="check-row" for="privacyConsent"><input id="privacyConsent" type="checkbox"><span>我同意平台按<button type="button" class="inline-legal" data-legal="privacy">隐私政策摘要</button>处理注册和匹配所必需的信息。</span></label>
+        <label class="check-row" for="requiredConsent"><input id="requiredConsent" type="checkbox"><span>我已满 18 周岁，并同意<button type="button" class="inline-legal" data-legal="terms">《用户协议》</button><button type="button" class="inline-legal" data-legal="privacy">《隐私政策》</button><button type="button" class="inline-legal" data-legal="community">《社区规范》</button>。</span></label>
       </div>
       <div class="consent-group">
         <h3>可选授权 <em>默认不勾选，不影响注册</em></h3>
@@ -375,9 +373,8 @@ function openRegistrationGate(context = 'match') {
       emailInput.focus();
       return;
     }
-    const mandatory = ['ageConsent', 'termsConsent', 'privacyConsent'];
-    if (mandatory.some((id) => !document.querySelector(`#${id}`).checked)) {
-      error.textContent = '请完成年龄确认，并同意用户协议和必要的隐私处理';
+    if (!document.querySelector('#requiredConsent').checked) {
+      error.textContent = '请确认已满 18 周岁并同意必要条款';
       return;
     }
     localStorage.setItem('pingo-email', email);
@@ -707,13 +704,13 @@ memberRows.forEach((row) => {
 document.querySelectorAll('.match-card.is-locked').forEach((card) => {
   const openCandidate = () => {
     if (card.classList.contains('is-unlocked')) {
-      const isChen = card.dataset.index === '1';
-      const name = isChen ? '陈默' : '周野';
+      const isProductMatch = card.dataset.index === '1';
+      const name = isProductMatch ? '小陈同学' : '一一';
       openSheet(`
         <h2 id="sheetTitle">${name}</h2>
-        <p>${isChen ? 'AI 产品实习生 · 北京' : '推荐算法实习生 · 杭州'}</p>
-        <p><strong>为什么匹配：</strong>${isChen ? '她擅长从客户访谈拆解产品需求，你能补上模型能力边界和工程交付流程。' : '他在做内容推荐与特征工程，与你的多模态理解和 ToB 数据闭环经验互补。'}</p>
-        <p><strong>可以交换：</strong>${isChen ? '需求优先级、客户沟通、AI 产品面试复盘。' : '召回与排序实验、特征工程、离线评测设计。'}</p>
+        <p>${isProductMatch ? 'AI 产品实习生 · 北京' : '推荐算法实习生 · 杭州'}</p>
+        <p><strong>为什么匹配：</strong>${isProductMatch ? '她擅长从客户访谈拆解产品需求，你能补上模型能力边界和工程交付流程。' : '她在做内容推荐与特征工程，与你的多模态理解和 ToB 数据闭环经验互补。'}</p>
+        <p><strong>可以交换：</strong>${isProductMatch ? '需求优先级、客户沟通、AI 产品面试复盘。' : '召回与排序实验、特征工程、离线评测设计。'}</p>
         <button class="primary-button candidate-contact" data-name="${name}"><span>发送联系请求</span><span class="arrow">→</span></button>
         <button class="sheet-secondary candidate-report">举报或拉黑</button>
       `);
