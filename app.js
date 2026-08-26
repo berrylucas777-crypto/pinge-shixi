@@ -3,6 +3,7 @@ const resultsView = document.querySelector('#resultsView');
 const loginForm = document.querySelector('#loginForm');
 const needText = document.querySelector('#needText');
 const personText = document.querySelector('#personText');
+const contentConsent = document.querySelector('#contentConsent');
 const formError = document.querySelector('#formError');
 const avatarButton = document.querySelector('#avatarButton');
 const infoSheet = document.querySelector('#infoSheet');
@@ -525,6 +526,11 @@ loginForm.addEventListener('submit', (event) => {
     personText.focus();
     return;
   }
+  if (!contentConsent.checked) {
+    formError.textContent = '请先确认经历已脱敏且内容合法';
+    contentConsent.focus();
+    return;
+  }
   formError.textContent = '';
   needText.removeAttribute('aria-invalid');
   personText.removeAttribute('aria-invalid');
@@ -543,6 +549,9 @@ needText.addEventListener('input', () => {
 personText.addEventListener('input', () => {
   formError.textContent = '';
   personText.removeAttribute('aria-invalid');
+});
+contentConsent.addEventListener('change', () => {
+  if (contentConsent.checked) formError.textContent = '';
 });
 document.querySelectorAll('#intakeTags button').forEach((button) => {
   button.addEventListener('click', () => {

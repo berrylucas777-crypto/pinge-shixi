@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#f6f8fb" />
     <meta name="description" content="拼个实习，用真实经历找到可以交换工作流的实习搭子。" />
     <title>拼个实习</title>
-    <link rel="stylesheet" href="styles.css?v=dashboard-final1" />
+    <link rel="stylesheet" href="styles.css?v=dashboard-final2" />
   </head>
   <body>
     <!--
@@ -50,7 +50,11 @@
                 <strong>提交前请先脱敏</strong>
                 <p>不要填写客户姓名、未公开业务数据、代码、合同或公司内部资料。</p>
               </div>
-              <p class="legal-hint">点击开始匹配，即表示内容由本人提供或已获授权，并已阅读<button type="button" class="inline-legal" data-legal="privacy">隐私政策摘要</button>和<button type="button" class="inline-legal" data-legal="community">内容规范</button>。</p>
+              <label class="consent-row" for="contentConsent">
+                <input id="contentConsent" type="checkbox" />
+                <span>我确认内容由本人提供或已获授权，不冒用他人经历，也不包含第三方个人信息或商业秘密。</span>
+              </label>
+              <p class="legal-hint">点击开始匹配，即表示你已阅读<button type="button" class="inline-legal" data-legal="privacy">隐私政策摘要</button>和<button type="button" class="inline-legal" data-legal="community">内容规范</button>。</p>
               <p class="form-error" id="formError" role="alert"></p>
               <button class="primary-button" type="submit"><span>开始匹配</span><span class="arrow" aria-hidden="true">→</span></button>
               <p class="privacy-note">可以先关闭，浏览部分名单</p>
@@ -310,6 +314,6 @@
     </aside>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=dashboard-final1"></script>
+    <script src="app.js?v=dashboard-final2"></script>
   </body>
 </html>
