@@ -1,7 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.production
+.env.*
+!.env.example
+data/
+*.db
 .DS_Store
-.impeccable/
-outputs/
-work/
-PRODUCT.md
-DESIGN.md
-
