@@ -32,8 +32,8 @@
       <main>
         <section class="login-view" id="loginView" aria-labelledby="loginTitle">
           <div class="login-copy">
-            <h1 id="loginTitle">找一个真的<br />聊得上工作的人。</h1>
-            <p>把群聊里零散的自我介绍，变成三个值得认识的实习搭子。</p>
+            <h1 id="loginTitle">先说说你想<br />拼什么实习。</h1>
+            <p>不用先注册。告诉我们你的需求，以及你想找什么样的人。</p>
             <div class="proof-line" aria-label="产品特点">
               <span>真实群聊需求</span>
               <i></i>
@@ -51,22 +51,27 @@
             </div>
             <form class="login-panel" id="loginForm" novalidate>
               <div class="login-heading">
-                <h2>查看你的匹配</h2>
-                <p>登录后免费查看第一位候选人</p>
+                <h2>先填两句话</h2>
+                <p>越具体，匹配出来的人越有用</p>
               </div>
-              <label for="email">邮箱</label>
-              <div class="input-wrap">
-                <input id="email" name="email" type="email" autocomplete="email" placeholder="name@example.com" required />
-                <span class="input-status" aria-hidden="true"></span>
+              <label for="needText">1. 填写你的需求</label>
+              <textarea class="intake-textarea" id="needText" name="need" placeholder="例如：我在做 ToB AI 营销产品，想交换真实工作流和面试经验" required></textarea>
+              <label for="personText">2. 你要找什么样的人</label>
+              <textarea class="intake-textarea" id="personText" name="person" placeholder="例如：做多模态、搜推或模型微调，有真实项目经验的同学" required></textarea>
+              <div class="intake-tags" id="intakeTags" aria-label="选择方向标签">
+                <button type="button" data-tag="AI / 算法">AI / 算法</button>
+                <button type="button" data-tag="产品">产品</button>
+                <button type="button" data-tag="开发">开发</button>
+                <button type="button" data-tag="增长">增长</button>
+                <button type="button" data-tag="ToB">ToB</button>
+                <button type="button" data-tag="求职交流">求职交流</button>
               </div>
-              <label for="inviteCode">邀请码 <span>选填</span></label>
-              <input id="inviteCode" name="inviteCode" type="text" autocomplete="off" placeholder="例如 PINGO-8K2M" />
               <p class="form-error" id="formError" role="alert"></p>
               <button class="primary-button" type="submit">
-                <span>进入匹配结果</span>
+                <span>开始匹配</span>
                 <span class="arrow" aria-hidden="true">→</span>
               </button>
-              <p class="privacy-note">继续即表示你同意仅将资料用于本次匹配</p>
+              <p class="privacy-note">无需注册，先看看匹配结果</p>
             </form>
           </div>
         </section>
@@ -101,16 +106,18 @@
 
               <div class="onboarding-state is-hidden" id="matchSuccessState">
                 <span class="onboarding-label success-label">匹配成功</span>
-                <h1>拼上了，三位搭子<br />已经在等你。</h1>
-                <p>最高匹配度 92%。先免费查看第一位，再通过真实互动解锁另外两位。</p>
-                <div class="success-people" aria-label="三位匹配对象">
-                  <span class="success-avatar tone-blue">L</span>
-                  <span class="success-avatar tone-coral">C</span>
-                  <span class="success-avatar tone-violet">Z</span>
-                  <strong>3 位搭子</strong>
+                <h1>最高匹配度<br />92%。</h1>
+                <p>已经找到最适合你的实习搭子。注册后即可揭晓他的完整资料。</p>
+                <div class="masked-match" aria-label="最高匹配对象，注册后查看">
+                  <div class="masked-person">
+                    <span class="success-avatar tone-blue">L</span>
+                    <span><strong>林 ·</strong><small>多模态算法实习生</small></span>
+                  </div>
+                  <span class="masked-score">92% 匹配</span>
+                  <div class="masked-cover"><span class="lock-icon" aria-hidden="true"></span><strong>注册后揭晓</strong></div>
                 </div>
                 <button class="primary-button match-start-button" id="viewMatchesButton">
-                  <span>查看我的搭子</span><span class="arrow" aria-hidden="true">→</span>
+                  <span>注册并查看最高匹配</span><span class="arrow" aria-hidden="true">→</span>
                 </button>
               </div>
             </div>

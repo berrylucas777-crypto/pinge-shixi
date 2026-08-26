@@ -2,7 +2,8 @@ const loginView = document.querySelector('#loginView');
 const onboardingView = document.querySelector('#onboardingView');
 const resultsView = document.querySelector('#resultsView');
 const loginForm = document.querySelector('#loginForm');
-const emailInput = document.querySelector('#email');
+const needText = document.querySelector('#needText');
+const personText = document.querySelector('#personText');
 const formError = document.querySelector('#formError');
 const avatarButton = document.querySelector('#avatarButton');
 const infoSheet = document.querySelector('#infoSheet');
@@ -30,6 +31,7 @@ let toastTimer;
 let sheetTrigger;
 let activeFilter = '全部';
 let matchTimer;
+const selectedIntakeTags = new Set();
 
 function showToast(message) {
   toast.textContent = message;
@@ -65,18 +67,27 @@ function showResults(email) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function showOnboarding(email) {
+function showOnboarding() {
   loginView.classList.add('is-hidden');
   resultsView.classList.add('is-hidden');
   onboardingView.classList.remove('is-hidden');
   onboardingView.classList.remove('is-matching', 'is-complete');
-  matchReadyState.classList.remove('is-hidden');
-  matchLoadingState.classList.add('is-hidden');
+  matchReadyState.classList.add('is-hidden');
+  matchLoadingState.classList.remove('is-hidden');
   matchSuccessState.classList.add('is-hidden');
   matchProgressBar.style.width = '0%';
   matchPercent.textContent = '0%';
-  avatarButton.classList.remove('is-hidden');
-  avatarButton.textContent = email.trim().charAt(0).toUpperCase();
+  avatarButton.classList.add('is-hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.requestAnimationFrame(startMatching);
+}
+
+function showIntake() {
+  window.clearInterval(matchTimer);
+  onboardingView.classList.add('is-hidden');
+  resultsView.classList.add('is-hidden');
+  loginView.classList.remove('is-hidden');
+  avatarButton.classList.add('is-hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -103,7 +114,7 @@ function startMatching() {
     if (currentMessage) loadingMessage.textContent = currentMessage[1];
     if (elapsed >= duration) {
       window.clearInterval(matchTimer);
-      localStorage.setItem('pingo-matched', '1');
+      localStorage.setItem('pingo-match-ready', '1');
       matchLoadingState.classList.add('is-hidden');
       matchSuccessState.classList.remove('is-hidden');
       onboardingView.classList.remove('is-matching');
@@ -233,29 +244,77 @@ function openIntentSheet(type) {
 
 loginForm.addEventListener('submit', (event) => {
   event.preventDefault();
-  const email = emailInput.value.trim();
-  if (!/^\S+@\S+\.\S+$/.test(email)) {
-    formError.textContent = '请输入可以接收匹配邮件的邮箱';
-    emailInput.setAttribute('aria-invalid', 'true');
-    emailInput.focus();
+  const need = needText.value.trim();
+  const person = personText.value.trim();
+  if (need.length < 8) {
+    formError.textContent = '再具体说一点你的需求，至少填写 8 个字';
+    needText.setAttribute('aria-invalid', 'true');
+    needText.focus();
+    return;
+  }
+  if (person.length < 8) {
+    formError.textContent = '再具体说一点你想找什么样的人';
+    personText.setAttribute('aria-invalid', 'true');
+    personText.focus();
     return;
   }
   formError.textContent = '';
-  emailInput.removeAttribute('aria-invalid');
-  localStorage.setItem('pingo-email', email);
-  showOnboarding(email);
+  needText.removeAttribute('aria-invalid');
+  personText.removeAttribute('aria-invalid');
+  localStorage.setItem('pingo-need', need);
+  localStorage.setItem('pingo-person', person);
+  localStorage.setItem('pingo-intake-tags', JSON.stringify([...selectedIntakeTags]));
+  showOnboarding();
 });
 
-emailInput.addEventListener('input', () => {
+needText.addEventListener('input', () => {
   formError.textContent = '';
-  emailInput.removeAttribute('aria-invalid');
+  needText.removeAttribute('aria-invalid');
+});
+personText.addEventListener('input', () => {
+  formError.textContent = '';
+  personText.removeAttribute('aria-invalid');
+});
+document.querySelectorAll('#intakeTags button').forEach((button) => {
+  button.addEventListener('click', () => {
+    const tag = button.dataset.tag;
+    if (selectedIntakeTags.has(tag)) selectedIntakeTags.delete(tag);
+    else selectedIntakeTags.add(tag);
+    button.classList.toggle('is-selected', selectedIntakeTags.has(tag));
+  });
 });
 
 document.querySelector('#brandButton').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 document.querySelector('#startMatchButton').addEventListener('click', startMatching);
 document.querySelector('#viewMatchesButton').addEventListener('click', () => {
-  const email = localStorage.getItem('pingo-email') || '当前用户';
-  showResults(email);
+  openSheet(`
+    <h2 id="sheetTitle">注册后揭晓最高匹配</h2>
+    <p>你的匹配已经完成。留下邮箱即可查看第一位搭子、自由探索和完整名单。</p>
+    <form id="registrationForm" novalidate>
+      <label for="registrationEmail">邮箱</label>
+      <input id="registrationEmail" type="email" autocomplete="email" placeholder="name@example.com" required>
+      <label for="registrationInvite">邀请码 <span>选填</span></label>
+      <input id="registrationInvite" type="text" autocomplete="off" placeholder="例如 PINGO-8K2M">
+      <p class="form-error" id="registrationError" role="alert"></p>
+      <button class="primary-button" type="submit"><span>注册并揭晓</span><span class="arrow">→</span></button>
+    </form>
+  `);
+  document.querySelector('#registrationForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    const emailInput = document.querySelector('#registrationEmail');
+    const email = emailInput.value.trim();
+    const error = document.querySelector('#registrationError');
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      error.textContent = '请输入可以接收匹配结果的邮箱';
+      emailInput.focus();
+      return;
+    }
+    localStorage.setItem('pingo-email', email);
+    localStorage.setItem('pingo-matched', '1');
+    closeSheet();
+    showResults(email);
+    showToast('注册成功，最高匹配已揭晓');
+  });
 });
 matchesTab.addEventListener('click', () => setResultsView('matches'));
 exploreTab.addEventListener('click', () => setResultsView('explore'));
@@ -267,9 +326,9 @@ document.querySelector('#aboutButton').addEventListener('click', () => {
     <h2 id="sheetTitle">三步找到实习搭子</h2>
     <p>匹配不只看岗位名，更看你们正在做什么、彼此能补上什么。</p>
     <ol>
-      <li><div><strong>留下你的方向</strong><br><span>从群聊介绍或个人资料里提取岗位、项目与目标。</span></div></li>
+      <li><div><strong>先写两句话</strong><br><span>填写你的需求，以及你想找什么样的人，不需要先注册。</span></div></li>
       <li><div><strong>等待约 10 秒</strong><br><span>从现有名单中比对学校、方向和可以交换的经验。</span></div></li>
-      <li><div><strong>完成两个小动作</strong><br><span>发出第一封邮件解锁第 2 位，邀请好友注册解锁第 3 位。</span></div></li>
+      <li><div><strong>注册揭晓第一位</strong><br><span>最高匹配先以蒙版展示，注册后查看完整资料。</span></div></li>
     </ol>
     <p>当前页面使用演示数据，正式版本会接入真实匹配 API。</p>
   `);
@@ -310,9 +369,10 @@ avatarButton.addEventListener('click', () => {
   });
   document.querySelector('#resetMatchButton')?.addEventListener('click', () => {
     localStorage.removeItem('pingo-matched');
+    localStorage.removeItem('pingo-match-ready');
     window.clearInterval(matchTimer);
     closeSheet();
-    showOnboarding(email);
+    showIntake();
   });
 });
 
@@ -473,6 +533,10 @@ if (isDemoMode) {
     'pingo-helper-topic',
     'pingo-super-topic',
     'pingo-matched',
+    'pingo-match-ready',
+    'pingo-need',
+    'pingo-person',
+    'pingo-intake-tags',
   ].forEach((key) => localStorage.removeItem(key));
 }
 
