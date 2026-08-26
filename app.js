@@ -100,8 +100,8 @@ function startMatching() {
   const startedAt = Date.now();
   const duration = 10000;
   const messages = [
-    [0, '正在读取你的方向'],
-    [2400, '比对学校、岗位和擅长点'],
+    [0, '正在读取你的经历和项目'],
+    [2400, '比对项目方向、岗位和擅长点'],
     [5000, '计算彼此可以交换的经验'],
     [7600, '整理三位最合适的实习搭子'],
   ];
@@ -246,8 +246,8 @@ loginForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const need = needText.value.trim();
   const person = personText.value.trim();
-  if (need.length < 8) {
-    formError.textContent = '再具体说一点你的需求，至少填写 8 个字';
+  if (need !== '无' && need.length < 8) {
+    formError.textContent = '请具体填写经历和项目经历；如果没有，可以填写“无”';
     needText.setAttribute('aria-invalid', 'true');
     needText.focus();
     return;
@@ -326,7 +326,7 @@ document.querySelector('#aboutButton').addEventListener('click', () => {
     <h2 id="sheetTitle">三步找到实习搭子</h2>
     <p>匹配不只看岗位名，更看你们正在做什么、彼此能补上什么。</p>
     <ol>
-      <li><div><strong>先写两句话</strong><br><span>填写你的需求，以及你想找什么样的人，不需要先注册。</span></div></li>
+      <li><div><strong>先写两句话</strong><br><span>填写你的经历、项目经历，以及你想找什么样的人，不需要先注册。</span></div></li>
       <li><div><strong>等待约 10 秒</strong><br><span>从现有名单中比对学校、方向和可以交换的经验。</span></div></li>
       <li><div><strong>注册揭晓第一位</strong><br><span>最高匹配先以蒙版展示，注册后查看完整资料。</span></div></li>
     </ol>
