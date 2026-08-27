@@ -1,0 +1,2342 @@
+[
+  {
+    "nickname": "momo",
+    "time_label": "昨天10:19",
+    "source_y": 453,
+    "raw_ocr": "蹲大模型/Agent算法实习经历或项目经历。本人在vibe coding初创公司进行coding agent算法的研究，包括上下文管理优化，coding agent归因，统一评测，另外有CUA，Web Agent的项目经历。所有成果均有文档，并且有业务逻辑的文档以及面试故事",
+    "cleaned_message": "寻找大模型或 Agent 算法实习/项目经历。本人在 vibe coding 初创公司研究 Coding Agent 算法，包括上下文管理优化、Coding Agent 归因、统一评测，并有 CUA、Web Agent 项目经历；成果、业务逻辑和面试故事均有文档。",
+    "message_type": "经验交换",
+    "experience": "vibe coding 初创公司 Coding Agent 算法研究；CUA、Web Agent 项目",
+    "supply": "上下文管理优化；Coding Agent 归因；统一评测；CUA；Web Agent；项目文档；业务逻辑；面试故事",
+    "demand": "大模型/Agent 算法实习经历或项目经历",
+    "role_tags": [
+      "算法",
+      "AI开发"
+    ],
+    "domain_tags": [
+      "大模型",
+      "Agent",
+      "Coding Agent",
+      "CUA",
+      "Web Agent"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "昵称与后文 momO 可能重名，暂不合并",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "只有6个苹果",
+    "time_label": "昨天11:14后",
+    "source_y": 2464,
+    "raw_ocr": "@恋恋日记簿 有做过活动策划岗实习 但是是运动品牌 感兴趣活动统筹",
+    "cleaned_message": "做过运动品牌的活动策划岗实习，对活动统筹感兴趣。",
+    "message_type": "经验交换",
+    "experience": "运动品牌活动策划实习",
+    "supply": "活动策划；运动品牌经验",
+    "demand": "活动统筹相关经验",
+    "role_tags": [
+      "活动策划",
+      "活动统筹"
+    ],
+    "domain_tags": [
+      "运动品牌",
+      "品牌营销"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "中",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "恋恋日记簿",
+    "time_label": "昨天11:14后",
+    "source_y": 2822,
+    "raw_ocr": "演出/活动统筹，传统演出行业和机器人方向都做过，蹲蹲活…",
+    "cleaned_message": "做过演出/活动统筹，覆盖传统演出行业和机器人方向；正在寻找活动相关交流。",
+    "message_type": "经验交换",
+    "experience": "传统演出行业和机器人方向的演出/活动统筹",
+    "supply": "演出统筹；活动统筹；机器人方向项目",
+    "demand": "活动相关经历（原消息后半截被引用折叠）",
+    "role_tags": [
+      "活动统筹",
+      "活动策划"
+    ],
+    "domain_tags": [
+      "演出",
+      "机器人"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "中",
+    "review_status": "需复核",
+    "review_note": "仅从群内引用消息恢复，末尾被折叠",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "幻影星著名蛋黄",
+    "time_label": "昨天11:25",
+    "source_y": 3122,
+    "raw_ocr": "中大厂ota酒旅b端商业化广告策略产品项目，我总结了详细的文档，蹲一个ai产品的项目有可能吗",
+    "cleaned_message": "有中大厂 OTA 酒旅 B 端商业化广告策略产品项目，并整理了详细文档；寻找 AI 产品项目。",
+    "message_type": "经验交换",
+    "experience": "中大厂 OTA 酒旅 B 端商业化广告策略产品项目",
+    "supply": "商业化广告策略；B 端产品；OTA 酒旅；详细项目文档",
+    "demand": "AI 产品项目",
+    "role_tags": [
+      "策略产品",
+      "AI产品",
+      "商业化产品"
+    ],
+    "domain_tags": [
+      "OTA",
+      "酒旅",
+      "B端",
+      "广告商业化",
+      "AI"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "后文补充：广告策略，寻找中厂 AI 产品",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "momO",
+    "time_label": "昨天11:36",
+    "source_y": 3697,
+    "raw_ocr": "本身法学背景 某红圈-互联网金融法务；国际4a媒介策划-内容运营-商品商家产运-电商平台运营消费者增长；（目前）泛体制政策公关。蹲蹲欢迎有相关经历的来互相交流",
+    "cleaned_message": "法学背景，经历覆盖红圈所/互联网金融法务、国际 4A 媒介策划、内容运营、商品商家产运、电商平台运营和消费者增长，目前从事政策公关；寻找相关经历交流。",
+    "message_type": "开放交流",
+    "experience": "法学；红圈所/互联网金融法务；国际4A媒介策划；内容运营；商品商家产运；电商平台运营消费者增长；政策公关",
+    "supply": "法务；媒介策划；内容运营；平台运营；消费者增长；政策公关",
+    "demand": "相关领域经历交流，未指定单一目标",
+    "role_tags": [
+      "法务",
+      "媒介策划",
+      "内容运营",
+      "平台运营",
+      "增长",
+      "公关"
+    ],
+    "domain_tags": [
+      "互联网金融",
+      "4A",
+      "电商",
+      "政策"
+    ],
+    "city": "",
+    "urgency": "低",
+    "profile_completeness": "高",
+    "review_status": "需复核",
+    "review_note": "昵称与首条 momo 可能不是同一人；原文一处连接词 OCR 不清",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "晚星（群主）",
+    "time_label": "昨天12:46起",
+    "source_y": 5544,
+    "raw_ocr": "有无有AI开发/agent或者相关实习项目的，最好有源码，可以和我交换。实习项目不能给代码，不过我可以分享我的自研项目",
+    "cleaned_message": "寻找 AI 开发、Agent 或相关实习项目，偏好可分享源码；本人可分享自研项目，实习项目不便提供代码。",
+    "message_type": "经验交换",
+    "experience": "AI/Agent 相关自研项目；另有不便提供代码的实习项目",
+    "supply": "自研项目；AI/Agent 项目经验",
+    "demand": "AI 开发、Agent 或相关实习项目，最好有源码",
+    "role_tags": [
+      "AI开发",
+      "算法",
+      "全栈开发"
+    ],
+    "domain_tags": [
+      "AI",
+      "Agent",
+      "源码"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "中",
+    "review_status": "已初校",
+    "review_note": "多条发言合并；同时表达代码分享边界；同一 AI/Agent 项目交换发言在两个群中重复出现，已跨群合并",
+    "source_groups": [
+      "群聊1",
+      "群聊2"
+    ],
+    "duplicate_count": 2,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "别蛀牙",
+    "time_label": "昨天12:46后",
+    "source_y": 6419,
+    "raw_ocr": "有ai产品项目（高质量prd＋面试文档）想交换出海赛道/海外赛道/外企的各种！尽量是营销 跨境电商 社媒Kol或者国内大厂运营经历",
+    "cleaned_message": "可提供 AI 产品项目、高质量 PRD 和面试文档；希望交换出海/海外赛道或外企经历，优先营销、跨境电商、社媒/KOL 或国内大厂运营。",
+    "message_type": "经验交换",
+    "experience": "AI 产品项目",
+    "supply": "AI 产品项目；高质量 PRD；面试文档",
+    "demand": "出海/海外赛道/外企经历；营销；跨境电商；社媒/KOL；国内大厂运营",
+    "role_tags": [
+      "AI产品",
+      "产品经理",
+      "营销",
+      "运营"
+    ],
+    "domain_tags": [
+      "AI",
+      "出海",
+      "跨境电商",
+      "社媒",
+      "KOL",
+      "外企"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "Brulante",
+    "time_label": "昨天12:51",
+    "source_y": 7061,
+    "raw_ocr": "本人有四大八大经历，欢迎有券商/基金/互联网产品&财务经历的宝宝来交流",
+    "cleaned_message": "有四大、八大经历；寻找券商、基金、互联网产品或财务经历交流。",
+    "message_type": "经验交换",
+    "experience": "四大、八大相关经历",
+    "supply": "会计师事务所/审计相关经验",
+    "demand": "券商；基金；互联网产品；财务经历",
+    "role_tags": [
+      "审计",
+      "财务",
+      "产品经理"
+    ],
+    "domain_tags": [
+      "四大",
+      "八大",
+      "券商",
+      "基金",
+      "互联网"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "中",
+    "review_status": "已初校",
+    "review_note": "昵称后文一次 OCR 为 Brdlante，按较清晰结果统一",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "芫荽",
+    "time_label": "昨天13:41",
+    "source_y": 8403,
+    "raw_ocr": "有感兴趣4a公关的朋友可以看看主页招继任帖",
+    "cleaned_message": "发布 4A 公关继任岗位信息，感兴趣者可查看主页。",
+    "message_type": "岗位/继任",
+    "experience": "4A 公关相关岗位",
+    "supply": "4A 公关继任机会",
+    "demand": "寻找对 4A 公关感兴趣的继任者",
+    "role_tags": [
+      "公关"
+    ],
+    "domain_tags": [
+      "4A",
+      "广告公关"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "这是岗位供给，不是经历交换",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "Izy",
+    "time_label": "昨天13:41后",
+    "source_y": 8732,
+    "raw_ocr": "大家是怎么进行优化简历的啊 我现在在大厂运营 但感觉太dirty 根本没什么能说的。往策略运营上靠呗",
+    "cleaned_message": "目前在大厂做运营，希望优化简历并向策略运营靠拢。",
+    "message_type": "求职求助",
+    "experience": "大厂运营",
+    "supply": "大厂运营经历",
+    "demand": "简历优化；策略运营方向经验",
+    "role_tags": [
+      "运营",
+      "策略运营"
+    ],
+    "domain_tags": [
+      "大厂",
+      "简历优化"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "中",
+    "review_status": "已初校",
+    "review_note": "最后一句可能是该用户后续发言，也可能是回复上下文，保留为目标标签",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "不叫momo了怕你找不到我（日活一星）",
+    "time_label": "昨天12:17起",
+    "source_y": 4953,
+    "raw_ocr": "做过广告客户执行，可以交流吗。广告怎么转互联网。谢谢建议！但我怕进了广告行以后转不出来。得物好像总部在上海诶，广东这边有推荐的中厂吗。",
+    "cleaned_message": "做过广告客户执行，希望交流广告转互联网的路径，并寻找广东地区适合的中厂机会。",
+    "message_type": "求职求助",
+    "experience": "广告客户执行",
+    "supply": "广告客户执行经验",
+    "demand": "广告转互联网路径；广东中厂推荐；互联网/电商运营机会",
+    "role_tags": [
+      "客户执行",
+      "广告",
+      "运营"
+    ],
+    "domain_tags": [
+      "广告公司",
+      "互联网",
+      "电商"
+    ],
+    "city": "广东",
+    "urgency": "高",
+    "profile_completeness": "中",
+    "review_status": "已初校",
+    "review_note": "多条发言合并；昵称在截图中被截断，括号内容来自引用消息",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "灰身归空",
+    "time_label": "昨天15:57",
+    "source_y": 10828,
+    "raw_ocr": "有做过品宣类视觉方向的设计，求有互联网中大厂视觉设计的uu交换经验",
+    "cleaned_message": "做过品牌宣传类视觉设计，希望与有互联网中大厂视觉设计经历的人交换经验。",
+    "message_type": "经验交换",
+    "experience": "品宣类视觉设计",
+    "supply": "品牌宣传视觉设计",
+    "demand": "互联网中大厂视觉设计经历",
+    "role_tags": [
+      "视觉设计",
+      "品牌设计"
+    ],
+    "domain_tags": [
+      "互联网",
+      "中大厂",
+      "品宣"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "中",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "IVY",
+    "time_label": "昨天16:37后",
+    "source_y": 12563,
+    "raw_ocr": "可交换hr经历和运营经历 蹲hrbp实习and运营和产品实习经历。可以问一下零基础第一份产品经历或者运营经历该怎么找吗",
+    "cleaned_message": "可提供 HR 和运营经历；寻找 HRBP、运营、产品实习经历，也希望了解零基础如何获得第一份产品或运营经历。",
+    "message_type": "经验交换",
+    "experience": "HR、运营经历",
+    "supply": "HR 经历；运营经历",
+    "demand": "HRBP 实习；运营实习；产品实习；零基础入行方法",
+    "role_tags": [
+      "HR",
+      "HRBP",
+      "运营",
+      "产品经理"
+    ],
+    "domain_tags": [
+      "实习",
+      "零基础"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "多条发言合并",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "薄荷吃了么",
+    "time_label": "昨天16:42后",
+    "source_y": 14024,
+    "raw_ocr": "（可交换）之前有做过字节旗下豆包Dola和Gauth的海外内容创意，也做过4a、kol/koc这类的工作。想蹲蹲产品方向经历。差不多同问题，想问问有没有朋友传媒相关转产品的，一般怎么准备呢？",
+    "cleaned_message": "做过字节旗下豆包、Dola、Gauth 的海外内容创意，也有 4A、KOL/KOC 工作；寻找产品方向经历及传媒转产品的准备方法。",
+    "message_type": "经验交换",
+    "experience": "字节系产品海外内容创意；4A；KOL/KOC",
+    "supply": "海外内容创意；4A；KOL/KOC；内容营销",
+    "demand": "产品方向经历；传媒转产品路径",
+    "role_tags": [
+      "内容运营",
+      "内容营销",
+      "产品经理"
+    ],
+    "domain_tags": [
+      "字节",
+      "豆包",
+      "Dola",
+      "Gauth",
+      "海外",
+      "4A",
+      "KOL",
+      "KOC"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "需复核",
+    "review_note": "Dola 产品名可能需人工确认；多条发言合并",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "岛民",
+    "time_label": "昨天16:42后",
+    "source_y": 16729,
+    "raw_ocr": "有没有制造业实习的宝宝呀，研发或者工艺或者其他方向的",
+    "cleaned_message": "寻找制造业实习经历，研发、工艺或其他方向均可。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "制造业实习；研发；工艺或其他制造方向",
+    "role_tags": [
+      "研发",
+      "工艺"
+    ],
+    "domain_tags": [
+      "制造业"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "无供给信息",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "艾瑞克",
+    "time_label": "昨天17:50",
+    "source_y": 18130,
+    "raw_ocr": "@IVY 我也是hr实习",
+    "cleaned_message": "有 HR 实习经历，希望与 IVY 交流。",
+    "message_type": "开放交流",
+    "experience": "HR 实习",
+    "supply": "HR 实习经验",
+    "demand": "HR/HRBP 相关交流",
+    "role_tags": [
+      "HR",
+      "HRBP"
+    ],
+    "domain_tags": [
+      "实习"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "需求根据回复对象推断，需确认",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "大屁股扭一扭驾到（云吃吃）",
+    "time_label": "昨天17:57起",
+    "source_y": 18790,
+    "raw_ocr": "有VM实习经历的友友吗？我在上海。有campaign相关的经验分享吗。mkt实习的同学我们也可以互相交流",
+    "cleaned_message": "人在上海，寻找 VM 实习、Campaign 和市场营销实习经历交流。",
+    "message_type": "开放交流",
+    "experience": "MKT 实习（从后文语义看可能已有，需确认）",
+    "supply": "市场营销实习交流",
+    "demand": "VM 实习；Campaign 经验；MKT 实习交流",
+    "role_tags": [
+      "VM",
+      "市场营销",
+      "Campaign"
+    ],
+    "domain_tags": [
+      "品牌营销",
+      "零售",
+      "市场"
+    ],
+    "city": "上海",
+    "urgency": "中",
+    "profile_completeness": "中",
+    "review_status": "需复核",
+    "review_note": "VM 缩写及其具体含义需业务侧确认",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "南极的北极熊",
+    "time_label": "昨天17:57后",
+    "source_y": 19106,
+    "raw_ocr": "有wl培训运营实习过的朋友吗",
+    "cleaned_message": "寻找有培训运营实习经历的人。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "培训运营实习经历",
+    "role_tags": [
+      "培训运营",
+      "运营"
+    ],
+    "domain_tags": [
+      "培训"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "低",
+    "review_status": "需复核",
+    "review_note": "原文培训运营前可能有机构缩写，OCR 为 wl",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "帮我想一个别人绝对猜不出…",
+    "time_label": "昨天17:57后",
+    "source_y": 19551,
+    "raw_ocr": "有新东方hr/省外办/中国银行营业部客户经理/外贸公司新媒体运营，蹲中/大厂产品运营",
+    "cleaned_message": "经历包括新东方 HR、省外办、中国银行营业部客户经理、外贸公司新媒体运营；寻找中大厂产品运营经历。",
+    "message_type": "经验交换",
+    "experience": "新东方 HR；省外办；中国银行营业部客户经理；外贸公司新媒体运营",
+    "supply": "HR；客户经理；新媒体运营；外贸相关经验",
+    "demand": "中厂/大厂产品运营",
+    "role_tags": [
+      "HR",
+      "客户经理",
+      "新媒体运营",
+      "产品运营"
+    ],
+    "domain_tags": [
+      "教育",
+      "政府",
+      "银行",
+      "外贸",
+      "中大厂"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "需复核",
+    "review_note": "截图中昵称被界面截断",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "C0000000|",
+    "time_label": "昨天17:57后",
+    "source_y": 19947,
+    "raw_ocr": "一段腰部证券食品饮料方向行研，一段八大年审，一段央企财务，蹲审计/咨询/战略研究/投行/财务",
+    "cleaned_message": "有腰部证券食品饮料行研、八大年审和央企财务经历；寻找审计、咨询、战略研究、投行或财务经历。",
+    "message_type": "经验交换",
+    "experience": "腰部证券食品饮料行业研究；八大年审；央企财务",
+    "supply": "行业研究；年审；央企财务",
+    "demand": "审计；咨询；战略研究；投行；财务",
+    "role_tags": [
+      "行研",
+      "审计",
+      "咨询",
+      "战略研究",
+      "投行",
+      "财务"
+    ],
+    "domain_tags": [
+      "证券",
+      "食品饮料",
+      "八大",
+      "央企"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "需复核",
+    "review_note": "昵称 OCR 不稳定，后文引用显示为 co00000000l",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "Pro",
+    "time_label": "昨天17:57后",
+    "source_y": 20793,
+    "raw_ocr": "@晚星 我是主要做的ai在安全领域的应用，希望可以交流一下",
+    "cleaned_message": "主要做 AI 在安全领域的应用，希望与 AI/Agent 方向的人交流。",
+    "message_type": "开放交流",
+    "experience": "AI 在安全领域的应用",
+    "supply": "AI 安全应用经验",
+    "demand": "AI/Agent 相关交流",
+    "role_tags": [
+      "AI开发",
+      "安全"
+    ],
+    "domain_tags": [
+      "AI安全",
+      "Agent"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "中",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "阴月有晴",
+    "time_label": "昨天19:35",
+    "source_y": 22783,
+    "raw_ocr": "蹲游戏行业的友友，PM，PMO，各类运营，策划都可。本人有完美世界用户运营，百度产运，掌趣游戏运营三段经验。",
+    "cleaned_message": "寻找游戏行业 PM、PMO、运营或策划；本人有完美世界用户运营、百度产品运营、掌趣游戏运营三段经历。",
+    "message_type": "经验交换",
+    "experience": "完美世界用户运营；百度产品运营；掌趣游戏运营",
+    "supply": "用户运营；产品运营；游戏运营",
+    "demand": "游戏行业 PM；PMO；各类运营；策划",
+    "role_tags": [
+      "用户运营",
+      "产品运营",
+      "游戏运营",
+      "产品经理",
+      "PMO",
+      "策划"
+    ],
+    "domain_tags": [
+      "游戏",
+      "完美世界",
+      "百度",
+      "掌趣"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "Eternal",
+    "time_label": "昨天20:31",
+    "source_y": 24390,
+    "raw_ocr": "蹲想了解新媒体岗位 我目前有基金经理，证券投行和律所IPO并购实习，想了解的也可以dd",
+    "cleaned_message": "想了解新媒体岗位；可分享基金经理、证券投行、律所 IPO 与并购实习经历。",
+    "message_type": "经验交换",
+    "experience": "基金经理相关；证券投行；律所 IPO/并购实习",
+    "supply": "基金；投行；IPO；并购；律所实习",
+    "demand": "新媒体岗位经历",
+    "role_tags": [
+      "基金",
+      "投行",
+      "律师",
+      "新媒体运营"
+    ],
+    "domain_tags": [
+      "证券",
+      "IPO",
+      "并购",
+      "法律",
+      "新媒体"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "‘基金经理’可能指基金经理相关实习，需确认具体岗位",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "伟大的ddm",
+    "time_label": "昨天21:28",
+    "source_y": 25663,
+    "raw_ocr": "蹲市场营销/gtm/to b销售，我有项目管理/hr/海外达人运营经历",
+    "cleaned_message": "寻找市场营销、GTM 或 ToB 销售经历；可提供项目管理、HR、海外达人运营经验。",
+    "message_type": "经验交换",
+    "experience": "项目管理；HR；海外达人运营",
+    "supply": "项目管理；HR；海外达人运营",
+    "demand": "市场营销；GTM；ToB 销售",
+    "role_tags": [
+      "项目管理",
+      "HR",
+      "达人运营",
+      "市场营销",
+      "GTM",
+      "ToB销售"
+    ],
+    "domain_tags": [
+      "海外",
+      "ToB"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "人海尔尔",
+    "time_label": "昨天21:46",
+    "source_y": 26281,
+    "raw_ocr": "找继任~ 岗位：内容运营实习生 base：广州 详情可以看看主页",
+    "cleaned_message": "招聘内容运营实习生继任，工作地点广州，详情见主页。",
+    "message_type": "岗位/继任",
+    "experience": "内容运营岗位发布者",
+    "supply": "广州内容运营实习机会",
+    "demand": "寻找内容运营实习生继任",
+    "role_tags": [
+      "内容运营"
+    ],
+    "domain_tags": [
+      "实习",
+      "继任"
+    ],
+    "city": "广州",
+    "urgency": "高",
+    "profile_completeness": "中",
+    "review_status": "已初校",
+    "review_note": "岗位供给，可单独用于职位匹配",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "曲奇⑧",
+    "time_label": "昨天22:29",
+    "source_y": 26972,
+    "raw_ocr": "蹲医药器械或者海外销售出海的友友～有内容运营/药企mkt/药企digital相关经验",
+    "cleaned_message": "寻找医药器械、海外销售或出海方向交流；有内容运营、药企市场营销、药企 Digital 经验。",
+    "message_type": "经验交换",
+    "experience": "内容运营；药企 MKT；药企 Digital",
+    "supply": "内容运营；医药市场营销；医药数字化",
+    "demand": "医药器械；海外销售；出海",
+    "role_tags": [
+      "内容运营",
+      "市场营销",
+      "Digital",
+      "海外销售"
+    ],
+    "domain_tags": [
+      "医药",
+      "医疗器械",
+      "出海"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "昵称最后字符疑似表情/特殊字符",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "甜品杀手",
+    "time_label": "昨天23:11",
+    "source_y": 27592,
+    "raw_ocr": "量化研究蹲ai相关算法相关，ds",
+    "cleaned_message": "有量化研究方向，寻找 AI 算法或 Data Science 相关经历。",
+    "message_type": "经验交换",
+    "experience": "量化研究",
+    "supply": "量化研究经验",
+    "demand": "AI 算法；Data Science",
+    "role_tags": [
+      "量化研究",
+      "算法",
+      "数据科学"
+    ],
+    "domain_tags": [
+      "量化",
+      "AI",
+      "DS"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "中",
+    "review_status": "需复核",
+    "review_note": "原消息可能未完整显示；DS 按 Data Science 暂释",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "华尔街草履虫",
+    "time_label": "00:13前",
+    "source_y": 29102,
+    "raw_ocr": "Ai-startup 0-1产品owner 想交换出海growth/marketing/开发者关系等",
+    "cleaned_message": "AI 初创公司 0-1 产品 Owner，希望交换出海 Growth、Marketing 或开发者关系经验。",
+    "message_type": "经验交换",
+    "experience": "AI Startup 0-1 产品 Owner",
+    "supply": "AI 产品从 0 到 1；产品 Owner 经验",
+    "demand": "出海 Growth；Marketing；开发者关系",
+    "role_tags": [
+      "产品负责人",
+      "增长",
+      "市场营销",
+      "开发者关系"
+    ],
+    "domain_tags": [
+      "AI",
+      "Startup",
+      "0-1",
+      "出海"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "无人乐园",
+    "time_label": "00:30后",
+    "source_y": 31432,
+    "raw_ocr": "安全运营蹲其他",
+    "cleaned_message": "有安全运营方向，开放寻找其他方向交流。",
+    "message_type": "开放交流",
+    "experience": "安全运营",
+    "supply": "安全运营经验",
+    "demand": "其他方向，未明确",
+    "role_tags": [
+      "安全运营"
+    ],
+    "domain_tags": [
+      "安全"
+    ],
+    "city": "",
+    "urgency": "低",
+    "profile_completeness": "低",
+    "review_status": "需复核",
+    "review_note": "原始发言极短，需补充需求",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "nickname": "一生气就煲仔饭",
+    "time_label": "00:45后",
+    "source_y": 32345,
+    "raw_ocr": "广州中大厂测试蹲测开/自动化测试实习经验",
+    "cleaned_message": "有广州中大厂测试相关背景，寻找测试开发或自动化测试实习经验。",
+    "message_type": "经验交换",
+    "experience": "广州中大厂测试相关经历",
+    "supply": "中大厂测试经验",
+    "demand": "测试开发；自动化测试实习",
+    "role_tags": [
+      "测试",
+      "测试开发",
+      "自动化测试"
+    ],
+    "domain_tags": [
+      "中大厂",
+      "实习"
+    ],
+    "city": "广州",
+    "urgency": "高",
+    "profile_completeness": "中",
+    "review_status": "需复核",
+    "review_note": "‘有广州中大厂测试’的供给语义需用户确认",
+    "source_groups": [
+      "群聊1"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高"
+  },
+  {
+    "time_label": "星期二17:40起",
+    "source_y": 441,
+    "raw_ocr": "求Agent实习经历分享，可有偿。求Agent或者JAVA实习经历分享，可有偿。有木有在深圳的UU",
+    "cleaned_message": "寻找 Agent 或 Java 实习经历分享，可有偿；同时希望认识深圳的同学。",
+    "message_type": "有偿求助",
+    "experience": "",
+    "supply": "",
+    "demand": "Agent 实习；Java 实习；深圳同城交流",
+    "role_tags": [
+      "Agent",
+      "Java后端"
+    ],
+    "domain_tags": [
+      "AI",
+      "实习",
+      "有偿"
+    ],
+    "city": "深圳",
+    "urgency": "高",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "治愈人心的女宝哦"
+  },
+  {
+    "time_label": "星期二17:40",
+    "source_y": 763,
+    "raw_ocr": "求产品经历实习经历",
+    "cleaned_message": "寻找产品实习经历分享。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "产品实习经历",
+    "role_tags": [
+      "产品经理"
+    ],
+    "domain_tags": [
+      "实习"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "不吃鹅肝"
+  },
+  {
+    "time_label": "星期二17:40后",
+    "source_y": 1554,
+    "raw_ocr": "本人有一段大厂中台产品经理实习，想求IBD行研咨询一级市场等等实习。蹲Java后端开发方向，我这边有详细文档介绍了实习经历上每一条产出的意思以及对应的面试可能会被问到的问题，后续面试过程中遇到的问题也会不断补充进去",
+    "cleaned_message": "有大厂中台产品经理实习和详细产出/面试文档；寻找 IBD、行研、咨询、一级市场或 Java 后端相关经历。",
+    "message_type": "经验交换",
+    "experience": "大厂中台产品经理实习",
+    "supply": "中台产品经历；产出说明；面试问题文档",
+    "demand": "IBD；行研；咨询；一级市场；Java后端开发",
+    "role_tags": [
+      "中台产品",
+      "产品经理",
+      "IBD",
+      "行研",
+      "咨询",
+      "Java后端"
+    ],
+    "domain_tags": [
+      "大厂",
+      "一级市场"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "需复核",
+    "review_note": "Java 后端段落在截图中重复出现两次；与产品/金融诉求是否属于同一人需确认",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 2,
+    "identity_confidence": "中",
+    "nickname": "哥一伦比亚"
+  },
+  {
+    "time_label": "星期二18:13",
+    "source_y": 7103,
+    "raw_ocr": "我在soul做ai功能相关的pm。我想蹲蹲电商的项目",
+    "cleaned_message": "在 Soul 做 AI 功能相关产品经理，希望了解电商项目。",
+    "message_type": "经验交换",
+    "experience": "Soul AI 功能产品经理",
+    "supply": "AI 功能产品；社交产品经验",
+    "demand": "电商项目经历",
+    "role_tags": [
+      "AI产品",
+      "产品经理"
+    ],
+    "domain_tags": [
+      "Soul",
+      "AI",
+      "社交",
+      "电商"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "高",
+    "review_status": "需复核",
+    "review_note": "右侧消息未显示昵称，暂以截图账号标记",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "低",
+    "nickname": "截图账号（昵称未显示）"
+  },
+  {
+    "time_label": "星期二18:13后",
+    "source_y": 7708,
+    "raw_ocr": "蹲蹲数分岗~ 本人一段中大厂数分实习",
+    "cleaned_message": "有一段中大厂数据分析实习，寻找数据分析岗位交流。",
+    "message_type": "经验交换",
+    "experience": "中大厂数据分析实习",
+    "supply": "数据分析实习经验",
+    "demand": "数据分析岗位",
+    "role_tags": [
+      "数据分析"
+    ],
+    "domain_tags": [
+      "中大厂",
+      "实习"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "亦行"
+  },
+  {
+    "time_label": "星期二18:13后/昨天15:41",
+    "source_y": 9177,
+    "raw_ocr": "这里两段品牌方电商。快消品牌方电商想换平台方",
+    "cleaned_message": "有两段品牌方电商经历，当前在快消品牌方电商，希望交换平台方电商经验。",
+    "message_type": "经验交换",
+    "experience": "两段品牌方电商；快消品牌方电商",
+    "supply": "品牌方电商；快消电商",
+    "demand": "平台方电商",
+    "role_tags": [
+      "电商运营"
+    ],
+    "domain_tags": [
+      "品牌方",
+      "平台方",
+      "快消"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "同一用户在截图前后两次表达相同供需，已合并去重",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 2,
+    "identity_confidence": "高",
+    "nickname": "老熊米线（耐面王版）"
+  },
+  {
+    "time_label": "星期二18:13后",
+    "source_y": 10133,
+    "raw_ocr": "有没有朋友可以交流一下erp实施",
+    "cleaned_message": "寻找 ERP 实施相关经历交流。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "ERP 实施经验",
+    "role_tags": [
+      "ERP实施"
+    ],
+    "domain_tags": [
+      "企业软件"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "晨瑜"
+  },
+  {
+    "time_label": "星期二18:19",
+    "source_y": 11896,
+    "raw_ocr": "有没有大佬可以交流一下ToB销售。岗位To B销售",
+    "cleaned_message": "寻找 ToB 销售岗位经历交流。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "ToB 销售岗位经历",
+    "role_tags": [
+      "ToB销售"
+    ],
+    "domain_tags": [
+      "ToB"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "成都泊程露营帐篷租赁叮叮"
+  },
+  {
+    "time_label": "星期二18:19后",
+    "source_y": 13295,
+    "raw_ocr": "蹲市场营销类岗位，我在整合营销岗做了一小段时间",
+    "cleaned_message": "有短期整合营销经历，寻找市场营销岗位。",
+    "message_type": "经验交换",
+    "experience": "整合营销短期经历",
+    "supply": "整合营销经验",
+    "demand": "市场营销岗位",
+    "role_tags": [
+      "整合营销",
+      "市场营销"
+    ],
+    "domain_tags": [
+      "营销"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "大户咪咪咪咪"
+  },
+  {
+    "time_label": "星期二18:25",
+    "source_y": 14242,
+    "raw_ocr": "有没有友友交流下gtm",
+    "cleaned_message": "寻找 GTM 相关经历交流。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "GTM 经验",
+    "role_tags": [
+      "GTM"
+    ],
+    "domain_tags": [
+      "市场进入"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "Karina果子"
+  },
+  {
+    "time_label": "星期二18:25后",
+    "source_y": 14624,
+    "raw_ocr": "我有全流程的海外kol运营经验。两段海外kol经历（全流程），求海外电商相关经验，或者整合营销也OK",
+    "cleaned_message": "有两段全流程海外 KOL 运营经历，寻找海外电商或整合营销经验。",
+    "message_type": "经验交换",
+    "experience": "两段海外 KOL 全流程运营",
+    "supply": "海外 KOL 运营全流程",
+    "demand": "海外电商；整合营销",
+    "role_tags": [
+      "KOL运营",
+      "海外运营",
+      "整合营销"
+    ],
+    "domain_tags": [
+      "海外",
+      "电商",
+      "KOL"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "岁月静好"
+  },
+  {
+    "time_label": "星期二18:35",
+    "source_y": 16217,
+    "raw_ocr": "求ai agent经历 我有车企数分/web3运营/ai运营经历",
+    "cleaned_message": "有车企数据分析、Web3 运营、AI 运营经历，寻找 AI Agent 经历。",
+    "message_type": "经验交换",
+    "experience": "车企数据分析；Web3运营；AI运营",
+    "supply": "数据分析；Web3运营；AI运营",
+    "demand": "AI Agent 经历",
+    "role_tags": [
+      "数据分析",
+      "运营",
+      "Agent"
+    ],
+    "domain_tags": [
+      "车企",
+      "Web3",
+      "AI"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "那不是悬崖"
+  },
+  {
+    "time_label": "星期二18:35",
+    "source_y": 16668,
+    "raw_ocr": "求AI agent相关",
+    "cleaned_message": "寻找 AI Agent 相关经历。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "AI Agent 相关经历",
+    "role_tags": [
+      "Agent"
+    ],
+    "domain_tags": [
+      "AI"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "bbbb"
+  },
+  {
+    "time_label": "星期二18:35",
+    "source_y": 16922,
+    "raw_ocr": "2段MKT经历（分别偏前后端），蹲电商/商业化/行业运营/整合营销",
+    "cleaned_message": "有两段分别偏前端和后端的 MKT 经历，寻找电商、商业化、行业运营或整合营销。",
+    "message_type": "经验交换",
+    "experience": "两段 MKT 经历（前端/后端）",
+    "supply": "市场营销前后链路",
+    "demand": "电商；商业化；行业运营；整合营销",
+    "role_tags": [
+      "市场营销",
+      "商业化",
+      "行业运营",
+      "整合营销"
+    ],
+    "domain_tags": [
+      "电商"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "椰椰（学习版）"
+  },
+  {
+    "time_label": "星期二19:01",
+    "source_y": 17544,
+    "raw_ocr": "求TO B云计算AI售前相关经历",
+    "cleaned_message": "寻找 ToB 云计算 AI 售前相关经历。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "ToB 云计算 AI 售前经历",
+    "role_tags": [
+      "AI售前",
+      "ToB销售"
+    ],
+    "domain_tags": [
+      "云计算",
+      "AI",
+      "ToB"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "是小川呀"
+  },
+  {
+    "time_label": "星期二19:01",
+    "source_y": 17931,
+    "raw_ocr": "我有一段tob的车辆管理，有技术开发，prd文档等，AI通过Tool Calling查询真实业务数据后再生成回答",
+    "cleaned_message": "有 ToB 车辆管理项目，包含技术开发、PRD，以及通过 Tool Calling 查询真实业务数据后生成回答的 AI 能力。",
+    "message_type": "经验供给",
+    "experience": "ToB车辆管理 AI 项目",
+    "supply": "技术开发；PRD；Tool Calling；真实业务数据查询",
+    "demand": "",
+    "role_tags": [
+      "AI产品",
+      "技术开发",
+      "产品经理"
+    ],
+    "domain_tags": [
+      "ToB",
+      "车辆管理",
+      "Tool Calling"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "中",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "SAX"
+  },
+  {
+    "time_label": "星期二19:01",
+    "source_y": 18516,
+    "raw_ocr": "有没有agent实习经验分享的",
+    "cleaned_message": "寻找 Agent 实习经验分享。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "Agent 实习经验",
+    "role_tags": [
+      "Agent"
+    ],
+    "domain_tags": [
+      "AI",
+      "实习"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "赵明月cherry"
+  },
+  {
+    "time_label": "星期二19:01后",
+    "source_y": 18895,
+    "raw_ocr": "前端加agent实习tob完整的agent项目。海外广告投放经历，蹲市场营销、商业化经历",
+    "cleaned_message": "涉及前端、Agent 实习和 ToB 完整 Agent 项目，并有海外广告投放经历；寻找市场营销或商业化经历。",
+    "message_type": "经验交换",
+    "experience": "前端；Agent实习；ToB Agent项目；海外广告投放",
+    "supply": "前端开发；Agent项目；海外投放",
+    "demand": "市场营销；商业化经历",
+    "role_tags": [
+      "前端开发",
+      "Agent",
+      "广告投放",
+      "市场营销",
+      "商业化"
+    ],
+    "domain_tags": [
+      "ToB",
+      "海外",
+      "AI"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "需复核",
+    "review_note": "两段连续发言跨度较大，需确认均属于同一用户",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "中",
+    "nickname": "想去鹅厂看企鹅"
+  },
+  {
+    "time_label": "星期二19:08",
+    "source_y": 19887,
+    "raw_ocr": "可以蹲蹲电商实习经历吗？国内和海外都行，可有偿，本人之前是设计院的实习，可能帮助不大，想转行",
+    "cleaned_message": "有设计院实习经历，计划转行，愿意付费寻找国内或海外电商实习经历。",
+    "message_type": "有偿求助",
+    "experience": "设计院实习",
+    "supply": "设计相关经历",
+    "demand": "国内/海外电商实习",
+    "role_tags": [
+      "设计",
+      "电商运营"
+    ],
+    "domain_tags": [
+      "电商",
+      "转行",
+      "有偿"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "致富基本靠强"
+  },
+  {
+    "time_label": "星期二19:08后",
+    "source_y": 20473,
+    "raw_ocr": "大厂电商运营，已整理好实习经历和产出，希望有电商经历的小伙伴可以交流or互换。也蹲蹲商业化的小伙伴",
+    "cleaned_message": "有大厂电商运营经历和整理好的实习产出，寻找电商或商业化方向交流。",
+    "message_type": "经验交换",
+    "experience": "大厂电商运营",
+    "supply": "电商运营实习经历；项目产出文档",
+    "demand": "电商经历；商业化经历",
+    "role_tags": [
+      "电商运营",
+      "商业化"
+    ],
+    "domain_tags": [
+      "大厂",
+      "电商"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "在在在吃"
+  },
+  {
+    "time_label": "星期二19:18",
+    "source_y": 21646,
+    "raw_ocr": "蹲toB ai产品。可换制造业toB ai产品",
+    "cleaned_message": "有制造业 ToB AI 产品经历，可交换并寻找 ToB AI 产品经验。",
+    "message_type": "经验交换",
+    "experience": "制造业 ToB AI 产品",
+    "supply": "制造业 ToB AI 产品经验",
+    "demand": "ToB AI 产品经历",
+    "role_tags": [
+      "AI产品",
+      "ToB产品"
+    ],
+    "domain_tags": [
+      "制造业",
+      "ToB",
+      "AI"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "Gardenia_rc"
+  },
+  {
+    "time_label": "星期二19:24",
+    "source_y": 22499,
+    "raw_ocr": "蹲个ai方向的实习",
+    "cleaned_message": "寻找 AI 方向实习经历。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "AI方向实习",
+    "role_tags": [
+      "AI"
+    ],
+    "domain_tags": [
+      "实习"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "香菜大王哇咔咔"
+  },
+  {
+    "time_label": "星期二19:33",
+    "source_y": 23720,
+    "raw_ocr": "AI/互联网行业 用户运营，蹲蹲律所/大厂法务",
+    "cleaned_message": "有 AI/互联网行业用户运营经历，寻找律所或大厂法务经验。",
+    "message_type": "经验交换",
+    "experience": "AI/互联网用户运营",
+    "supply": "用户运营经验",
+    "demand": "律所法务；大厂法务",
+    "role_tags": [
+      "用户运营",
+      "法务"
+    ],
+    "domain_tags": [
+      "AI",
+      "互联网",
+      "律所",
+      "大厂"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "昵称与其他 momo 类昵称相似，但供需明显不同，未合并",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "中",
+    "nickname": "mmo"
+  },
+  {
+    "time_label": "星期二19:33",
+    "source_y": 24152,
+    "raw_ocr": "有一段top咨询数字转型项目，一段电商kol（全流程）。蹲蹲大中厂商分/数分，agent岗",
+    "cleaned_message": "有 Top 咨询数字化转型项目和电商 KOL 全流程经历，寻找大中厂商业分析、数据分析或 Agent 岗。",
+    "message_type": "经验交换",
+    "experience": "Top咨询数字化转型；电商KOL全流程",
+    "supply": "数字化转型咨询；KOL运营",
+    "demand": "商业分析；数据分析；Agent岗位",
+    "role_tags": [
+      "咨询",
+      "商业分析",
+      "数据分析",
+      "Agent",
+      "KOL运营"
+    ],
+    "domain_tags": [
+      "数字化转型",
+      "电商",
+      "大中厂"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "柠檬鸡翅"
+  },
+  {
+    "time_label": "星期二19:41",
+    "source_y": 24774,
+    "raw_ocr": "待过用友的erp实施可以交流。实习比较杂，做过作业帮广告投放，品牌方电商运营，八大审计和出版社编辑。日常有整理实习文档，想交流运营和产品相关或者其他感兴趣的岗位",
+    "cleaned_message": "经历包括用友 ERP 实施、作业帮广告投放、品牌方电商运营、八大审计和出版社编辑；有整理好的实习文档，希望交流运营、产品或其他岗位。",
+    "message_type": "经验交换",
+    "experience": "用友ERP实施；作业帮广告投放；品牌方电商运营；八大审计；出版社编辑",
+    "supply": "ERP实施；广告投放；电商运营；审计；编辑；实习文档",
+    "demand": "运营；产品及其他感兴趣岗位",
+    "role_tags": [
+      "ERP实施",
+      "广告投放",
+      "电商运营",
+      "审计",
+      "编辑",
+      "产品经理"
+    ],
+    "domain_tags": [
+      "用友",
+      "作业帮",
+      "品牌方",
+      "八大",
+      "出版"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "昵称 OCR 两次略有差异，按较清晰形式统一",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "落槑"
+  },
+  {
+    "time_label": "星期二19:41起/昨天12:14",
+    "source_y": 25097,
+    "raw_ocr": "一段世界top游戏外设厂（外企）kol/品牌推广，一段K12产品的mkt。多段快消美妆mkt，一段4A广告公司，一段电竞外设大厂的kol品牌推广。蹲蹲4A广告/大厂产品运营/商业化相关实习",
+    "cleaned_message": "有快消美妆 MKT、4A 广告、世界 Top 电竞/游戏外设厂 KOL 品牌推广和 K12 产品营销经历；寻找 4A、大厂产品运营或商业化实习。",
+    "message_type": "经验交换",
+    "experience": "快消美妆MKT；4A广告；电竞/游戏外设KOL品牌推广；K12产品MKT",
+    "supply": "品牌推广；KOL运营；市场营销；4A广告",
+    "demand": "4A广告；大厂产品运营；商业化实习",
+    "role_tags": [
+      "市场营销",
+      "KOL运营",
+      "品牌推广",
+      "产品运营",
+      "商业化"
+    ],
+    "domain_tags": [
+      "快消",
+      "美妆",
+      "4A",
+      "电竞",
+      "游戏外设",
+      "K12",
+      "外企"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "伯恩山大王"
+  },
+  {
+    "time_label": "星期二19:41后",
+    "source_y": 26352,
+    "raw_ocr": "一段中厂内容运营一段中厂新媒体运营两段八大审计，蹲产品运营/产品/商业化实习",
+    "cleaned_message": "有中厂内容运营、中厂新媒体运营和两段八大审计经历；寻找产品运营、产品或商业化实习。",
+    "message_type": "经验交换",
+    "experience": "中厂内容运营；中厂新媒体运营；两段八大审计",
+    "supply": "内容运营；新媒体运营；审计",
+    "demand": "产品运营；产品；商业化实习",
+    "role_tags": [
+      "内容运营",
+      "新媒体运营",
+      "审计",
+      "产品运营",
+      "商业化"
+    ],
+    "domain_tags": [
+      "中厂",
+      "八大"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "七七打怪中"
+  },
+  {
+    "time_label": "星期二19:41后",
+    "source_y": 26742,
+    "raw_ocr": "一段跨境电商选品（前期）加运营（后期）。平台美客多。蹲蹲外企产品或其他岗。",
+    "cleaned_message": "有美客多跨境电商选品与后期运营经历，寻找外企产品或其他岗位。",
+    "message_type": "经验交换",
+    "experience": "美客多跨境电商选品及运营",
+    "supply": "跨境电商选品；平台运营",
+    "demand": "外企产品或其他岗位",
+    "role_tags": [
+      "选品",
+      "电商运营",
+      "产品经理"
+    ],
+    "domain_tags": [
+      "跨境电商",
+      "美客多",
+      "外企"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "七天半"
+  },
+  {
+    "time_label": "星期二19:41后",
+    "source_y": 27257,
+    "raw_ocr": "一段中厂toB的ai产品，蹲互联网产品/产品/产品运营",
+    "cleaned_message": "有一段中厂 ToB AI 产品经历，寻找互联网产品、产品经理或产品运营经历。",
+    "message_type": "经验交换",
+    "experience": "中厂ToB AI产品",
+    "supply": "ToB AI产品经验",
+    "demand": "互联网产品；产品经理；产品运营",
+    "role_tags": [
+      "AI产品",
+      "ToB产品",
+      "产品经理",
+      "产品运营"
+    ],
+    "domain_tags": [
+      "中厂",
+      "ToB",
+      "AI",
+      "互联网"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "脑子用在小猫上"
+  },
+  {
+    "time_label": "星期二19:41后",
+    "source_y": 27708,
+    "raw_ocr": "嵌入式软件实习的有可以共享的吗",
+    "cleaned_message": "寻找嵌入式软件实习经历分享。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "嵌入式软件实习",
+    "role_tags": [
+      "嵌入式软件"
+    ],
+    "domain_tags": [
+      "实习"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "RUI"
+  },
+  {
+    "time_label": "星期二19:41后",
+    "source_y": 28136,
+    "raw_ocr": "求电商实习经历分享，可有偿。有用户运营、营销投放和kol运营",
+    "cleaned_message": "有用户运营、营销投放和 KOL 运营经历，愿意付费寻找电商实习经验。",
+    "message_type": "有偿交换",
+    "experience": "用户运营；营销投放；KOL运营",
+    "supply": "用户运营；营销投放；KOL运营",
+    "demand": "电商实习经历",
+    "role_tags": [
+      "用户运营",
+      "广告投放",
+      "KOL运营",
+      "电商运营"
+    ],
+    "domain_tags": [
+      "电商",
+      "有偿"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "q9q8k"
+  },
+  {
+    "time_label": "星期二19:57",
+    "source_y": 28694,
+    "raw_ocr": "求电商实习经历分享，可有偿",
+    "cleaned_message": "愿意付费寻找电商实习经历分享。",
+    "message_type": "有偿求助",
+    "experience": "",
+    "supply": "",
+    "demand": "电商实习经历",
+    "role_tags": [
+      "电商运营"
+    ],
+    "domain_tags": [
+      "电商",
+      "有偿"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "昵称与其他 momo 类昵称相似，未按昵称合并",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "中",
+    "nickname": "m0m0"
+  },
+  {
+    "time_label": "星期二19:57后",
+    "source_y": 29065,
+    "raw_ocr": "蹲产品运营/增长运营/用户运营经历分享 有偿",
+    "cleaned_message": "愿意付费寻找产品运营、增长运营或用户运营经历。",
+    "message_type": "有偿求助",
+    "experience": "",
+    "supply": "",
+    "demand": "产品运营；增长运营；用户运营",
+    "role_tags": [
+      "产品运营",
+      "增长运营",
+      "用户运营"
+    ],
+    "domain_tags": [
+      "有偿"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "圣水洞双吉宣传大使"
+  },
+  {
+    "time_label": "星期二20:18",
+    "source_y": 30161,
+    "raw_ocr": "有大厂商业化搜广推实习（技术/产品），对ai增长/agent相关感兴趣，欢迎分享交流",
+    "cleaned_message": "有大厂商业化搜广推实习，覆盖技术/产品，寻找 AI 增长或 Agent 相关交流。",
+    "message_type": "经验交换",
+    "experience": "大厂商业化搜广推实习（技术/产品）",
+    "supply": "搜广推；商业化；技术/产品经验",
+    "demand": "AI增长；Agent",
+    "role_tags": [
+      "搜广推",
+      "商业化",
+      "AI增长",
+      "Agent"
+    ],
+    "domain_tags": [
+      "大厂",
+      "AI"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "张九龄"
+  },
+  {
+    "time_label": "星期二20:18后",
+    "source_y": 30659,
+    "raw_ocr": "求电商实习，运营经历分享，可有偿",
+    "cleaned_message": "愿意付费寻找电商实习和运营经历。",
+    "message_type": "有偿求助",
+    "experience": "",
+    "supply": "",
+    "demand": "电商实习；运营经历",
+    "role_tags": [
+      "电商运营",
+      "运营"
+    ],
+    "domain_tags": [
+      "电商",
+      "有偿"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "雨雨雨雨"
+  },
+  {
+    "time_label": "星期二20:36",
+    "source_y": 31215,
+    "raw_ocr": "蹲蹲商业化实习经历 有国内和跨境电商经历",
+    "cleaned_message": "有国内和跨境电商经历，寻找商业化实习经验。",
+    "message_type": "经验交换",
+    "experience": "国内电商；跨境电商",
+    "supply": "国内/跨境电商经验",
+    "demand": "商业化实习",
+    "role_tags": [
+      "电商运营",
+      "商业化"
+    ],
+    "domain_tags": [
+      "国内电商",
+      "跨境电商"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "hxxxx"
+  },
+  {
+    "time_label": "星期二20:45",
+    "source_y": 31759,
+    "raw_ocr": "蹲蹲agent",
+    "cleaned_message": "寻找 Agent 相关经历。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "Agent 相关经历",
+    "role_tags": [
+      "Agent"
+    ],
+    "domain_tags": [
+      "AI"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "低",
+    "review_status": "需复核",
+    "review_note": "昵称为特殊字符，容易与无效消息混淆",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "低",
+    "nickname": "%"
+  },
+  {
+    "time_label": "星期二21:54",
+    "source_y": 32889,
+    "raw_ocr": "蹲蹲tob销售的经历 欢迎uu来",
+    "cleaned_message": "寻找 ToB 销售经历交流。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "ToB销售经历",
+    "role_tags": [
+      "ToB销售"
+    ],
+    "domain_tags": [
+      "ToB"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "群内存在多个 momo，按供需方向拆分，需补充唯一身份标识",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "低",
+    "nickname": "momo（ToB销售方向）"
+  },
+  {
+    "time_label": "星期二21:54",
+    "source_y": 33134,
+    "raw_ocr": "我目前在AI公司tob销售相关岗位实习@momo",
+    "cleaned_message": "目前在 AI 公司做 ToB 销售相关实习，可与寻找 ToB 销售经历的人交流。",
+    "message_type": "经验供给",
+    "experience": "AI公司ToB销售实习",
+    "supply": "AI ToB销售经验",
+    "demand": "ToB销售同行交流",
+    "role_tags": [
+      "ToB销售"
+    ],
+    "domain_tags": [
+      "AI",
+      "ToB",
+      "实习"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "汉堡大王"
+  },
+  {
+    "time_label": "星期二22:00",
+    "source_y": 33794,
+    "raw_ocr": "有bat其中一个的agent项目与文档，蹲agent实习",
+    "cleaned_message": "有 BAT 某厂 Agent 项目及文档，寻找 Agent 实习经历。",
+    "message_type": "经验交换",
+    "experience": "BAT某厂Agent项目",
+    "supply": "Agent项目；项目文档",
+    "demand": "Agent实习",
+    "role_tags": [
+      "Agent"
+    ],
+    "domain_tags": [
+      "BAT",
+      "AI",
+      "项目文档"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "群内存在多个 momo；内容与第一群 momo 相似但不完全相同，未自动合并",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "低",
+    "nickname": "momo（Agent项目方向）"
+  },
+  {
+    "time_label": "星期二22:13",
+    "source_y": 34332,
+    "raw_ocr": "大厂的跨境电商实习主要是品类运营方向 蹲蹲同样跨境电商方向的",
+    "cleaned_message": "有大厂跨境电商品类运营实习，寻找同方向交流。",
+    "message_type": "经验交换",
+    "experience": "大厂跨境电商品类运营实习",
+    "supply": "跨境电商品类运营",
+    "demand": "跨境电商同方向经历",
+    "role_tags": [
+      "品类运营",
+      "电商运营"
+    ],
+    "domain_tags": [
+      "大厂",
+      "跨境电商"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "可乐兑雪碧"
+  },
+  {
+    "time_label": "昨天00:01",
+    "source_y": 34961,
+    "raw_ocr": "蹲蹲天坑类研发实习",
+    "cleaned_message": "寻找传统工科研发类实习经历。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "传统工科/研发类实习",
+    "role_tags": [
+      "研发"
+    ],
+    "domain_tags": [
+      "工科",
+      "实习"
+    ],
+    "city": "",
+    "urgency": "中",
+    "profile_completeness": "低",
+    "review_status": "需复核",
+    "review_note": "“天坑类”是用户原始口语，需补充具体专业和研发方向",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "Ppppp"
+  },
+  {
+    "time_label": "昨天00:42",
+    "source_y": 35317,
+    "raw_ocr": "求agent实习分享 我有两段大厂实习",
+    "cleaned_message": "有两段大厂实习经历，寻找 Agent 实习分享。",
+    "message_type": "经验交换",
+    "experience": "两段大厂实习",
+    "supply": "大厂实习经验",
+    "demand": "Agent实习经历",
+    "role_tags": [
+      "Agent"
+    ],
+    "domain_tags": [
+      "大厂",
+      "AI",
+      "实习"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "中",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "心情好极了"
+  },
+  {
+    "time_label": "昨天11:37",
+    "source_y": 35858,
+    "raw_ocr": "蹲蹲薪酬绩效或者SSC方面的实习",
+    "cleaned_message": "寻找薪酬绩效或 SSC 相关实习经历。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "薪酬绩效；SSC实习",
+    "role_tags": [
+      "薪酬绩效",
+      "SSC",
+      "HR"
+    ],
+    "domain_tags": [
+      "实习"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "群内存在多个 momo，按 HR 方向拆分",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "低",
+    "nickname": "momo（HR方向）"
+  },
+  {
+    "time_label": "昨天11:43",
+    "source_y": 36281,
+    "raw_ocr": "一段大厂商业化运营实习＋一段大厂行运实习 蹲一个产运和电商实习",
+    "cleaned_message": "有大厂商业化运营和另一段大厂运营经历，寻找产品运营和电商实习。",
+    "message_type": "经验交换",
+    "experience": "大厂商业化运营实习；另一段大厂运营实习",
+    "supply": "商业化运营；大厂运营",
+    "demand": "产品运营；电商实习",
+    "role_tags": [
+      "商业化运营",
+      "产品运营",
+      "电商运营"
+    ],
+    "domain_tags": [
+      "大厂",
+      "实习"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "需复核",
+    "review_note": "原文“行运”OCR 不清，暂按大厂运营处理",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "Bae"
+  },
+  {
+    "time_label": "昨天12:14",
+    "source_y": 36780,
+    "raw_ocr": "蹲ai产品 或者agent产品",
+    "cleaned_message": "寻找 AI 产品或 Agent 产品经历。",
+    "message_type": "单向求助",
+    "experience": "",
+    "supply": "",
+    "demand": "AI产品；Agent产品",
+    "role_tags": [
+      "AI产品",
+      "Agent产品"
+    ],
+    "domain_tags": [
+      "AI",
+      "Agent"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "低",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "Ryan"
+  },
+  {
+    "time_label": "昨天13:54",
+    "source_y": 38630,
+    "raw_ocr": "电商策略运营/快消ka/4a广告公司秋招中欢迎交流想了解电商和出海相关",
+    "cleaned_message": "经历涉及电商策略运营、快消 KA 和 4A 广告，目前秋招中，希望交流并了解电商与出海。",
+    "message_type": "经验交换",
+    "experience": "电商策略运营；快消KA；4A广告",
+    "supply": "电商策略运营；快消KA；4A广告经验",
+    "demand": "电商；出海相关经历",
+    "role_tags": [
+      "策略运营",
+      "KA",
+      "广告",
+      "电商运营"
+    ],
+    "domain_tags": [
+      "快消",
+      "4A",
+      "电商",
+      "出海",
+      "秋招"
+    ],
+    "city": "",
+    "urgency": "高",
+    "profile_completeness": "高",
+    "review_status": "已初校",
+    "review_note": "",
+    "source_groups": [
+      "群聊2"
+    ],
+    "duplicate_count": 1,
+    "identity_confidence": "高",
+    "nickname": "Nebula"
+  }
+]
