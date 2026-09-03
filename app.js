@@ -1,169 +1,65 @@
 const loginView = document.querySelector('#loginView');
+const profileView = document.querySelector('#profileView');
+const archiveView = document.querySelector('#archiveView');
 const resultsView = document.querySelector('#resultsView');
 const loginForm = document.querySelector('#loginForm');
-const needText = document.querySelector('#needText');
-const personText = document.querySelector('#personText');
-const contentConsent = document.querySelector('#contentConsent');
+const profileForm = document.querySelector('#profileForm');
+const archiveForm = document.querySelector('#archiveForm');
+const emailInput = document.querySelector('#email');
+const otpInput = document.querySelector('#otpCode');
+const inviteInput = document.querySelector('#inviteCode');
 const formError = document.querySelector('#formError');
+const profileError = document.querySelector('#profileError');
+const archiveError = document.querySelector('#archiveError');
 const avatarButton = document.querySelector('#avatarButton');
+const pinpinButton = document.querySelector('#pinpinButton');
 const infoSheet = document.querySelector('#infoSheet');
 const sheetBackdrop = document.querySelector('#sheetBackdrop');
 const sheetContent = document.querySelector('#sheetContent');
 const toast = document.querySelector('#toast');
-const demoUnlock = document.querySelector('#demoUnlock');
 const matchesPanel = document.querySelector('#matchesPanel');
 const explorePanel = document.querySelector('#explorePanel');
 const matchesTab = document.querySelector('#matchesTab');
 const exploreTab = document.querySelector('#exploreTab');
 const memberSearch = document.querySelector('#memberSearch');
-const memberRows = [...document.querySelectorAll('.member-row')];
-const helpIntentButton = document.querySelector('#helpIntentButton');
-const superIntentButton = document.querySelector('#superIntentButton');
-const dashboardMatchEmpty = document.querySelector('#dashboardMatchEmpty');
-const dashboardMatchLoading = document.querySelector('#dashboardMatchLoading');
-const dashboardMatchReady = document.querySelector('#dashboardMatchReady');
-const loadingMessage = document.querySelector('#loadingMessage');
-const matchProgressBar = document.querySelector('#matchProgressBar');
-const matchPercent = document.querySelector('#matchPercent');
-const isDemoMode = new URLSearchParams(window.location.search).get('demo') === '1';
-const firstMatchCard = document.querySelector('.match-card[data-index="0"]');
-const listRegisterGate = document.querySelector('#listRegisterGate');
-const seekerCount = document.querySelector('#seekerCount');
-const exploreAllowance = document.querySelector('#exploreAllowance');
-const matchAllowance = document.querySelector('#matchAllowance');
-const exploreQuota = document.querySelector('#exploreQuota');
-const rushCardButton = document.querySelector('#rushCardButton');
-const matchRushButton = document.querySelector('#matchRushButton');
-const matchEntitlementNote = document.querySelector('#matchEntitlementNote');
-const advancedFilterButton = document.querySelector('#advancedFilterButton');
-const rushMatchCards = [...document.querySelectorAll('.rush-match')];
+const matchDeck = document.querySelector('#matchDeck');
+const memberRowsEl = document.querySelector('#memberRows');
+const referralCodeEl = document.querySelector('#referralCode');
+const inviteStrip = document.querySelector('#inviteStrip');
+const quotaBar = document.querySelector('#quotaBar');
+const filterCity = document.querySelector('#filterCity');
+const filterGrade = document.querySelector('#filterGrade');
+const filterMajor = document.querySelector('#filterMajor');
+const proFilters = document.querySelector('#proFilters');
+
+const TAG_OPTIONS = ['AI', '产品', '开发', '增长', '求职交流', 'ToB', 'Agent', 'VLM', '推荐', '安全'];
+const PINPIN_REASONS = {
+  details_quota: '今天的详情已经看完。开通拼拼卡，每天可以打开 100 位同学的档案。',
+  more_matches: '今天的第一位匹配已经给你。开通拼拼卡，每天直接查看 5 位，不必再等邀请。',
+  boost: '无经验、求指导时，加急曝光能让你在 24 小时内被更多人看见。',
+  filter: '城市、年级、专业的组合筛选是拼拼卡权益。同城加权本身对所有人免费。',
+  generic: '拼拼卡是唯一付费项。加急曝光是其中一项能力，不是另一张卡。',
+};
 
 let toastTimer;
 let sheetTrigger;
 let activeFilter = '全部';
-let activeAdvancedFilters = { city: '全部', grade: '全部', major: '全部' };
-let matchTimer;
-let liveCountTimer;
-const selectedIntakeTags = new Set();
+let me = null;
+let matches = [];
+let members = [];
+let awaitingCode = false;
+let selectedTags = [];
+let selectedLearnTags = [];
+let filterOptions = { cities: [], grades: [], majors: [] };
 
-function getNoonPeriodKey(date = new Date()) {
-  const boundary = new Date(date);
-  boundary.setHours(12, 0, 0, 0);
-  if (date < boundary) boundary.setDate(boundary.getDate() - 1);
-  return `${boundary.getFullYear()}-${String(boundary.getMonth() + 1).padStart(2, '0')}-${String(boundary.getDate()).padStart(2, '0')}`;
-}
-
-function ensureDailyState() {
-  const period = getNoonPeriodKey();
-  if (localStorage.getItem('pingo-daily-period') === period) return;
-  localStorage.setItem('pingo-daily-period', period);
-  localStorage.setItem('pingo-explore-viewed', '[]');
-  localStorage.removeItem('pingo-rush-exposure-period');
-  if (localStorage.getItem('pingo-match-period') && localStorage.getItem('pingo-match-period') !== period) {
-    localStorage.removeItem('pingo-match-ready');
-    localStorage.removeItem('pingo-email-sent');
-    localStorage.removeItem('pingo-referral-complete');
-  }
-}
-
-function hasRushCard() {
-  return localStorage.getItem('pingo-rush-card') === '1';
-}
-
-function getExploreLimit() {
-  return hasRushCard() ? 100 : 20;
-}
-
-function getViewedProfiles() {
-  return new Set(getStoredList('pingo-explore-viewed'));
-}
-
-function syncOwnProfileMetadata() {
-  ['#helperMemberCard', '#superMemberCard'].forEach((selector) => {
-    const card = document.querySelector(selector);
-    card.dataset.city = localStorage.getItem('pingo-city') || '';
-    card.dataset.grade = localStorage.getItem('pingo-grade') || '';
-    card.dataset.major = localStorage.getItem('pingo-major') || '';
-  });
-}
-
-const legalDocuments = {
-  terms: {
-    title: '用户协议',
-    body: `
-      <p class="legal-status">当前为产品原型。运营主体、联系地址和生效日期须在正式上线前补充，并由中国大陆执业律师复核。</p>
-      <h3>产品定位</h3><p>拼个实习提供同学之间的经历交流和联系撮合，不是招聘机构，也不提供录用、背调或能力认证。</p>
-      <h3>用户责任</h3><p>用户应提交真实、合法且已脱敏的内容，不得伪造简历、冒用他人经历、骚扰诈骗，或上传雇主商业秘密和未公开资料。</p>
-      <h3>公开资料</h3><p>完成注册后，你提供的昵称、经历、擅长方向和交流目标会进入“自由探索”，方便其他用户发现并联系你；平台不会在公开资料中展示学校或邮箱。</p>
-      <h3>账号与服务</h3><p>平台可对违规内容采取隐藏、限制联系或停用账号等措施。付费服务的价格、有效期和退款规则应在购买前单独明示。</p>
-    `,
-  },
-  privacy: {
-    title: '隐私政策摘要',
-    body: `
-      <p class="legal-status">运营主体待正式上线前补充。本摘要不能替代上线版完整隐私政策。</p>
-      <h3>必要信息</h3><p>邮箱用于注册、发送匹配结果和安全通知；经历、项目、标签和寻找目标用于生成匹配。未经双方同意，不向其他用户公开邮箱。</p>
-      <h3>公开范围</h3><p>注册用户的昵称、经历、擅长方向和交流目标会用于匹配并展示在“自由探索”；学校和邮箱不会公开。活动邮件为独立可选授权，可随时关闭。</p>
-      <h3>保存与删除</h3><p>正式上线前需明确各类数据的保存期限、第三方处理方、跨境情况和联系方式。用户应能撤回可选授权，并申请注销账号及删除数据。</p>
-    `,
-  },
-  community: {
-    title: '内容与社区规范',
-    body: `
-      <h3>鼓励</h3><p>交流岗位工作流、公开项目方法、求职准备和个人复盘；对不确定的信息清楚注明。</p>
-      <h3>禁止</h3><p>伪造或买卖实习经历、代写简历、冒充他人；发布客户名单、内部数据、源代码、合同、账号凭证等保密信息；骚扰、歧视、诈骗或绕过平台安全机制。</p>
-      <h3>处置</h3><p>用户可以举报或拉黑。平台应保留必要证据进行核查，并提供申诉渠道。</p>
-    `,
-  },
-  algorithm: {
-    title: 'AI 匹配说明',
-    body: `
-      <h3>主要依据</h3><p>匹配会参考项目方向、岗位兴趣、经验互补、交流目标和用户选择的标签，并生成便于理解的匹配理由。</p>
-      <h3>它不代表什么</h3><p>匹配度只表示资料之间的相似与互补程度，不代表能力排名、经历真实性、背调结果、录用概率或平台推荐。</p>
-      <h3>用户控制</h3><p>用户可以修改资料、举报异常结果或注销账号。正式版应提供人工反馈入口，并记录模型与规则版本。</p>
-    `,
-  },
-  paid: {
-    title: '加急卡规则',
-    body: `
-      <p class="legal-status">演示版不收费。正式收费前必须展示实际价格、有效期、权益范围、退款条件和客服渠道。</p>
-      <h3>当前权益</h3><p>内测终身版包含每天查看 100 位成员详情、每天直接查看 5 位匹配对象，以及每天 1 次持续 24 小时的加急曝光。</p>
-      <h3>权益边界</h3><p>加急曝光会以“加急卡”标识清楚展示，只增加曝光机会，不改变 AI 匹配分数，也不保证收到回复、获得面试、实习或 offer。</p>
-    `,
-  },
-};
-
-function getStoredList(key) {
-  try {
-    return JSON.parse(localStorage.getItem(key) || '[]');
-  } catch {
-    return [];
-  }
-}
-
-function openLegalDocument(kind) {
-  const legalDocument = legalDocuments[kind];
-  if (!legalDocument) return;
-  openSheet(`
-    <h2 id="sheetTitle">${legalDocument.title}</h2>
-    <div class="legal-document">${legalDocument.body}</div>
-    <button class="sheet-secondary" data-open-legal-center>返回法律中心</button>
-  `);
-}
-
-function openLegalCenter() {
-  openSheet(`
-    <h2 id="sheetTitle">法律与安全中心</h2>
-    <p>把规则放在关键动作旁边，也集中放在这里方便随时查看。</p>
-    <div class="legal-list">
-      <button data-legal="terms">用户协议 <span>→</span></button>
-      <button data-legal="privacy">隐私政策摘要 <span>→</span></button>
-      <button data-legal="community">内容与社区规范 <span>→</span></button>
-      <button data-legal="algorithm">AI 匹配说明 <span>→</span></button>
-      <button data-legal="paid">加急卡规则 <span>→</span></button>
-    </div>
-    <p class="legal-status">运营主体待正式上线前补充。上线真实数据和收费功能前，应完成律师审核、隐私影响评估与数据授权留痕。</p>
-  `);
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[char]));
 }
 
 function showToast(message) {
@@ -171,16 +67,6 @@ function showToast(message) {
   toast.classList.add('is-visible');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove('is-visible'), 2300);
-}
-
-function escapeHtml(value = '') {
-  return value.replace(/[&<>'"]/g, (character) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    "'": '&#39;',
-    '"': '&quot;',
-  })[character]);
 }
 
 function openSheet(content) {
@@ -199,206 +85,214 @@ function closeSheet() {
   if (sheetTrigger instanceof HTMLElement) sheetTrigger.focus();
 }
 
-function updateEntitlementUI() {
-  ensureDailyState();
-  const rushActive = hasRushCard();
-  const viewedCount = getViewedProfiles().size;
-  const remaining = Math.max(0, getExploreLimit() - viewedCount);
-  exploreAllowance.textContent = String(remaining);
-  matchAllowance.textContent = rushActive ? '5' : '1';
-  exploreQuota.textContent = `今日还可查看 ${remaining} 位成员详情 · 每天 12:00 刷新`;
-  rushCardButton.classList.toggle('is-active', rushActive);
-  rushCardButton.querySelector('strong').textContent = rushActive ? '加急卡已解锁' : '加急卡';
-  rushCardButton.querySelector('small').textContent = rushActive ? '终身权益生效中' : '¥9.8 内测终身版';
-  rushCardButton.querySelector('i').textContent = rushActive ? '权益详情 →' : '查看权益 →';
-  advancedFilterButton.classList.toggle('is-unlocked', rushActive);
-}
-
-function applyRushCardState() {
-  const rushActive = hasRushCard();
-  dashboardMatchReady.classList.toggle('has-rush-card', rushActive);
-  rushMatchCards.forEach((card) => card.classList.toggle('is-hidden', !rushActive));
-  if (rushActive && isRegistered() && !dashboardMatchReady.classList.contains('is-hidden')) {
-    [1, 2, 3, 4].forEach((index) => unlockCard(index, { instant: true }));
-    markProgress('email');
-    markProgress('invite');
+async function api(path, options = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Pingo-Client': '1',
+    ...(options.headers || {}),
+  };
+  const response = await fetch(path, { credentials: 'include', ...options, headers });
+  let data = {};
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
   }
-  const city = localStorage.getItem('pingo-city');
-  matchEntitlementNote.querySelector('span').textContent = rushActive
-    ? `今天已直接开放 5 位匹配${city ? `，已优先参考 ${city} 同城` : ''}`
-    : `今天已为你找到 1 位直接匹配${city ? `，已优先参考 ${city} 同城` : ''}`;
-  matchRushButton.classList.toggle('is-hidden', rushActive);
-  updateEntitlementUI();
+  if (response.status === 401) {
+    localStorage.removeItem('pingo-token');
+    throw new Error(data.detail || '请先登录');
+  }
+  if (!response.ok) {
+    const detail = Array.isArray(data.detail)
+      ? data.detail.map((item) => item.msg || item).join('；')
+      : data.detail;
+    throw new Error(detail || data.message || '请求失败，请稍后重试');
+  }
+  return data;
 }
 
-function startMockLiveBoard() {
-  let count = 4286;
-  seekerCount.textContent = count.toLocaleString('zh-CN');
-  window.clearInterval(liveCountTimer);
-  liveCountTimer = window.setInterval(() => {
-    if (Math.random() > 0.42) count += 1;
-    seekerCount.textContent = count.toLocaleString('zh-CN');
-  }, 12000);
+function clearLocalAuth() {
+  localStorage.removeItem('pingo-token');
 }
 
-function activateRushCard() {
-  localStorage.setItem('pingo-rush-card', '1');
-  closeSheet();
-  applyRushCardState();
-  filterMembers();
-  showToast('加急卡已解锁，终身权益已生效');
+function setAuth(nextToken) {
+  if (!nextToken) clearLocalAuth();
 }
 
-function openRushCardSheet(source = 'dashboard') {
-  const rushActive = hasRushCard();
+function hideAllViews() {
+  loginView.classList.add('is-hidden');
+  profileView.classList.add('is-hidden');
+  archiveView.classList.add('is-hidden');
+  resultsView.classList.add('is-hidden');
+}
+
+function showLogin() {
+  hideAllViews();
+  loginView.classList.remove('is-hidden');
+  avatarButton.classList.add('is-hidden');
+  pinpinButton.classList.add('is-hidden');
+}
+
+function showProfile() {
+  hideAllViews();
+  profileView.classList.remove('is-hidden');
+  avatarButton.classList.remove('is-hidden');
+  pinpinButton.classList.remove('is-hidden');
+  avatarButton.textContent = (me?.user?.name || me?.user?.email || 'U').charAt(0).toUpperCase();
+  fillProfileForm();
+}
+
+function showArchive() {
+  hideAllViews();
+  archiveView.classList.remove('is-hidden');
+  avatarButton.classList.remove('is-hidden');
+  pinpinButton.classList.remove('is-hidden');
+  avatarButton.textContent = (me?.user?.name || me?.user?.email || 'U').charAt(0).toUpperCase();
+  fillArchiveForm();
+}
+
+function showResults() {
+  hideAllViews();
+  resultsView.classList.remove('is-hidden');
+  avatarButton.classList.remove('is-hidden');
+  pinpinButton.classList.remove('is-hidden');
+  avatarButton.textContent = (me?.user?.name || me?.user?.email || 'U').charAt(0).toUpperCase();
+  renderQuota();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function quota() {
+  return me?.quota || {};
+}
+
+function isPro() {
+  return Boolean(me?.user?.is_pro || quota().is_pro);
+}
+
+function renderQuota() {
+  const data = quota();
+  if (!quotaBar) return;
+  const used = data.details_used ?? 0;
+  const limit = data.details_limit ?? 20;
+  const refresh = data.next_refresh_label || '每天 12:00';
+  quotaBar.innerHTML = `
+    <span>今日详情 <strong>${used}/${limit}</strong></span>
+    <span>下次刷新 <strong>${escapeHtml(refresh)}</strong></span>
+    <span>${isPro() ? '拼拼卡已开通' : `内测 ${data.pinpin_sold || 0}/${data.pinpin_cap || 500}`}</span>
+    ${isPro() ? '' : '<button class="text-button" type="button" id="quotaPinpin">开通拼拼卡</button>'}
+  `;
+  document.querySelector('#quotaPinpin')?.addEventListener('click', () => openPinpinSheet('generic'));
+  pinpinButton.textContent = isPro() ? '拼拼卡权益' : '拼拼卡';
+}
+
+function pinpinTableHtml() {
+  return `
+    <table class="pinpin-table">
+      <thead><tr><th>能力</th><th>普通用户</th><th>拼拼卡</th></tr></thead>
+      <tbody>
+        <tr><td>自由探索详情</td><td>每天 20 人</td><td>每天 100 人</td></tr>
+        <tr><td>每日新匹配</td><td>1 人</td><td>5 人</td></tr>
+        <tr><td>第 2、3 位匹配</td><td>邀请好友解锁</td><td>直接查看</td></tr>
+        <tr><td>加急曝光</td><td>无</td><td>每天 1 次，24 小时</td></tr>
+        <tr><td>筛选</td><td>基础标签</td><td>城市、年级、专业</td></tr>
+      </tbody>
+    </table>
+  `;
+}
+
+function bindPinpinBuy() {
+  document.querySelector('#simulatePinpin')?.addEventListener('click', buyPinpin);
+}
+
+async function buyPinpin() {
+  const button = document.querySelector('#simulatePinpin');
+  if (button) button.disabled = true;
+  try {
+    const data = await api('/api/pinpin/simulate', { method: 'POST' });
+    me = data;
+    matches = data.matches || matches;
+    closeSheet();
+    renderQuota();
+    renderMatches();
+    if (explorePanel && !explorePanel.classList.contains('is-hidden')) loadMembers();
+    showToast(data.quota?.already ? '拼拼卡已经开通过' : '测试权益已开通');
+  } catch (error) {
+    showToast(error.message);
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+function openPinpinSheet(reason = 'more_matches') {
+  const data = quota();
+  const open = data.pinpin_open !== false;
+  const copy = PINPIN_REASONS[reason] || PINPIN_REASONS.more_matches;
   openSheet(`
-    <h2 id="sheetTitle">${rushActive ? '加急卡已生效' : '加急卡'}</h2>
-    <p>${rushActive ? '你的内测终身权益正在生效，每天中午 12:00 自动刷新。' : '一次解锁，把更多时间留给真正值得认识的人。'}</p>
-    <div class="rush-price"><strong>¥9.8</strong><span>内测终身版</span></div>
-    <div class="rush-benefits">
-      <div><strong>100</strong><span>每天查看成员详情</span></div>
-      <div><strong>5</strong><span>每天直接匹配对象</span></div>
-      <div><strong>1 次</strong><span>每天加急曝光 24 小时</span></div>
-    </div>
-    <p class="legal-status">演示版不会扣款。正式支付接入后，购买前会展示完整权益、退款规则和运营主体。</p>
-    ${rushActive ? '<button class="primary-button" id="closeRushCard"><span>知道了</span><span class="arrow">→</span></button>' : `<button class="primary-button" id="activateRushCard"><span>${isRegistered() ? '演示解锁加急卡' : '注册后解锁加急卡'}</span><span class="arrow">→</span></button>`}
-    <button class="sheet-secondary" data-legal="paid">查看加急卡规则</button>
+    <h2 id="sheetTitle">拼拼卡 · 内测终身版</h2>
+    <p>${escapeHtml(copy)}</p>
+    ${pinpinTableHtml()}
+    <p class="pinpin-note">首批内测用户 ¥9.8，终身解锁<strong>当前</strong>拼拼卡基础权益。不包含以后可能上线的 AI 匹配、邮件增强等增值服务。</p>
+    <p class="pinpin-note">真实支付接入前不会扣款，也不会展示虚假支付成功。名额 ${data.pinpin_sold || 0}/${data.pinpin_cap || 500}。</p>
+    ${isPro() ? '<button class="primary-button" disabled><span>已开通</span></button>' : open
+      ? '<button class="primary-button" id="simulatePinpin"><span>仅供测试环境开通</span><span class="arrow">→</span></button>'
+      : '<button class="primary-button" disabled><span>真实支付接入中</span></button>'}
   `);
-  document.querySelector('#closeRushCard')?.addEventListener('click', closeSheet);
-  document.querySelector('#activateRushCard')?.addEventListener('click', () => {
-    if (!isRegistered()) {
-      closeSheet();
-      openRegistrationGate('rush');
+  bindPinpinBuy();
+}
+
+function applyUnlock(unlock) {
+  const emailDone = Boolean(unlock?.email_sent);
+  const inviteDone = Boolean(unlock?.referral_complete);
+  document.querySelector('#emailProgress').classList.toggle('is-done', emailDone || isPro());
+  document.querySelector('#emailProgressLine').classList.toggle('is-done', emailDone || isPro());
+  document.querySelector('#inviteProgress').classList.toggle('is-done', inviteDone || isPro());
+  document.querySelector('#inviteProgressLine').classList.toggle('is-done', inviteDone || isPro());
+  const strip = document.querySelector('#inviteStrip');
+  if (!strip) return;
+  if (isPro()) {
+    const data = quota();
+    strip.innerHTML = `
+      <div class="invite-visual" aria-hidden="true"><img src="assets/pingo-mascot.webp" alt=""></div>
+      <div class="invite-copy">
+        <h2>加急曝光</h2>
+        <p>${data.boost_active ? '你正在被优先看见，24 小时有效。' : '每天一次，持续 24 小时。适合「无经验，求大佬」这类需求。'}</p>
+      </div>
+      <div class="invite-action">
+        <button class="primary-button" id="boostButton" ${data.can_boost ? '' : 'disabled'}>
+          <span>${data.boost_active ? '加急曝光进行中' : data.can_boost ? '开启今天的加急曝光' : '今天已经用过'}</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </button>
+      </div>
+    `;
+    document.querySelector('#boostButton')?.addEventListener('click', activateBoost);
+    return;
+  }
+  if (inviteDone && strip.dataset.complete !== 'true') {
+    strip.dataset.complete = 'true';
+    strip.innerHTML = `
+      <div class="invite-visual" aria-hidden="true"><img src="assets/pingo-mascot.webp" alt=""></div>
+      <div class="invite-copy"><h2>朋友来了，第 3 位搭子已解锁</h2><p>你们都获得了一位新的匹配。想看更多，也可以开通拼拼卡。</p></div>
+      <div class="invite-action"><button class="primary-button" id="moreMatchesButton"><span>查看更多匹配</span><span class="arrow">→</span></button></div>
+    `;
+    document.querySelector('#moreMatchesButton')?.addEventListener('click', () => openPinpinSheet('more_matches'));
+  }
+}
+
+async function activateBoost() {
+  try {
+    const data = await api('/api/pinpin/boost', { method: 'POST' });
+    if (data.paywall) {
+      openPinpinSheet('boost');
       return;
     }
-    activateRushCard();
-  });
-  infoSheet.dataset.source = source;
-}
-
-function openAdvancedFilters() {
-  if (!isRegistered()) {
-    openRegistrationGate('list');
-    return;
+    me = data.me || me;
+    if (data.quota) me.quota = data.quota;
+    renderQuota();
+    renderMatches();
+    showToast('加急曝光已开启，24 小时内优先被看见');
+  } catch (error) {
+    showToast(error.message);
   }
-  if (!hasRushCard()) {
-    openRushCardSheet('filters');
-    return;
-  }
-  openSheet(`
-    <h2 id="sheetTitle">精确筛选</h2>
-    <p>按城市、年级和专业方向缩小范围。学校不会在公开列表中展示。</p>
-    <label class="sheet-field-label" for="filterCity">城市</label>
-    <select class="sheet-select" id="filterCity"><option>全部</option><option>上海</option><option>北京</option><option>杭州</option><option>南京</option><option>武汉</option><option>合肥</option><option>哈尔滨</option></select>
-    <label class="sheet-field-label" for="filterGrade">年级</label>
-    <select class="sheet-select" id="filterGrade"><option>全部</option><option>大三</option><option>大四</option><option>研一</option><option>研二</option></select>
-    <label class="sheet-field-label" for="filterMajor">专业方向</label>
-    <select class="sheet-select" id="filterMajor"><option>全部</option><option>计算机</option><option>软件工程</option><option>信息安全</option><option>信息管理</option><option>市场营销</option><option>工商管理</option><option>自动化</option><option>经济学</option></select>
-    <button class="primary-button" id="applyAdvancedFilters"><span>应用筛选</span><span class="arrow">→</span></button>
-    <button class="sheet-secondary" id="clearAdvancedFilters">清除精筛</button>
-  `);
-  document.querySelector('#filterCity').value = activeAdvancedFilters.city;
-  document.querySelector('#filterGrade').value = activeAdvancedFilters.grade;
-  document.querySelector('#filterMajor').value = activeAdvancedFilters.major;
-  document.querySelector('#applyAdvancedFilters').addEventListener('click', () => {
-    activeAdvancedFilters = {
-      city: document.querySelector('#filterCity').value,
-      grade: document.querySelector('#filterGrade').value,
-      major: document.querySelector('#filterMajor').value,
-    };
-    closeSheet();
-    filterMembers();
-    const activeCount = Object.values(activeAdvancedFilters).filter((value) => value !== '全部').length;
-    advancedFilterButton.firstChild.textContent = activeCount ? `精筛 ${activeCount} 项 ` : '城市 / 年级 / 专业 ';
-  });
-  document.querySelector('#clearAdvancedFilters').addEventListener('click', () => {
-    activeAdvancedFilters = { city: '全部', grade: '全部', major: '全部' };
-    closeSheet();
-    advancedFilterButton.firstChild.textContent = '城市 / 年级 / 专业 ';
-    filterMembers();
-  });
-}
-
-function isRegistered() {
-  return localStorage.getItem('pingo-matched') === '1' && Boolean(localStorage.getItem('pingo-email'));
-}
-
-function applyRegisteredState(email) {
-  dismissOnboardingModal();
-  avatarButton.classList.remove('is-hidden');
-  avatarButton.textContent = email.trim().charAt(0).toUpperCase();
-  firstMatchCard.classList.remove('is-gated');
-  document.querySelector('#firstMatchGate')?.classList.add('is-hidden');
-  document.querySelector('#registerProgress')?.classList.add('is-done');
-  restoreUnlockState();
-  restoreIntentCards();
-  syncOwnProfileMetadata();
-  applyRushCardState();
-  filterMembers();
-}
-
-function openOnboarding() {
-  if (!needText.value) needText.value = localStorage.getItem('pingo-need') || '';
-  if (!personText.value) personText.value = localStorage.getItem('pingo-person') || '';
-  loginView.classList.remove('is-hidden');
-  document.body.style.overflow = 'hidden';
-  window.setTimeout(() => needText.focus(), 100);
-}
-
-function dismissOnboardingModal() {
-  loginView.classList.add('is-hidden');
-  document.body.style.overflow = '';
-}
-
-function showMatchEmpty() {
-  dashboardMatchEmpty.classList.remove('is-hidden');
-  dashboardMatchLoading.classList.add('is-hidden');
-  dashboardMatchReady.classList.add('is-hidden');
-}
-
-function showMatchReady() {
-  dashboardMatchEmpty.classList.add('is-hidden');
-  dashboardMatchLoading.classList.add('is-hidden');
-  dashboardMatchReady.classList.remove('is-hidden');
-  if (!isRegistered()) {
-    firstMatchCard.classList.add('is-gated');
-    document.querySelector('#firstMatchGate')?.classList.remove('is-hidden');
-  }
-  applyRushCardState();
-}
-
-function startMatching() {
-  window.clearInterval(matchTimer);
-  dismissOnboardingModal();
-  dashboardMatchEmpty.classList.add('is-hidden');
-  dashboardMatchReady.classList.add('is-hidden');
-  dashboardMatchLoading.classList.remove('is-hidden');
-  matchProgressBar.style.transform = 'scaleX(0)';
-  matchPercent.textContent = '0%';
-  setResultsView('matches');
-  const startedAt = Date.now();
-  const duration = 10000;
-  const messages = [
-    [0, '正在读取你的经历和项目'],
-    [2400, '比对项目方向、岗位和擅长点'],
-    [5000, '计算彼此可以交换的经验'],
-    [7600, hasRushCard() ? '整理五位最合适的实习搭子' : '整理今天最合适的实习搭子'],
-  ];
-  matchTimer = window.setInterval(() => {
-    const elapsed = Date.now() - startedAt;
-    const progress = Math.min(100, Math.round((elapsed / duration) * 100));
-    matchProgressBar.style.transform = `scaleX(${progress / 100})`;
-    matchPercent.textContent = `${progress}%`;
-    const currentMessage = [...messages].reverse().find(([time]) => elapsed >= time);
-    if (currentMessage) loadingMessage.textContent = currentMessage[1];
-    if (elapsed >= duration) {
-      window.clearInterval(matchTimer);
-      localStorage.setItem('pingo-match-ready', '1');
-      localStorage.setItem('pingo-match-period', getNoonPeriodKey());
-      showMatchReady();
-      showToast(hasRushCard() ? '匹配完成，五位搭子已找到' : '今日匹配已找到');
-    }
-  }, 100);
 }
 
 function setResultsView(view) {
@@ -409,535 +303,591 @@ function setResultsView(view) {
   exploreTab.classList.toggle('is-selected', !showMatches);
   matchesTab.setAttribute('aria-selected', String(showMatches));
   exploreTab.setAttribute('aria-selected', String(!showMatches));
+  if (!showMatches) loadMembers();
 }
 
-function markProgress(step) {
-  const progress = document.querySelector(`#${step}Progress`);
-  const line = document.querySelector(`#${step}ProgressLine`);
-  progress?.classList.add('is-done');
-  line?.classList.add('is-done');
+function renderTags(containerId, selected, attr) {
+  const el = document.querySelector(containerId);
+  if (!el) return;
+  el.innerHTML = TAG_OPTIONS.map((tag) => (
+    `<button class="filter-chip${selected.includes(tag) ? ' is-active' : ''}" type="button" data-${attr}="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`
+  )).join('');
 }
 
-function unlockCard(index, options = {}) {
-  const card = document.querySelector(`.match-card[data-index="${index}"]`);
-  if (!card || card.classList.contains('is-unlocked')) return;
-  card.classList.remove('is-locked');
-  card.classList.add('is-unlocking');
-  window.setTimeout(() => {
-    card.classList.add('is-unlocked');
-    card.setAttribute('role', 'button');
-    card.setAttribute('tabindex', '0');
-    card.setAttribute('aria-label', `查看第 ${index + 1} 位候选人详情`);
-    if (options.focus) {
-      card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-      card.focus({ preventScroll: true });
+function fillProfileForm() {
+  const user = me?.user || {};
+  if (profileForm.profileIntro) profileForm.profileIntro.value = user.intro || '';
+  if (profileForm.profileExperience) profileForm.profileExperience.value = user.experience || user.skills || '';
+  if (profileForm.profileLooking) profileForm.profileLooking.value = user.looking_for || user.wants || '';
+}
+
+function fillArchiveForm() {
+  const user = me?.user || {};
+  archiveForm.archiveName.value = user.name || '';
+  archiveForm.archiveRole.value = user.role || '';
+  archiveForm.archiveCity.value = user.city || '';
+  archiveForm.archiveGrade.value = user.grade || '';
+  archiveForm.archiveMajor.value = user.major || '';
+  archiveForm.archiveSchool.value = user.school || '';
+  archiveForm.archiveExperience.value = user.experience || user.skills || '';
+  archiveForm.archiveLooking.value = user.looking_for || user.wants || '';
+  archiveForm.archiveSameCity.checked = user.prefer_same_city !== false;
+  selectedTags = [...(user.tags || [])];
+  selectedLearnTags = [...(user.learn_tags || [])];
+  renderTags('#archiveSkillTags', selectedTags, 'tag');
+  renderTags('#archiveLearnTags', selectedLearnTags, 'learn');
+}
+
+function contactCta(person, contacted) {
+  if (person?.xhs) {
+    return contacted ? '已记下小红书昵称' : '复制小红书昵称去搜';
+  }
+  return contacted ? '已发出认识邮件' : '发一封认识邮件';
+}
+
+function hintHtml(person) {
+  const hints = [];
+  if (person.same_city) hints.push('同城');
+  if (person.similar_background) hints.push('背景相近');
+  if (person.boost_active) hints.push('加急曝光中');
+  return hints.length ? `<div class="hint-row">${hints.map((item) => `<span class="hint-chip">${item}</span>`).join('')}</div>` : '';
+}
+
+function renderMatches() {
+  const codeEl = document.querySelector('#referralCode');
+  if (codeEl) codeEl.textContent = me?.user?.referral_code || '—';
+  applyUnlock(me?.unlock);
+  matchDeck.classList.toggle('has-five', matches.length >= 5);
+  matchDeck.innerHTML = matches.map((item, index) => {
+    const person = item.person;
+    const tags = (item.shared_tags || person.tags || []).map((tag) => `<span>${escapeHtml(tag)}</span>`).join('');
+    const meta = [person.role, person.city, person.grade].filter(Boolean).join(' · ');
+    if (index === 0 && item.unlocked) {
+      return `
+        <article class="match-card is-active" data-id="${person.id}" data-index="0">
+          <div class="match-topline">
+            <span class="match-number">第 ${item.rank || 1} 位</span>
+            <span class="match-score"><strong>${item.score}%</strong> 匹配</span>
+          </div>
+          <div class="person-row">
+            <div class="person-avatar tone-${escapeHtml(person.tone)}">${escapeHtml(person.letter)}</div>
+            <div>
+              <h2>${escapeHtml(person.name)}${person.boost_active ? '<span class="boost-badge">加急</span>' : ''}</h2>
+              <p>${escapeHtml(meta)}</p>
+              ${hintHtml(person)}
+            </div>
+          </div>
+          <div class="match-reason">
+            <p>${escapeHtml(item.reason)}</p>
+          </div>
+          <div class="tag-row">${tags}</div>
+          <div class="exchange-grid">
+            <div><span>他可以分享</span><p>${escapeHtml(item.can_share)}</p></div>
+            <div><span>他想了解</span><p>${escapeHtml(item.wants)}</p></div>
+          </div>
+          <button class="primary-button contact-button" data-id="${person.id}" data-name="${escapeHtml(person.name)}" ${item.contacted && !person.xhs ? 'disabled' : ''}>
+            <span>${contactCta(person, item.contacted)}</span>
+            <span class="arrow" aria-hidden="true">→</span>
+          </button>
+        </article>
+      `;
     }
-  }, options.instant ? 0 : 460);
+    const lockedClass = item.unlocked ? 'is-unlocked' : 'is-locked';
+    const firstUsesXhs = Boolean(matches[0]?.person?.xhs);
+    const lockTitle = index === 1
+      ? (firstUsesXhs ? '记下第 1 位的小红书昵称' : '发出第一封认识邮件')
+      : '喊一个朋友来拼';
+    const lockCopy = index === 1
+      ? (firstUsesXhs ? '复制昵称去小红书搜后解锁，或开通拼拼卡直接查看' : '联系第 1 位搭子后解锁，或开通拼拼卡直接查看')
+      : '好友完成注册后解锁，或开通拼拼卡直接查看';
+    return `
+      <article class="match-card ${lockedClass}" data-id="${person.id}" data-index="${index}" data-unlocked="${item.unlocked ? '1' : '0'}" tabindex="0" role="button">
+        <div class="locked-preview preview-${escapeHtml(person.tone)}">
+          <span>${item.score}%</span>
+          <div class="blur-avatar tone-${escapeHtml(person.tone)}">${escapeHtml(person.letter)}</div>
+          <h2>${escapeHtml(person.name)}</h2>
+          <p>${escapeHtml(person.role)}</p>
+        </div>
+        ${item.unlocked ? '' : `
+          <div class="lock-copy">
+            <div class="lock-icon" aria-hidden="true"></div>
+            <h3>${lockTitle}</h3>
+            <p>${lockCopy}</p>
+            <button class="text-button pinpin-lock-button" type="button">开通拼拼卡直接查看</button>
+          </div>
+        `}
+      </article>
+    `;
+  }).join('') || `<div class="empty-members">写下经历后即可生成匹配。</div>`;
+
+  matchDeck.querySelectorAll('.contact-button').forEach((button) => {
+    button.addEventListener('click', () => openContact(Number(button.dataset.id), button.dataset.name));
+  });
+  matchDeck.querySelectorAll('.pinpin-lock-button').forEach((button) => {
+    button.addEventListener('click', (event) => {
+      event.stopPropagation();
+      openPinpinSheet('more_matches');
+    });
+  });
+  matchDeck.querySelectorAll('.match-card[data-id]').forEach((card) => {
+    if (card.classList.contains('is-active')) return;
+    const open = () => {
+      if (card.dataset.unlocked === '1') openPersonDetail(Number(card.dataset.id));
+      else openPinpinSheet('more_matches');
+    };
+    card.addEventListener('click', open);
+    card.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        open();
+      }
+    });
+  });
 }
 
-function restoreUnlockState() {
-  if (localStorage.getItem('pingo-email-sent') === '1') {
-    unlockCard(1, { instant: true });
-    markProgress('email');
-  }
-  if (localStorage.getItem('pingo-referral-complete') === '1') {
-    unlockCard(2, { instant: true });
-    markProgress('invite');
-    showReferralComplete();
-  }
+function personMeta(row) {
+  return [row.city, row.grade, row.major].filter(Boolean).join(' · ');
 }
 
-function showReferralComplete() {
-  const inviteStrip = document.querySelector('#inviteStrip');
-  if (!inviteStrip || inviteStrip.dataset.complete === 'true') return;
-  inviteStrip.dataset.complete = 'true';
-  inviteStrip.innerHTML = `
-    <div class="invite-visual" aria-hidden="true"><img src="assets/pingo-mascot.webp" alt=""></div>
-    <div class="invite-copy"><h2>朋友来了，第 3 位搭子已解锁</h2><p>你们都获得了一位新的匹配。</p></div>
+function renderMembers() {
+  memberRowsEl.innerHTML = members.map((row) => `
+    <button class="member-row" type="button" data-id="${row.id}">
+      <span class="member-person"><i class="member-avatar tone-${escapeHtml(row.tone)}">${escapeHtml(row.letter)}</i><span><strong>${escapeHtml(row.name)}${row.boost_active ? '<span class="boost-badge">加急</span>' : ''}</strong><small>${escapeHtml(personMeta(row) || '方向待补充')}${row.is_seed ? ' · 群资料' : ''}${row.same_city ? ' · 同城' : ''}</small></span></span>
+      <span class="member-skill">${escapeHtml(row.skills)}</span>
+      <span class="member-tags">${(row.tags || []).map((tag) => `<i>${escapeHtml(tag)}</i>`).join('')}</span>
+    </button>
+  `).join('');
+  document.querySelector('#emptyMembers').classList.toggle('is-hidden', members.length > 0);
+  memberRowsEl.querySelectorAll('.member-row').forEach((row) => {
+    row.addEventListener('click', () => openPersonDetail(Number(row.dataset.id)));
+  });
+}
+
+function fillSelect(select, values, current, placeholder) {
+  const selected = current || '';
+  select.innerHTML = `<option value="">${placeholder}</option>` + values.map((value) => (
+    `<option value="${escapeHtml(value)}" ${value === selected ? 'selected' : ''}>${escapeHtml(value)}</option>`
+  )).join('');
+}
+
+function syncProFilters(filters) {
+  filterOptions = filters || filterOptions;
+  const pro = Boolean(filters?.pro || isPro());
+  fillSelect(filterCity, filterOptions.cities || [], filterCity.value, '全部城市');
+  fillSelect(filterGrade, filterOptions.grades || [], filterGrade.value, '全部年级');
+  fillSelect(filterMajor, filterOptions.majors || [], filterMajor.value, '全部专业');
+  proFilters.classList.toggle('is-locked', !pro);
+}
+
+async function loadMe() {
+  me = await api('/api/me');
+  return me;
+}
+
+async function loadMatches() {
+  const data = await api('/api/matches');
+  matches = data.matches || [];
+  if (me) {
+    me.unlock = data.unlock;
+    if (data.quota) me.quota = data.quota;
+  }
+  renderQuota();
+  renderMatches();
+}
+
+async function loadMembers() {
+  memberRowsEl.innerHTML = '<div class="empty-members">加载中…</div>';
+  const query = new URLSearchParams();
+  if (memberSearch.value.trim()) query.set('q', memberSearch.value.trim());
+  if (activeFilter && activeFilter !== '全部') query.set('tag', activeFilter);
+  if (isPro()) {
+    if (filterCity.value) query.set('city', filterCity.value);
+    if (filterGrade.value) query.set('grade', filterGrade.value);
+    if (filterMajor.value) query.set('major', filterMajor.value);
+  }
+  const data = await api(`/api/members?${query.toString()}`);
+  members = data.members || [];
+  if (data.quota) {
+    me = me || {};
+    me.quota = data.quota;
+    renderQuota();
+  }
+  syncProFilters(data.filters);
+  renderMembers();
+}
+
+async function enterApp(payload) {
+  me = payload;
+  clearLocalAuth();
+  avatarButton.classList.remove('is-hidden');
+  if (!me.user.profile_complete) {
+    showProfile();
+    return;
+  }
+  await loadMatches();
+  showResults();
+}
+
+function openXhsContact(id, person) {
+  const handle = person.xhs || '';
+  openSheet(`
+    <h2 id="sheetTitle">去小红书搜这位搭子</h2>
+    <p>群资料没有邮箱。复制下面的昵称，打开小红书搜索即可。</p>
+    <div class="xhs-handle">${escapeHtml(handle)}</div>
+    <button class="primary-button" id="copyXhs"><span>复制昵称去搜</span><span class="arrow">→</span></button>
+    <p class="xhs-hint">搜不到时，试着只用其中几个字。</p>
+  `);
+  document.querySelector('#copyXhs').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(handle).catch(() => {});
+      const result = await api(`/api/matches/${id}/contact`, { method: 'POST', body: JSON.stringify({ body: `小红书搜：${handle}` }) });
+      matches = result.matches || matches;
+      me.unlock = result.unlock;
+      closeSheet();
+      renderMatches();
+      showToast('已复制小红书昵称，去 App 里搜。第 2 位已解锁');
+    } catch (error) {
+      showToast(error.message);
+    }
+  });
+}
+
+function openContact(id, name) {
+  const match = matches.find((item) => item.person.id === id);
+  const person = match?.person || {};
+  if (person.xhs) {
+    openXhsContact(id, person);
+    return;
+  }
+  const personName = name || person.name || '搭子';
+  const overlap = (match?.shared_tags || []).slice(0, 2).join('、') || '实习方向';
+  const draft = `Hi ${personName}，\n\n我在「拼个实习」看到我们在${overlap}上很匹配。我目前在做 ${me.user.role || '实习项目'}，很想和你交换一下工作流、项目细节和面试准备经验。\n\n如果你愿意，我们可以先约 20 分钟线上聊聊。`;
+  openSheet(`
+    <h2 id="sheetTitle">先发一封不尴尬的邮件</h2>
+    <p>已经根据你们的共同点写好开场，你可以直接修改。</p>
+    <textarea class="email-draft" id="emailDraft">${escapeHtml(draft)}</textarea>
+    <button class="primary-button" id="sendEmail"><span>发送并解锁第 2 位</span><span class="arrow">→</span></button>
+  `);
+  document.querySelector('#sendEmail').addEventListener('click', async () => {
+    const body = document.querySelector('#emailDraft').value;
+    try {
+      const result = await api(`/api/matches/${id}/contact`, { method: 'POST', body: JSON.stringify({ body }) });
+      matches = result.matches || matches;
+      me.unlock = result.unlock;
+      closeSheet();
+      renderMatches();
+      if (!result.sent) {
+        await navigator.clipboard.writeText(body).catch(() => {});
+        showToast('邮箱尚未接通，邮件已复制，请自行发送。第 2 位已解锁');
+      } else {
+        showToast('邮件已发出，第 2 位搭子已解锁');
+      }
+    } catch (error) {
+      showToast(error.message);
+    }
+  });
+}
+
+function openCandidate(id) {
+  openPersonDetail(id);
+}
+
+function personSheetHtml(person, extra = '') {
+  const meta = [person.role, person.city, person.grade, person.major].filter(Boolean).join(' · ');
+  return `
+    <h2 id="sheetTitle">${escapeHtml(person.name)}${person.boost_active ? '<span class="boost-badge">加急</span>' : ''}</h2>
+    <p>${escapeHtml(meta)}</p>
+    ${hintHtml(person)}
+    ${person.experience ? `<p><strong>经历与项目：</strong>${escapeHtml(person.experience)}</p>` : ''}
+    ${person.looking_for ? `<p><strong>想找 / 想学：</strong>${escapeHtml(person.looking_for)}</p>` : ''}
+    ${person.skills ? `<p><strong>擅长：</strong>${escapeHtml(person.skills)}</p>` : ''}
+    ${person.xhs ? `<p><strong>小红书：</strong>${escapeHtml(person.xhs)}</p>` : ''}
+    ${extra}
   `;
 }
 
-function publishIntentCard(type, topic, options = {}) {
-  const isHelper = type === 'helper';
-  const storagePrefix = isHelper ? 'pingo-helper' : 'pingo-super';
-  const card = document.querySelector(isHelper ? '#helperMemberCard' : '#superMemberCard');
-  const skill = document.querySelector(isHelper ? '#helperCardSkill' : '#superCardSkill');
-  const tag = document.querySelector(isHelper ? '#helperCardTag' : '#superCardTag');
-  const customTagElement = document.querySelector(isHelper ? '#helperCustomTag' : '#superCustomTag');
-  const customTag = (options.customTag || '').trim();
-  const content = (options.content || '').trim();
-  if (!isHelper) {
-    const table = document.querySelector('#memberTable');
-    table.insertBefore(card, table.querySelector('.member-table-head').nextElementSibling);
+async function openPersonDetail(id) {
+  try {
+    const data = await api(`/api/members/${id}`);
+    if (data.quota) {
+      me = me || {};
+      me.quota = data.quota;
+      renderQuota();
+    }
+    if (data.paywall) {
+      openPinpinSheet(data.reason || 'details_quota');
+      return;
+    }
+    const person = data.person;
+    const match = matches.find((item) => item.person.id === id);
+    const extra = match
+      ? `<p><strong>为什么匹配：</strong>${escapeHtml(match.reason)}</p>
+         <button class="primary-button candidate-contact"><span>${contactCta(person, match.contacted)}</span><span class="arrow">→</span></button>`
+      : `${person.xhs ? `<button class="primary-button copy-xhs-explore"><span>复制小红书昵称去搜</span><span class="arrow">→</span></button>` : ''}
+         <button class="primary-button explore-match-button"><span>看看我们是否适合拼</span><span class="arrow">→</span></button>`;
+    openSheet(personSheetHtml(person, extra));
+    if (data.quota?.just_hit_limit && !isPro()) {
+      showToast('今天的 20 个详情已看完，明天 12:00 刷新');
+    }
+    document.querySelector('.candidate-contact')?.addEventListener('click', () => {
+      closeSheet();
+      openContact(id, person.name);
+    });
+    document.querySelector('.copy-xhs-explore')?.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(person.xhs || '').catch(() => {});
+      showToast('已复制小红书昵称，去 App 里搜');
+    });
+    document.querySelector('.explore-match-button')?.addEventListener('click', async () => {
+      try {
+        const result = await api(`/api/members/${id}/prefer`, { method: 'POST' });
+        matches = result.matches || matches;
+        closeSheet();
+        setResultsView('matches');
+        renderMatches();
+        document.querySelector('#matchDeck').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        showToast('已加入下一轮匹配偏好');
+      } catch (error) {
+        showToast(error.message);
+      }
+    });
+  } catch (error) {
+    showToast(error.message);
   }
-  card.dataset.published = 'true';
-  card.dataset.tags = `${isHelper ? '帮助 求职 AI 产品 开发 增长' : '求大佬 求职 AI 产品 开发 增长'} ${topic} ${customTag}`.trim();
-  skill.textContent = content || (isHelper ? `愿意免费分享：${topic}相关经验` : `正在寻找熟悉${topic}的同行指点`);
-  tag.textContent = topic;
-  customTagElement.textContent = customTag;
-  customTagElement.classList.toggle('is-hidden', !customTag);
-  card.classList.remove('is-hidden');
-  localStorage.setItem(`${storagePrefix}-topic`, topic);
-  localStorage.setItem(`${storagePrefix}-custom-tag`, customTag);
-  localStorage.setItem(`${storagePrefix}-content`, content);
-  const sourceButton = isHelper ? helpIntentButton : superIntentButton;
-  sourceButton.querySelector('small').textContent = isHelper ? `已发布 · ${topic}` : `加急中 · ${topic}`;
-  if (!options.silent) {
-    activeFilter = '全部';
-    memberSearch.value = '';
-    document.querySelectorAll('.filter-chip').forEach((item) => item.classList.toggle('is-active', item.dataset.filter === '全部'));
-    setResultsView('explore');
-  }
-  filterMembers();
-  if (!options.silent) {
-    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    showToast(isHelper ? '纯帮助卡已发布' : options.updated ? '加急曝光内容已更新，结束时间不变' : '加急曝光已生效 24 小时');
-  }
 }
 
-function restoreIntentCards() {
-  const helperTopic = localStorage.getItem('pingo-helper-topic');
-  const superTopic = localStorage.getItem('pingo-super-topic');
-  if (helperTopic) publishIntentCard('helper', helperTopic, {
-    silent: true,
-    customTag: localStorage.getItem('pingo-helper-custom-tag') || '',
-    content: localStorage.getItem('pingo-helper-content') || '',
-  });
-  if (superTopic) publishIntentCard('super', superTopic, {
-    silent: true,
-    customTag: localStorage.getItem('pingo-super-custom-tag') || '',
-    content: localStorage.getItem('pingo-super-content') || '',
-  });
+function openMember(id) {
+  openPersonDetail(id);
 }
 
-function openIntentSheet(type) {
-  const isHelper = type === 'helper';
-  const exposureUsedToday = !isHelper && localStorage.getItem('pingo-rush-exposure-period') === getNoonPeriodKey();
-  const storagePrefix = isHelper ? 'pingo-helper' : 'pingo-super';
-  const topics = ['AI / 算法', '产品', '开发', '增长', '求职交流', '面试复盘'];
-  const savedTopic = localStorage.getItem(`${storagePrefix}-topic`) || topics[0];
-  const savedCustomTag = localStorage.getItem(`${storagePrefix}-custom-tag`) || '';
-  const profileContent = localStorage.getItem(isHelper ? 'pingo-need' : 'pingo-person') || '';
-  const savedContent = localStorage.getItem(`${storagePrefix}-content`) || profileContent;
-  openSheet(`
-    <h2 id="sheetTitle">${isHelper ? '发布纯帮助卡' : '发布加急曝光'}</h2>
-    <p>${isHelper ? '即使经验不互补，也可以让有具体问题的人找到你。纯帮助不会占用你的匹配名额。' : '适合暂时没有经验可以交换、但问题足够具体的用户。加急卡会在自由探索顶部优先展示 24 小时。'}</p>
-    ${isHelper ? '' : `<p class="super-sheet-note"><strong>${exposureUsedToday ? '今日加急曝光已使用。' : '今日 1 次加急曝光。'}</strong>${exposureUsedToday ? '可以编辑正在展示的内容，但不会重新计算 24 小时。' : '只增加展示机会，不会提高匹配分数，也不保证回复、实习或 offer。'}</p>`}
-    <div class="sheet-choice-grid" role="group" aria-label="选择方向">
-      ${topics.map((topic) => `<button class="sheet-choice${topic === savedTopic ? ' is-selected' : ''}" data-topic="${topic}">${topic}</button>`).join('')}
-    </div>
-    <label class="sheet-field-label" for="intentCustomTag">自定义标签 <span>选填</span></label>
-    <input id="intentCustomTag" type="text" maxlength="16" placeholder="例如：保险科技、RAG、AIGC">
-    <label class="sheet-field-label" for="intentContent">${isHelper ? '你愿意分享什么' : '你希望得到什么帮助'}</label>
-    <textarea class="profile-textarea" id="intentContent" maxlength="300" placeholder="先把内容说具体，别人更容易判断是否能帮到你"></textarea>
-    <p class="field-note">已自动带入你档案中的${isHelper ? '经历与项目' : '寻找目标'}，确认或修改后即可发布。</p>
-    ${isHelper ? '' : '<label class="check-row" for="promotionAcknowledge"><input id="promotionAcknowledge" type="checkbox"><span>我知道这是带“推广”标识的曝光服务，不会提高匹配分数或保证求职结果。 <button type="button" class="inline-legal" data-legal="paid">查看规则</button></span></label>'}
-    <p class="form-error" id="intentError" role="alert"></p>
-    <button class="primary-button" id="publishIntent"><span>${isHelper ? '发布纯帮助卡' : exposureUsedToday ? '更新加急卡内容' : '确认加急 24 小时'}</span><span class="arrow">→</span></button>
-  `);
-  document.querySelector('#intentCustomTag').value = savedCustomTag;
-  document.querySelector('#intentContent').value = savedContent;
-  let selectedTopic = savedTopic;
-  document.querySelectorAll('.sheet-choice').forEach((choice) => {
-    choice.addEventListener('click', () => {
-      selectedTopic = choice.dataset.topic;
-      document.querySelectorAll('.sheet-choice').forEach((item) => item.classList.toggle('is-selected', item === choice));
-    });
-  });
-  document.querySelector('#publishIntent').addEventListener('click', () => {
-    const customTag = document.querySelector('#intentCustomTag').value.trim().replace(/^#/, '');
-    const content = document.querySelector('#intentContent').value.trim();
-    if (content !== '无' && content.length < 8) {
-      document.querySelector('#intentError').textContent = '再具体写一点你的经历或希望交流的内容';
-      document.querySelector('#intentContent').focus();
-      return;
-    }
-    if (!isHelper && !document.querySelector('#promotionAcknowledge').checked) {
-      document.querySelector('#intentError').textContent = '请先确认你已了解推广权益边界';
-      return;
-    }
-    localStorage.setItem('pingo-public-profile', '1');
-    if (!isHelper && !exposureUsedToday) localStorage.setItem('pingo-rush-exposure-period', getNoonPeriodKey());
-    closeSheet();
-    publishIntentCard(type, selectedTopic, { customTag, content, updated: exposureUsedToday });
-  });
-}
-
-function openRegistrationGate(context = 'match') {
-  const matchCopy = context === 'match' && localStorage.getItem('pingo-match-ready') === '1';
-  const rushCopy = context === 'rush';
-  openSheet(`
-    <h2 id="sheetTitle">${rushCopy ? '先注册，再解锁加急卡' : matchCopy ? '注册后揭晓最高匹配' : '注册后查看完整名单'}</h2>
-    <p>${rushCopy ? '注册用于保存终身权益和每日额度。演示版注册后会继续展示加急卡页面。' : matchCopy ? '三位搭子已经匹配完成。完成必要注册即可揭晓第一位，并开放完整名单。' : '当前可以浏览每个筛选的前三位成员。完成必要注册后即可查看完整名单。'}</p>
-    <form id="registrationForm" novalidate>
-      <label for="registrationEmail">邮箱</label>
-      <input id="registrationEmail" type="email" autocomplete="email" placeholder="name@example.com" required>
-      <label for="registrationInvite">邀请码 <span>选填</span></label>
-      <input id="registrationInvite" type="text" autocomplete="off" placeholder="例如 PINGO-8K2M">
-      <div class="consent-group">
-        <h3>注册所必需</h3>
-        <label class="check-row" for="requiredConsent"><input id="requiredConsent" type="checkbox"><span>我已满 18 周岁，同意资料进入“自由探索”，并同意<button type="button" class="inline-legal" data-legal="terms">《用户协议》</button><button type="button" class="inline-legal" data-legal="privacy">《隐私政策》</button><button type="button" class="inline-legal" data-legal="community">《社区规范》</button>。</span></label>
-      </div>
-      <div class="consent-group">
-        <h3>可选授权 <em>默认不勾选，不影响注册</em></h3>
-        <label class="check-row" for="marketingConsent"><input id="marketingConsent" type="checkbox"><span>接收每周匹配和活动邮件。</span></label>
-      </div>
-      <p class="form-error" id="registrationError" role="alert"></p>
-      <button class="primary-button" type="submit"><span>注册并继续</span><span class="arrow">→</span></button>
-    </form>
-  `);
-  document.querySelector('#registrationForm').addEventListener('submit', (event) => {
-    event.preventDefault();
-    const emailInput = document.querySelector('#registrationEmail');
-    const email = emailInput.value.trim();
-    const error = document.querySelector('#registrationError');
-    if (!/^\S+@\S+\.\S+$/.test(email)) {
-      error.textContent = '请输入可以接收匹配结果的邮箱';
-      emailInput.focus();
-      return;
-    }
-    if (!document.querySelector('#requiredConsent').checked) {
-      error.textContent = '请确认已满 18 周岁并同意必要条款';
-      return;
-    }
-    localStorage.setItem('pingo-email', email);
-    localStorage.setItem('pingo-matched', '1');
-    localStorage.setItem('pingo-consent-version', 'prototype-2026-08-26');
-    localStorage.setItem('pingo-consent-at', new Date().toISOString());
-    localStorage.setItem('pingo-public-profile', '1');
-    localStorage.setItem('pingo-marketing', document.querySelector('#marketingConsent').checked ? '1' : '0');
-    closeSheet();
-    applyRegisteredState(email);
-    if (localStorage.getItem('pingo-match-ready') === '1') showMatchReady();
-    showToast(rushCopy ? '注册成功，可以解锁加急卡了' : matchCopy ? '注册成功，最高匹配已揭晓' : '注册成功，完整名单已开放');
-    if (rushCopy) window.setTimeout(() => openRushCardSheet('registration'), 220);
-  });
-}
-
-function openContactRequest(name, options = {}) {
-  const draft = `Hi ${name}，\n\n我在「拼个实习」看到我们在项目方向和求职目标上比较匹配，想和你交换一下工作流、数据细节和面试准备经验。\n\n如果你愿意，我们可以先约 20 分钟线上聊聊。`;
-  openSheet(`
-    <h2 id="sheetTitle">向 ${name} 发联系请求</h2>
-    <p>对方接受前，双方的邮箱和其他联系方式都不会公开。</p>
-    <textarea class="email-draft" id="contactDraft" maxlength="600">${draft}</textarea>
-    <p class="form-error" id="contactError" role="alert"></p>
-    <button class="primary-button" id="sendContactRequest"><span>通过平台发送联系请求</span><span class="arrow">→</span></button>
-  `);
-  document.querySelector('#sendContactRequest').addEventListener('click', () => {
-    const message = document.querySelector('#contactDraft').value.trim();
-    if (message.length < 10) {
-      document.querySelector('#contactError').textContent = '再多写一点，让对方知道为什么想认识';
-      return;
-    }
-    const requests = getStoredList('pingo-contact-requests').filter((request) => request.name !== name);
-    requests.push({ name, message, sentAt: new Date().toISOString() });
-    localStorage.setItem('pingo-contact-requests', JSON.stringify(requests));
-    if (options.unlockSecond) {
-      localStorage.setItem('pingo-email-sent', '1');
-      unlockCard(1, { focus: true });
-      markProgress('email');
-    }
-    closeSheet();
-    showToast(options.unlockSecond ? '联系请求已发送，第 2 位搭子已解锁' : '联系请求已发送，等待对方接受');
-  });
-}
-
-function openReportSheet(name = '') {
-  const target = name || '平台内容';
-  const reasons = ['虚假经历', '骚扰诈骗', '泄露公司信息', '其他'];
-  openSheet(`
-    <h2 id="sheetTitle">举报或拉黑</h2>
-    <p>针对“${target}”选择最接近的原因。演示版会在本机记录并隐藏该成员。</p>
-    <div class="sheet-choice-grid" id="reportReasons">
-      ${reasons.map((reason) => `<button class="sheet-choice" data-report-reason="${reason}">${reason}</button>`).join('')}
-    </div>
-    <p class="form-error" id="reportError" role="alert"></p>
-    <div class="report-actions">
-      <button class="sheet-secondary" id="submitReport">提交举报</button>
-      ${name ? '<button class="danger-button" id="blockMember">拉黑并隐藏</button>' : ''}
-    </div>
-  `);
-  let selectedReason = '';
-  document.querySelectorAll('[data-report-reason]').forEach((button) => {
-    button.addEventListener('click', () => {
-      selectedReason = button.dataset.reportReason;
-      document.querySelectorAll('[data-report-reason]').forEach((item) => item.classList.toggle('is-selected', item === button));
-    });
-  });
-  const saveReport = (block) => {
-    if (!selectedReason && !block) {
-      document.querySelector('#reportError').textContent = '请选择举报原因';
-      return;
-    }
-    if (selectedReason) {
-      const reports = getStoredList('pingo-reports');
-      reports.push({ target, reason: selectedReason, createdAt: new Date().toISOString() });
-      localStorage.setItem('pingo-reports', JSON.stringify(reports));
-    }
-    if (block && name) {
-      const blocked = new Set(getStoredList('pingo-blocked-members'));
-      blocked.add(name);
-      localStorage.setItem('pingo-blocked-members', JSON.stringify([...blocked]));
-    }
-    closeSheet();
-    filterMembers();
-    showToast(block ? '已拉黑并隐藏该成员' : '举报已提交，感谢反馈');
-  };
-  document.querySelector('#submitReport').addEventListener('click', () => saveReport(false));
-  document.querySelector('#blockMember')?.addEventListener('click', () => saveReport(true));
-}
-
-function openProfileSettings() {
-  const settings = [
-    ['pingo-marketing', '匹配与活动邮件', '接收每周匹配和产品活动通知'],
-  ];
-  openSheet(`
-    <h2 id="sheetTitle">资料与授权</h2>
-    <p>公开资料范围遵循用户协议；活动邮件可以随时关闭。</p>
-    ${settings.map(([key, title, description]) => `
-      <div class="profile-setting">
-        <span><strong>${title}</strong><small>${description}</small></span>
-        <button class="toggle${localStorage.getItem(key) === '1' ? ' is-on' : ''}" data-setting="${key}" role="switch" aria-checked="${localStorage.getItem(key) === '1'}" aria-label="${title}"></button>
-      </div>
-    `).join('')}
-    <button class="danger-button" id="deleteAccountButton">注销并删除数据</button>
-  `);
-  document.querySelectorAll('[data-setting]').forEach((toggle) => {
-    toggle.addEventListener('click', () => {
-      const enabled = !toggle.classList.contains('is-on');
-      toggle.classList.toggle('is-on', enabled);
-      toggle.setAttribute('aria-checked', String(enabled));
-      localStorage.setItem(toggle.dataset.setting, enabled ? '1' : '0');
-      showToast('授权设置已保存');
-    });
-  });
-  document.querySelector('#deleteAccountButton').addEventListener('click', () => {
-    openSheet(`
-      <h2 id="sheetTitle">确认删除全部数据？</h2>
-      <p>演示版会删除这台设备上的账号、经历、匹配、联系请求、授权和发布记录。正式版还需要向服务端提交删除请求并反馈处理结果。</p>
-      <button class="danger-button" id="confirmDeleteAccount">确认注销并删除</button>
-      <button class="sheet-secondary" id="cancelDeleteAccount">取消</button>
-    `);
-    document.querySelector('#confirmDeleteAccount').addEventListener('click', () => {
-      Object.keys(localStorage).filter((key) => key.startsWith('pingo-')).forEach((key) => localStorage.removeItem(key));
-      window.location.reload();
-    });
-    document.querySelector('#cancelDeleteAccount').addEventListener('click', openProfileSettings);
-  });
-}
-
-function openProfileEditor() {
-  const currentNeed = localStorage.getItem('pingo-need') || '';
-  const currentPerson = localStorage.getItem('pingo-person') || '';
-  const currentCity = localStorage.getItem('pingo-city') || '';
-  const currentGrade = localStorage.getItem('pingo-grade') || '';
-  const currentMajor = localStorage.getItem('pingo-major') || '';
-  const currentSchool = localStorage.getItem('pingo-school') || '';
-  openSheet(`
-    <h2 id="sheetTitle">编辑我的档案</h2>
-    <p>这两项会用于匹配、个人资料和发布帮助卡，更新后立即生效。</p>
-    <form id="profileForm" novalidate>
-      <label class="sheet-field-label" for="profileNeed">我的经历与项目</label>
-      <textarea class="profile-textarea" id="profileNeed" maxlength="500" placeholder="填写你的经历、负责的项目和擅长的部分"></textarea>
-      <label class="sheet-field-label" for="profilePerson">我想找的人 / 想学习的项目</label>
-      <textarea class="profile-textarea" id="profilePerson" maxlength="500" placeholder="填写你想找什么样的人，以及想了解或学习的项目"></textarea>
-      <div class="profile-detail-grid">
-        <label for="profileCity"><span>所在城市</span><input id="profileCity" type="text" maxlength="20" placeholder="例如：上海"></label>
-        <label for="profileGrade"><span>年级</span><select class="sheet-select" id="profileGrade"><option value="">暂不填写</option><option>大一</option><option>大二</option><option>大三</option><option>大四</option><option>研一</option><option>研二</option><option>研三</option><option>已毕业</option></select></label>
-        <label for="profileMajor"><span>专业</span><input id="profileMajor" type="text" maxlength="30" placeholder="例如：计算机"></label>
-        <label for="profileSchool"><span>学校 <em>仅用于私密匹配</em></span><input id="profileSchool" type="text" maxlength="40" placeholder="不会在公开资料展示"></label>
-      </div>
-      <p class="form-error" id="profileError" role="alert"></p>
-      <button class="primary-button" type="submit"><span>保存我的档案</span><span class="arrow">→</span></button>
-    </form>
-  `);
-  const profileNeed = document.querySelector('#profileNeed');
-  const profilePerson = document.querySelector('#profilePerson');
-  profileNeed.value = currentNeed;
-  profilePerson.value = currentPerson;
-  document.querySelector('#profileCity').value = currentCity;
-  document.querySelector('#profileGrade').value = currentGrade;
-  document.querySelector('#profileMajor').value = currentMajor;
-  document.querySelector('#profileSchool').value = currentSchool;
-  document.querySelector('#profileForm').addEventListener('submit', (event) => {
-    event.preventDefault();
-    const need = profileNeed.value.trim();
-    const person = profilePerson.value.trim();
-    const error = document.querySelector('#profileError');
-    if (need !== '无' && need.length < 8) {
-      error.textContent = '请具体填写经历与项目；如果没有，可以填写“无”';
-      profileNeed.focus();
-      return;
-    }
-    if (person.length < 8) {
-      error.textContent = '再具体说一点你想找的人或想学习的项目';
-      profilePerson.focus();
-      return;
-    }
-    localStorage.setItem('pingo-need', need);
-    localStorage.setItem('pingo-person', person);
-    localStorage.setItem('pingo-city', document.querySelector('#profileCity').value.trim());
-    localStorage.setItem('pingo-grade', document.querySelector('#profileGrade').value);
-    localStorage.setItem('pingo-major', document.querySelector('#profileMajor').value.trim());
-    localStorage.setItem('pingo-school', document.querySelector('#profileSchool').value.trim());
-    needText.value = need;
-    personText.value = person;
-    syncOwnProfileMetadata();
-
-    const helperTopic = localStorage.getItem('pingo-helper-topic');
-    const helperContent = localStorage.getItem('pingo-helper-content');
-    if (helperTopic && (!helperContent || helperContent === currentNeed)) {
-      publishIntentCard('helper', helperTopic, {
-        silent: true,
-        customTag: localStorage.getItem('pingo-helper-custom-tag') || '',
-        content: need,
-      });
-    }
-    const superTopic = localStorage.getItem('pingo-super-topic');
-    const superContent = localStorage.getItem('pingo-super-content');
-    if (superTopic && (!superContent || superContent === currentPerson)) {
-      publishIntentCard('super', superTopic, {
-        silent: true,
-        customTag: localStorage.getItem('pingo-super-custom-tag') || '',
-        content: person,
-      });
-    }
-
-    closeSheet();
-    applyRushCardState();
-    filterMembers();
-    showToast('个人档案已更新');
-  });
-}
-
-loginForm.addEventListener('submit', (event) => {
+loginForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  const need = needText.value.trim();
-  const person = personText.value.trim();
-  if (need !== '无' && need.length < 8) {
-    formError.textContent = '请具体填写经历和项目经历；如果没有，可以填写“无”';
-    needText.setAttribute('aria-invalid', 'true');
-    needText.focus();
-    return;
-  }
-  if (person.length < 8) {
-    formError.textContent = '再具体说一点你想找什么样的人';
-    personText.setAttribute('aria-invalid', 'true');
-    personText.focus();
-    return;
-  }
-  if (!contentConsent.checked) {
-    formError.textContent = '请先确认经历已脱敏且内容合法';
-    contentConsent.focus();
-    return;
-  }
   formError.textContent = '';
-  needText.removeAttribute('aria-invalid');
-  personText.removeAttribute('aria-invalid');
-  localStorage.setItem('pingo-need', need);
-  localStorage.setItem('pingo-person', person);
-  localStorage.setItem('pingo-intake-tags', JSON.stringify([...selectedIntakeTags]));
-  localStorage.setItem('pingo-content-consent-version', 'prototype-2026-08-26');
-  localStorage.setItem('pingo-content-consent-at', new Date().toISOString());
-  startMatching();
+  const email = emailInput.value.trim();
+  const inviteCode = inviteInput.value.trim();
+  const acceptTerms = document.querySelector('#acceptTerms')?.checked === true;
+  if (!acceptTerms) {
+    formError.textContent = '请确认已满 18 周岁并同意用户协议与隐私政策';
+    return;
+  }
+  const submit = document.querySelector('#loginSubmit');
+  submit.disabled = true;
+  try {
+    if (awaitingCode) {
+      const data = await api('/api/auth/verify', {
+        method: 'POST',
+        body: JSON.stringify({
+          email,
+          code: otpInput.value.trim(),
+          remember: document.querySelector('#rememberMe')?.checked !== false,
+        }),
+      });
+      await enterApp(data);
+      return;
+    }
+    const data = await api('/api/auth/enter', {
+      method: 'POST',
+      body: JSON.stringify({
+        email,
+        invite_code: inviteCode,
+        remember: document.querySelector('#rememberMe')?.checked !== false,
+        accept_terms: acceptTerms,
+      }),
+    });
+    if (data.status === 'code_sent') {
+      awaitingCode = true;
+      document.querySelector('#codeField').classList.remove('is-hidden');
+      document.querySelector('#loginHint').textContent = '验证码已发到邮箱，10 分钟内有效';
+      document.querySelector('#loginSubmitLabel').textContent = '验证并进入';
+      otpInput.focus();
+      showToast('验证码已发送');
+      return;
+    }
+    await enterApp(data);
+  } catch (error) {
+    formError.textContent = error.message;
+    emailInput.setAttribute('aria-invalid', 'true');
+  } finally {
+    submit.disabled = false;
+  }
 });
 
-needText.addEventListener('input', () => {
+emailInput.addEventListener('input', () => {
   formError.textContent = '';
-  needText.removeAttribute('aria-invalid');
+  emailInput.removeAttribute('aria-invalid');
 });
-personText.addEventListener('input', () => {
-  formError.textContent = '';
-  personText.removeAttribute('aria-invalid');
+
+profileForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  profileError.textContent = '';
+  try {
+    me = await api('/api/me/onboard', {
+      method: 'POST',
+      body: JSON.stringify({
+        experience: profileForm.profileExperience.value.trim(),
+        looking_for: profileForm.profileLooking.value.trim(),
+        intro: profileForm.profileIntro.value.trim(),
+        content_confirmed: document.querySelector('#profileContentConsent')?.checked === true,
+      }),
+    });
+    await loadMatches();
+    showResults();
+  } catch (error) {
+    profileError.textContent = error.message;
+  }
 });
-contentConsent.addEventListener('change', () => {
-  if (contentConsent.checked) formError.textContent = '';
+
+archiveForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  archiveError.textContent = '';
+  try {
+    me = await api('/api/me', {
+      method: 'PATCH',
+      body: JSON.stringify({
+        name: archiveForm.archiveName.value.trim(),
+        role: archiveForm.archiveRole.value.trim(),
+        city: archiveForm.archiveCity.value.trim(),
+        grade: archiveForm.archiveGrade.value.trim(),
+        major: archiveForm.archiveMajor.value.trim(),
+        school: archiveForm.archiveSchool.value.trim(),
+        experience: archiveForm.archiveExperience.value.trim(),
+        looking_for: archiveForm.archiveLooking.value.trim(),
+        prefer_same_city: archiveForm.archiveSameCity.checked,
+        tags: selectedTags,
+        learn_tags: selectedLearnTags,
+        skills: archiveForm.archiveExperience.value.trim().slice(0, 80),
+        wants: archiveForm.archiveLooking.value.trim().slice(0, 80),
+      }),
+    });
+    await loadMatches();
+    showResults();
+    showToast('档案已保存');
+  } catch (error) {
+    archiveError.textContent = error.message;
+  }
 });
-document.querySelectorAll('#intakeTags button').forEach((button) => {
-  button.addEventListener('click', () => {
-    const tag = button.dataset.tag;
-    if (selectedIntakeTags.has(tag)) selectedIntakeTags.delete(tag);
-    else selectedIntakeTags.add(tag);
-    button.classList.toggle('is-selected', selectedIntakeTags.has(tag));
-  });
+
+document.querySelector('#parseIntroButton').addEventListener('click', async () => {
+  const text = profileForm.profileIntro.value.trim();
+  profileError.textContent = '';
+  const button = document.querySelector('#parseIntroButton');
+  button.disabled = true;
+  try {
+    const data = await api('/api/me/parse-intro', { method: 'POST', body: JSON.stringify({ text }) });
+    const profile = data.profile || {};
+    if (profile.experience) profileForm.profileExperience.value = profile.experience;
+    else if (profile.skills) profileForm.profileExperience.value = profile.skills;
+    if (profile.looking_for) profileForm.profileLooking.value = profile.looking_for;
+    else if (profile.wants) profileForm.profileLooking.value = profile.wants;
+    if (profile.intro && !profileForm.profileIntro.value) profileForm.profileIntro.value = profile.intro;
+    showToast(profile.source === 'llm' ? '已用模型识别，请确认后生成匹配' : '已识别，请确认后生成匹配');
+  } catch (error) {
+    profileError.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.querySelector('#archiveSkillTags').addEventListener('click', (event) => {
+  const chip = event.target.closest('[data-tag]');
+  if (!chip) return;
+  const tag = chip.dataset.tag;
+  selectedTags = selectedTags.includes(tag)
+    ? selectedTags.filter((item) => item !== tag)
+    : [...selectedTags, tag];
+  renderTags('#archiveSkillTags', selectedTags, 'tag');
+});
+
+document.querySelector('#archiveLearnTags').addEventListener('click', (event) => {
+  const chip = event.target.closest('[data-learn]');
+  if (!chip) return;
+  const tag = chip.dataset.learn;
+  selectedLearnTags = selectedLearnTags.includes(tag)
+    ? selectedLearnTags.filter((item) => item !== tag)
+    : [...selectedLearnTags, tag];
+  renderTags('#archiveLearnTags', selectedLearnTags, 'learn');
 });
 
 document.querySelector('#brandButton').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-document.querySelector('#onboardingDismiss').addEventListener('click', dismissOnboardingModal);
-document.querySelector('#dashboardStartButton').addEventListener('click', openOnboarding);
-document.querySelector('#firstMatchGate').addEventListener('click', () => openRegistrationGate('match'));
-listRegisterGate.addEventListener('click', () => openRegistrationGate('list'));
 matchesTab.addEventListener('click', () => setResultsView('matches'));
 exploreTab.addEventListener('click', () => setResultsView('explore'));
-helpIntentButton.addEventListener('click', () => isRegistered() ? openIntentSheet('helper') : openRegistrationGate('list'));
-superIntentButton.addEventListener('click', () => {
-  if (!isRegistered()) openRegistrationGate('rush');
-  else if (!hasRushCard()) openRushCardSheet('exposure');
-  else openIntentSheet('super');
-});
-rushCardButton.addEventListener('click', () => openRushCardSheet('dashboard'));
-matchRushButton.addEventListener('click', () => openRushCardSheet('matches'));
-advancedFilterButton.addEventListener('click', openAdvancedFilters);
 
 document.querySelector('#aboutButton').addEventListener('click', () => {
   openSheet(`
     <h2 id="sheetTitle">三步找到实习搭子</h2>
     <p>匹配不只看岗位名，更看你们正在做什么、彼此能补上什么。</p>
     <ol>
-      <li><div><strong>先写两句话</strong><br><span>填写你的经历、项目经历，以及你想找什么样的人，不需要先注册。</span></div></li>
-      <li><div><strong>等待约 10 秒</strong><br><span>从现有名单中比对方向、经历和可以交换的经验。</span></div></li>
-      <li><div><strong>注册揭晓第一位</strong><br><span>最高匹配先以蒙版展示，注册后查看完整资料。</span></div></li>
+      <li><div><strong>写下经历和想找的人</strong><br><span>首次只需两栏。城市、年级、专业可在「我的档案」里补。</span></div></li>
+      <li><div><strong>每天 12:00 看一批精选</strong><br><span>免费先看 1 位匹配，打开详情每天 20 人。不是列表滑过就算。</span></div></li>
+      <li><div><strong>需要更多时再开拼拼卡</strong><br><span>更多名单、更多匹配、加急曝光。学校不会公开展示。</span></div></li>
     </ol>
-    <p>当前页面使用演示数据，正式版本会接入真实匹配 API。</p>
   `);
 });
 
-document.querySelector('#legalCenterButton').addEventListener('click', openLegalCenter);
-document.querySelector('#privacyButton').addEventListener('click', () => openLegalDocument('privacy'));
-document.querySelector('#reportButton').addEventListener('click', () => openReportSheet());
+document.querySelector('#privacyButton').addEventListener('click', () => {
+  openSheet(`
+    <h2 id="sheetTitle">隐私说明</h2>
+    <p>邮箱和自我介绍只用于生成匹配、发送结果与建立联系。发出认识邮件时，对方会看到你的邮箱以便回复。群资料没有邮箱，只提供小红书昵称，需自行搜索。</p>
+    <p>登录后会把会话写在 HttpOnly Cookie 里，默认 30 天免登录。退出账户会立即作废。</p>
+  `);
+});
 
 avatarButton.addEventListener('click', () => {
-  const email = localStorage.getItem('pingo-email') || '当前用户';
-  const profileNeed = localStorage.getItem('pingo-need') || '还没有填写经历与项目';
-  const profilePerson = localStorage.getItem('pingo-person') || '还没有填写寻找目标';
-  const profileMeta = [localStorage.getItem('pingo-city'), localStorage.getItem('pingo-grade'), localStorage.getItem('pingo-major')].filter(Boolean).join(' · ') || '城市、年级和专业尚未补充';
-  const privateSchool = localStorage.getItem('pingo-school') || '尚未填写';
-  const demoReset = isDemoMode
-    ? '<button class="demo-unlock account-reset" id="resetMatchButton">重新体验匹配流程</button>'
-    : '';
+  const user = me?.user || {};
   openSheet(`
-    <h2 id="sheetTitle">我的档案</h2>
-    <p class="account-email">${escapeHtml(email)}</p>
-    <div class="profile-summary">
-      <section><span>基础信息</span><p>${escapeHtml(profileMeta)}</p></section>
-      <section><span>我的经历与项目</span><p>${escapeHtml(profileNeed)}</p></section>
-      <section><span>我想找的人 / 想学习的项目</span><p>${escapeHtml(profilePerson)}</p></section>
-      <section class="private-profile"><span>学校 · 仅用于私密匹配</span><p>${escapeHtml(privateSchool)}</p></section>
-    </div>
-    <button class="primary-button" id="profileEditButton"><span>编辑我的档案</span><span class="arrow">→</span></button>
-    <button class="sheet-secondary" id="profileSettingsButton">通知与账户设置</button>
-    <button class="sheet-secondary" id="legalSettingsButton">法律与安全中心</button>
-    ${demoReset}
+    <h2 id="sheetTitle">${escapeHtml(user.email || '当前用户')}</h2>
+    <p>${escapeHtml(user.role || '先写下经历，再查看匹配')}。学校只用于后台匹配，不会出现在别人看到的卡片上。</p>
+    <button class="primary-button" id="editProfileButton"><span>我的档案</span><span class="arrow">→</span></button>
+    ${isPro() ? '' : '<button class="text-button" id="openPinpinFromAccount" style="margin-top:12px;width:100%;">查看拼拼卡</button>'}
+    <button class="text-button" id="deleteAccountButton" style="margin-top:12px;width:100%;color:#a33;">注销并删除账户</button>
+    <button class="text-button" id="logoutButton" style="margin-top:12px;width:100%;">退出账户</button>
   `);
-  document.querySelector('#profileEditButton').addEventListener('click', openProfileEditor);
-  document.querySelector('#profileSettingsButton').addEventListener('click', openProfileSettings);
-  document.querySelector('#legalSettingsButton').addEventListener('click', openLegalCenter);
-  document.querySelector('#resetMatchButton')?.addEventListener('click', () => {
-    Object.keys(localStorage).filter((key) => key.startsWith('pingo-')).forEach((key) => localStorage.removeItem(key));
-    window.location.reload();
+  document.querySelector('#editProfileButton').addEventListener('click', () => {
+    closeSheet();
+    showArchive();
+  });
+  document.querySelector('#openPinpinFromAccount')?.addEventListener('click', () => openPinpinSheet('more_matches'));
+  document.querySelector('#deleteAccountButton').addEventListener('click', () => {
+    openSheet(`
+      <h2 id="sheetTitle">确认注销并删除账户？</h2>
+      <p>档案、会话、匹配记录和联系请求将从平台删除。该操作无法撤销。</p>
+      <button class="primary-button" id="confirmDeleteAccount"><span>确认永久删除</span><span class="arrow">→</span></button>
+      <button class="text-button" id="cancelDeleteAccount" style="margin-top:12px;width:100%;">取消</button>
+    `);
+    document.querySelector('#cancelDeleteAccount').addEventListener('click', closeSheet);
+    document.querySelector('#confirmDeleteAccount').addEventListener('click', async () => {
+      try {
+        await api('/api/me', { method: 'DELETE' });
+        me = null;
+        matches = [];
+        closeSheet();
+        showLogin();
+        showToast('账户与平台数据已删除');
+      } catch (error) {
+        showToast(error.message);
+      }
+    });
+  });
+  document.querySelector('#logoutButton').addEventListener('click', async () => {
+    try {
+      await api('/api/auth/logout', { method: 'POST' });
+    } catch {
+      /* ignore */
+    }
+    setAuth('');
+    me = null;
+    matches = [];
+    awaitingCode = false;
+    closeSheet();
+    showLogin();
   });
 });
 
-document.querySelectorAll('.contact-button').forEach((button) => {
-  button.addEventListener('click', () => openContactRequest(button.dataset.name, { unlockSecond: true }));
-});
-
-document.querySelector('#shareButton').addEventListener('click', async () => {
-  const code = document.querySelector('#referralCode').textContent;
+document.querySelector('#shareButton')?.addEventListener('click', async () => {
+  const code = referralCodeEl.textContent;
   const shareData = {
     title: '来拼个实习搭子',
     text: `我在「拼个实习」找到了很合适的同行，使用邀请码 ${code} 查看你的匹配。`,
-    url: window.location.href,
+    url: me?.app_url || window.location.href,
   };
   try {
     if (navigator.share) {
@@ -951,140 +901,41 @@ document.querySelector('#shareButton').addEventListener('click', async () => {
   }
 });
 
-if (isDemoMode) {
-  demoUnlock.classList.remove('is-hidden');
-}
-
-demoUnlock.addEventListener('click', () => {
-  localStorage.setItem('pingo-referral-complete', '1');
-  unlockCard(2, { focus: true });
-  markProgress('invite');
-  showReferralComplete();
-  showToast('好友已注册，第 3 位搭子已解锁');
+let searchTimer;
+memberSearch.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(loadMembers, 180);
 });
-
-function filterMembers() {
-  const query = memberSearch.value.trim().toLowerCase();
-  const registered = isRegistered();
-  const blockedMembers = new Set(getStoredList('pingo-blocked-members'));
-  const matchedRows = [];
-  memberRows.forEach((row) => {
-    if (blockedMembers.has(row.dataset.name)) {
-      row.classList.add('is-hidden');
-      return;
-    }
-    if (row.classList.contains('intent-member-row') && row.dataset.published !== 'true') {
-      row.classList.add('is-hidden');
-      return;
-    }
-    if (row.classList.contains('intent-member-row') && localStorage.getItem('pingo-public-profile') !== '1') {
-      row.classList.add('is-hidden');
-      return;
-    }
-    const haystack = `${row.textContent} ${row.dataset.tags}`.toLowerCase();
-    const matchesQuery = !query || haystack.includes(query);
-    const matchesFilter = activeFilter === '全部' || row.dataset.tags.includes(activeFilter);
-    const matchesCity = activeAdvancedFilters.city === '全部' || row.dataset.city === activeAdvancedFilters.city;
-    const matchesGrade = activeAdvancedFilters.grade === '全部' || row.dataset.grade === activeAdvancedFilters.grade;
-    const matchesMajor = activeAdvancedFilters.major === '全部' || row.dataset.major === activeAdvancedFilters.major;
-    if (matchesQuery && matchesFilter && matchesCity && matchesGrade && matchesMajor) matchedRows.push(row);
-    else row.classList.add('is-hidden');
-  });
-  matchedRows.forEach((row, index) => row.classList.toggle('is-hidden', !registered && index >= 3));
-  listRegisterGate.classList.toggle('is-hidden', registered || matchedRows.length <= 3);
-  document.querySelector('#emptyMembers').classList.toggle('is-hidden', matchedRows.length > 0);
-}
-
-memberSearch.addEventListener('input', filterMembers);
-document.querySelectorAll('.filter-chip[data-filter]').forEach((chip) => {
+document.querySelectorAll('#filterRow .filter-chip').forEach((chip) => {
   chip.addEventListener('click', () => {
     activeFilter = chip.dataset.filter;
-    document.querySelectorAll('.filter-chip[data-filter]').forEach((item) => item.classList.toggle('is-active', item === chip));
-    filterMembers();
+    document.querySelectorAll('#filterRow .filter-chip').forEach((item) => item.classList.toggle('is-active', item === chip));
+    loadMembers();
   });
 });
 
-memberRows.forEach((row) => {
-  row.addEventListener('click', () => {
-    if (!isRegistered()) {
-      openRegistrationGate('list');
-      return;
-    }
-    const name = row.dataset.name;
-    if (!name.startsWith('我的')) {
-      const viewedProfiles = getViewedProfiles();
-      if (!viewedProfiles.has(name) && viewedProfiles.size >= getExploreLimit()) {
-        openRushCardSheet('explore-limit');
-        return;
-      }
-      viewedProfiles.add(name);
-      localStorage.setItem('pingo-explore-viewed', JSON.stringify([...viewedProfiles]));
-      updateEntitlementUI();
-    }
-    const skill = row.querySelector('.member-skill').textContent;
-    const tags = [...row.querySelectorAll('.member-tags i')].map((tag) => tag.textContent).join(' · ');
-    openSheet(`
-      <h2 id="sheetTitle">${name}</h2>
-      <p><strong>擅长：</strong>${skill}</p>
-      <p><strong>方向：</strong>${tags}</p>
-      ${name.startsWith('我的') ? '<p class="legal-status">这是你主动发布的公开卡片。</p>' : '<button class="primary-button member-contact-button"><span>发送联系请求</span><span class="arrow">→</span></button><button class="sheet-secondary member-report-button">举报或拉黑</button>'}
-    `);
-    document.querySelector('.member-contact-button')?.addEventListener('click', () => openContactRequest(name));
-    document.querySelector('.member-report-button')?.addEventListener('click', () => openReportSheet(name));
+[filterCity, filterGrade, filterMajor].forEach((select) => {
+  select.addEventListener('mousedown', (event) => {
+    if (isPro()) return;
+    event.preventDefault();
+    openPinpinSheet('filter');
+  });
+  select.addEventListener('change', () => {
+    if (isPro()) loadMembers();
   });
 });
 
-const candidateDetails = {
-  1: { name: '小陈同学', role: 'AI 产品实习生 · 北京', reason: '她擅长从客户访谈拆解产品需求，你能补上模型能力边界和工程交付流程。', exchange: '需求优先级、客户沟通、AI 产品面试复盘。' },
-  2: { name: '一一', role: '推荐算法实习生 · 杭州', reason: '她在做内容推荐与特征工程，与你的多模态理解和 ToB 数据闭环经验互补。', exchange: '召回与排序实验、特征工程、离线评测设计。' },
-  3: { name: '小林', role: 'Agent 全栈实习生 · 上海', reason: '他熟悉 Agent 工作流和 RAG 工程，能够与你交换从模型能力到产品交付的完整链路。', exchange: 'Agent 编排、RAG 评测、全栈工程落地。' },
-  4: { name: '小雨', role: '增长产品实习生 · 南京', reason: '她擅长商业化和增长实验，可以补充你的 AI 产品在获客与转化侧的经验。', exchange: '增长实验、数据分析、商业化策略。' },
-};
-
-document.querySelectorAll('.match-card.is-locked').forEach((card) => {
-  const openCandidate = () => {
-    if (card.classList.contains('is-unlocked')) {
-      const candidate = candidateDetails[card.dataset.index];
-      if (!candidate) return;
-      openSheet(`
-        <h2 id="sheetTitle">${candidate.name}</h2>
-        <p>${candidate.role}</p>
-        <p><strong>为什么匹配：</strong>${candidate.reason}</p>
-        <p><strong>可以交换：</strong>${candidate.exchange}</p>
-        <button class="primary-button candidate-contact" data-name="${candidate.name}"><span>发送联系请求</span><span class="arrow">→</span></button>
-        <button class="sheet-secondary candidate-report">举报或拉黑</button>
-      `);
-      document.querySelector('.candidate-contact').addEventListener('click', () => openContactRequest(candidate.name));
-      document.querySelector('.candidate-report').addEventListener('click', () => openReportSheet(candidate.name));
-    }
-  };
-  card.addEventListener('click', openCandidate);
-  card.addEventListener('keydown', (event) => {
-    if ((event.key === 'Enter' || event.key === ' ') && card.classList.contains('is-unlocked')) {
-      event.preventDefault();
-      openCandidate();
-    }
-  });
+proFilters.addEventListener('click', () => {
+  if (!isPro()) openPinpinSheet('filter');
 });
+
+pinpinButton.addEventListener('click', () => openPinpinSheet(isPro() ? 'generic' : 'generic'));
+
+renderTags('#archiveSkillTags', selectedTags, 'tag');
+renderTags('#archiveLearnTags', selectedLearnTags, 'learn');
 
 document.querySelector('#closeSheet').addEventListener('click', closeSheet);
 sheetBackdrop.addEventListener('click', closeSheet);
-sheetContent.addEventListener('click', (event) => {
-  const legalButton = event.target.closest('[data-legal]');
-  if (legalButton) {
-    event.preventDefault();
-    openLegalDocument(legalButton.dataset.legal);
-    return;
-  }
-  if (event.target.closest('[data-open-legal-center]')) openLegalCenter();
-});
-document.addEventListener('click', (event) => {
-  const legalButton = event.target.closest('[data-legal]');
-  if (legalButton && !sheetContent.contains(legalButton)) {
-    event.preventDefault();
-    openLegalDocument(legalButton.dataset.legal);
-  }
-});
 document.addEventListener('keydown', (event) => {
   if (infoSheet.classList.contains('is-hidden')) return;
   if (event.key === 'Escape') closeSheet();
@@ -1103,24 +954,15 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
-if (isDemoMode) {
-  Object.keys(localStorage).filter((key) => key.startsWith('pingo-')).forEach((key) => localStorage.removeItem(key));
-}
-
-ensureDailyState();
-startMockLiveBoard();
-syncOwnProfileMetadata();
-updateEntitlementUI();
-
-const savedEmail = localStorage.getItem('pingo-email');
-if (isRegistered() && savedEmail) {
-  applyRegisteredState(savedEmail);
-  if (localStorage.getItem('pingo-match-ready') === '1') showMatchReady();
-  else showMatchEmpty();
-} else {
-  avatarButton.classList.add('is-hidden');
-  if (localStorage.getItem('pingo-match-ready') === '1') showMatchReady();
-  else showMatchEmpty();
-  filterMembers();
-  openOnboarding();
-}
+(async function boot() {
+  clearLocalAuth();
+  const params = new URLSearchParams(window.location.search);
+  const invite = params.get('code') || params.get('invite');
+  if (invite && !inviteInput.value) inviteInput.value = invite;
+  try {
+    await loadMe();
+    await enterApp(me);
+  } catch {
+    showLogin();
+  }
+})();

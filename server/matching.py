@@ -45,32 +45,37 @@ def score_pair(user: dict, candidate: dict, preferred_id: Optional[int] = None) 
     shared = [tag for tag in cand_tags if tag in user_tags or tag.lower() in {t.lower() for t in user_tags}]
     tag_score = 38 * (len(shared) * 2) / (len(user_tags) + len(cand_tags) or 1)
 
-    user_wants = set(_split(user.get("wants", "")))
-    cand_skills = set(_split(candidate.get("skills", "")))
-    cand_wants = set(_split(candidate.get("wants", "")))
-    user_skills = set(_split(user.get("skills", "")))
+    user_wants_text = user.get("looking_for") or user.get("wants", "")
+    cand_skills_text = candidate.get("experience") or candidate.get("skills", "")
+    cand_wants_text = candidate.get("looking_for") or candidate.get("wants", "")
+    user_skills_text = user.get("experience") or user.get("skills", "")
+    user_wants = set(_split(user_wants_text))
+    cand_skills = set(_split(cand_skills_text))
+    cand_wants = set(_split(cand_wants_text))
+    user_skills = set(_split(user_skills_text))
     give = len(user_wants & cand_skills) + len({w for w in user_wants if any(w in s or s in w for s in cand_skills)})
     take = len(cand_wants & user_skills)
     comp_score = 28 * min(1.0, (give + take) / 4)
 
-    families = _family_hits(_blob(user.get("role", ""), " ".join(user_tags), user.get("skills", ""), user.get("wants", "")))
-    cand_families = _family_hits(_blob(candidate.get("role", ""), " ".join(cand_tags), candidate.get("skills", ""), candidate.get("wants", "")))
+    families = _family_hits(_blob(user.get("role", ""), " ".join(user_tags), user_skills_text, user_wants_text))
+    cand_families = _family_hits(_blob(candidate.get("role", ""), " ".join(cand_tags), cand_skills_text, cand_wants_text))
     family_score = 14 * (len(families & cand_families) / max(len(families | cand_families), 1))
-    city_score = 8 if user.get("city") and user.get("city") == candidate.get("city") else 0
+    city_score = 8 if user.get("prefer_same_city", True) and user.get("city") and user.get("city") == candidate.get("city") else 0
     prefer_score = 10 if preferred_id and preferred_id == candidate["id"] else 0
+    boost_score = 2 if candidate.get("boost_active") else 0
 
-    raw = 58 + tag_score + comp_score + family_score + city_score + prefer_score
+    raw = 58 + tag_score + comp_score + family_score + city_score + prefer_score + boost_score
     score = int(max(72, min(96, round(raw))))
 
     pronoun = "对方"
 
     if shared:
         reason = (
-            f"你们都在做 {shared[0]}，你熟悉{user.get('skills') or user.get('role') or '自己的项目'}，"
-            f"{pronoun}能补上{candidate.get('skills') or candidate.get('role')}。"
+            f"你们都在做 {shared[0]}，你熟悉{user_skills_text or user.get('role') or '自己的项目'}，"
+            f"{pronoun}能补上{cand_skills_text or candidate.get('role')}。"
         )
     elif give or take:
-        reason = f"你们的经验互补：你想了解的{user.get('wants') or '方向'}，正是{pronoun}擅长的。"
+        reason = f"你们的经验互补：你想了解的{user_wants_text or '方向'}，正是{pronoun}擅长的。"
     else:
         reason = f"{pronoun}在做{candidate.get('role') or '实习项目'}，和你的方向可以认真交换工作流。"
 
@@ -78,7 +83,7 @@ def score_pair(user: dict, candidate: dict, preferred_id: Optional[int] = None) 
         "candidate_id": candidate["id"],
         "score": score,
         "reason": reason,
-        "can_share": candidate.get("skills") or candidate.get("role"),
-        "wants": candidate.get("wants") or "彼此的实习工作流和面试准备",
+        "can_share": cand_skills_text or candidate.get("role"),
+        "wants": cand_wants_text or "彼此的实习工作流和面试准备",
         "shared_tags": shared[:4] or cand_tags[:3],
     }
