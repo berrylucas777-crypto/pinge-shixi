@@ -159,13 +159,13 @@ def test_contact_mail_includes_matched_email(tmp_path, monkeypatch):
                 json={"body": "想和你交换项目经验。"},
             )
             assert response.status_code == 200, response.text
-    bodies = "\n".join(item["body"] for item in captured)
-    recipients = {item["to"] for item in captured}
-    assert "alice@example.com" in bodies
-    assert "bob@example.com" in bodies
-    assert "匹配到的对方邮箱" in bodies
-    assert "alice@example.com" in recipients
-    assert "bob@example.com" in recipients
+    to_alice = next(item for item in captured if item["to"] == "alice@example.com")
+    to_bob = next(item for item in captured if item["to"] == "bob@example.com")
+    assert "我的联系方式" in to_alice["body"]
+    assert "bob@example.com" in to_alice["body"]
+    assert to_alice["reply_to"] == "bob@example.com"
+    assert "对方邮箱：alice@example.com" in to_bob["body"]
+    assert "bob@example.com" in to_bob["body"]
 
 
 def test_early_access_invite_does_not_require_an_existing_referrer(tmp_path, monkeypatch):

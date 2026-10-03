@@ -818,6 +818,7 @@ function openContact(id, name) {
     <h2 id="sheetTitle">先发一封不尴尬的邮件</h2>
     <p>已经根据你们的共同点写好开场，你可以直接修改。</p>
     <textarea class="email-draft" id="emailDraft">${escapeHtml(draft)}</textarea>
+    <p class="pinpin-note">发出去后，对方会看到你的登录邮箱 ${escapeHtml(me?.user?.email || '')}，可以直接回信。</p>
     <button class="primary-button" id="sendEmail"><span>发送并解锁第 2 位</span><span class="arrow">→</span></button>
   `);
   document.querySelector('#sendEmail').addEventListener('click', async () => {

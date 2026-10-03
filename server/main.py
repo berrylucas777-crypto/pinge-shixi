@@ -1120,18 +1120,27 @@ def _can_email_user(person: dict) -> bool:
     return bool(email) and not email.endswith(".local") and not person.get("is_seed")
 
 
-def _contact_mail_body(draft: str, sender: dict, candidate: dict) -> str:
+def _contact_messages(draft: str, sender: dict, candidate: dict) -> tuple[str, str]:
     sender_email = (sender.get("email") or "").strip()
     candidate_email = (candidate.get("email") or "").strip()
-    sender_name = (sender.get("name") or "发起人").strip()
-    candidate_name = (candidate.get("name") or "搭子").strip()
-    return (
-        f"{draft.rstrip()}\n\n"
+    sender_name = (sender.get("name") or "发起人").strip() or "发起人"
+    candidate_name = (candidate.get("name") or "搭子").strip() or "搭子"
+    text = draft.rstrip()
+    to_candidate = (
+        f"{text}\n\n"
         "——\n"
-        "为方便直接联系，这次匹配到的对方邮箱如下：\n"
-        f"{candidate_name}：{candidate_email}\n"
-        f"{sender_name}：{sender_email}\n"
+        f"我的联系方式：{sender_name}\n"
+        f"{sender_email}\n"
+        "直接回复这封邮件，也会发到这个邮箱。\n"
     )
+    to_sender = (
+        f"{text}\n\n"
+        "——\n"
+        f"这封信已经发给 {candidate_name}。\n"
+        f"对方邮箱：{candidate_email}\n"
+        f"你的邮箱 {sender_email} 也写在给对方的信里了。\n"
+    )
+    return to_candidate, to_sender
 
 
 @app.post("/api/matches/{candidate_id}/contact")
@@ -1141,15 +1150,15 @@ def contact(candidate_id: int, body: ContactBody, user: dict = Depends(current_u
         raise HTTPException(403, "这位搭子尚未解锁")
     candidate = get_user(candidate_id)
     draft = body.body.strip() or f"Hi {candidate['name']}，我在「拼个实习」看到我们很匹配，想约 20 分钟交换项目工作流和求职经验。"
-    message = _contact_mail_body(draft, user, candidate)
+    to_candidate, to_sender = _contact_messages(draft, user, candidate)
     sent = False
     if _can_email_user(candidate):
-        sent = send_mail(candidate["email"], f"来自「拼个实习」的认识邮件 · {user['name']}", message, reply_to=user["email"])
+        sent = send_mail(candidate["email"], f"来自「拼个实习」的认识邮件 · {user['name']}", to_candidate, reply_to=user["email"])
         if _can_email_user(user):
             send_mail(
                 user["email"],
                 f"你匹配到的搭子邮箱 · {candidate['name']}",
-                message,
+                to_sender,
                 reply_to=candidate["email"],
             )
     with connect() as conn:
