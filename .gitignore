@@ -8,6 +8,7 @@ __pycache__/
 data/
 *.db
 .DS_Store
+匹配池/
 .impeccable/
 outputs/
 work/

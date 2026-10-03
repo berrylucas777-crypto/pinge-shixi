@@ -1,6 +1,7 @@
 import importlib
 import json
 import sqlite3
+from datetime import datetime
 
 from fastapi.testclient import TestClient
 
@@ -8,11 +9,25 @@ from fastapi.testclient import TestClient
 def make_client(tmp_path, monkeypatch):
     monkeypatch.setenv("APP_URL", "http://testserver")
     monkeypatch.setenv("SMTP_PASSWORD", "")
+    monkeypatch.setenv("MATCH_HOUR", "21")
+    monkeypatch.setenv("MATCH_POOL_MIN", "2")
+    monkeypatch.setenv("JEV_API_KEY", "")
     db = importlib.import_module("server.db")
     db.DB_PATH = tmp_path / "pingo-test.db"
     main = importlib.import_module("server.main")
     main._auth_attempts.clear()
     return TestClient(main.app), db
+
+
+def freeze_clock(monkeypatch, hour, minute=0):
+    main = importlib.import_module("server.main")
+    frozen = datetime(2026, 10, 3, hour, minute, tzinfo=main.TZ)
+    monkeypatch.setattr(main, "_now", lambda: frozen)
+
+
+def extra_client():
+    main = importlib.import_module("server.main")
+    return TestClient(main.app)
 
 
 def register_and_onboard(client, email="tester@example.com"):
@@ -34,14 +49,25 @@ def register_and_onboard(client, email="tester@example.com"):
 
 def test_end_to_end_matching_and_account_deletion(tmp_path, monkeypatch):
     client, _ = make_client(tmp_path, monkeypatch)
+    freeze_clock(monkeypatch, 21, 30)
     with client:
         me = register_and_onboard(client)
         assert me["user"]["profile_complete"] is True
+        assert me["pool"]["count"] >= 1
+
+        bob = extra_client()
+        cara = extra_client()
+        with bob:
+            register_and_onboard(bob, "bob@example.com")
+        with cara:
+            register_and_onboard(cara, "cara@example.com")
 
         match_response = client.get("/api/matches")
         assert match_response.status_code == 200
-        matches = match_response.json()["matches"]
-        assert len(matches) == 3
+        payload = match_response.json()
+        assert payload["pool"]["waiting"] is False
+        matches = payload["matches"]
+        assert len(matches) >= 2
         assert matches[0]["unlocked"] is True
         assert matches[1]["unlocked"] is False
         first_id = matches[0]["person"]["id"]
@@ -65,17 +91,38 @@ def test_end_to_end_matching_and_account_deletion(tmp_path, monkeypatch):
         assert client.get("/api/me").status_code == 401
 
 
+def test_users_join_pool_before_nine_pm(tmp_path, monkeypatch):
+    client, _ = make_client(tmp_path, monkeypatch)
+    freeze_clock(monkeypatch, 10, 0)
+    with client:
+        me = register_and_onboard(client, "early@example.com")
+        assert me["pool"]["waiting"] is True
+        data = client.get("/api/matches").json()
+        assert data["matches"] == []
+        assert data["pool"]["waiting"] is True
+        assert data["pool"]["count"] >= 1
+        assert data["pool"]["match_hour"] == 21
+        public = client.get("/api/config").json()
+        assert public["pool"]["count"] >= 1
+        assert public["pool"]["next_match_label"].endswith("21:00")
+
+
 def test_school_is_never_exposed_in_member_payload(tmp_path, monkeypatch):
     client, db = make_client(tmp_path, monkeypatch)
+    other = extra_client()
     with client:
         register_and_onboard(client, "privacy@example.com")
+        with other:
+            register_and_onboard(other, "peer@example.com")
         with db.connect() as conn:
-            candidate = conn.execute("SELECT id FROM users WHERE is_seed=1 LIMIT 1").fetchone()
-            conn.execute("UPDATE users SET school='不应公开的学校' WHERE id=?", (candidate["id"],))
-        detail = client.get(f"/api/members/{candidate['id']}")
+            peer = conn.execute("SELECT id FROM users WHERE email=?", ("peer@example.com",)).fetchone()
+            conn.execute("UPDATE users SET school='不应公开的学校' WHERE id=?", (peer["id"],))
+        detail = client.get(f"/api/members/{peer['id']}")
         assert detail.status_code == 200
-        assert "school" not in json.dumps(detail.json(), ensure_ascii=False)
-        assert "不应公开的学校" not in json.dumps(detail.json(), ensure_ascii=False)
+        dumped = json.dumps(detail.json(), ensure_ascii=False)
+        assert "school" not in dumped
+        assert "不应公开的学校" not in dumped
+        assert "xhs" not in dumped
 
 
 def test_simulated_payment_is_disabled_by_default(tmp_path, monkeypatch):
@@ -85,6 +132,38 @@ def test_simulated_payment_is_disabled_by_default(tmp_path, monkeypatch):
         register_and_onboard(client, "payment@example.com")
         response = client.post("/api/pinpin/simulate")
         assert response.status_code == 503
+
+
+def test_contact_mail_includes_matched_email(tmp_path, monkeypatch):
+    captured = []
+
+    def fake_send(to, subject, body, reply_to=None):
+        captured.append({"to": to, "subject": subject, "body": body, "reply_to": reply_to})
+        return True
+
+    client, _ = make_client(tmp_path, monkeypatch)
+    freeze_clock(monkeypatch, 21, 30)
+    main = importlib.import_module("server.main")
+    monkeypatch.setattr(main, "send_mail", fake_send)
+    other = TestClient(main.app)
+    with client:
+        register_and_onboard(client, "alice@example.com")
+        with other:
+            register_and_onboard(other, "bob@example.com")
+            matches = other.get("/api/matches").json()["matches"]
+            assert matches
+            response = other.post(
+                f"/api/matches/{matches[0]['person']['id']}/contact",
+                json={"body": "想和你交换项目经验。"},
+            )
+            assert response.status_code == 200, response.text
+    bodies = "\n".join(item["body"] for item in captured)
+    recipients = {item["to"] for item in captured}
+    assert "alice@example.com" in bodies
+    assert "bob@example.com" in bodies
+    assert "匹配到的对方邮箱" in bodies
+    assert "alice@example.com" in recipients
+    assert "bob@example.com" in recipients
 
 
 def test_early_access_invite_does_not_require_an_existing_referrer(tmp_path, monkeypatch):
@@ -127,6 +206,39 @@ def test_data_admin_can_preview_and_import_authorized_ocr_text(tmp_path, monkeyp
             assert imported["is_seed"] == 1
 
 
+def test_seed_profiles_are_purged(tmp_path, monkeypatch):
+    client, db = make_client(tmp_path, monkeypatch)
+    other = extra_client()
+    with client:
+        register_and_onboard(client, "real@example.com")
+        with other:
+            register_and_onboard(other, "peer@example.com")
+        with db.connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO users(email,name,experience,looking_for,referral_code,is_seed,xhs)
+                VALUES (?,?,?,?,?,?,?)
+                """,
+                ("pool-x@pingo.local", "假资料", "做过算法实习", "找产品搭子", "POOL-FAKE", 1, "假昵称"),
+            )
+        main = importlib.import_module("server.main")
+        main.purge_seed_users()
+        members = client.get("/api/members").json()["members"]
+        dumped = json.dumps(members, ensure_ascii=False)
+        assert "假资料" not in dumped
+        assert "xhs" not in dumped
+        assert "群资料" not in dumped
+        with db.connect() as conn:
+            leftover = conn.execute(
+                """
+                SELECT COUNT(*) n FROM users
+                WHERE (IFNULL(is_seed,0)=1 OR email LIKE '%@pingo.local')
+                  AND email NOT LIKE 'import-%@pingo.local'
+                """
+            ).fetchone()["n"]
+        assert leftover == 0
+
+
 def test_health_reports_release(tmp_path, monkeypatch):
     monkeypatch.setenv("APP_RELEASE", "test-release")
     client, _ = make_client(tmp_path, monkeypatch)
@@ -136,6 +248,35 @@ def test_health_reports_release(tmp_path, monkeypatch):
         assert response.json()["release"] == "test-release"
         assert response.headers["cache-control"] == "no-store"
         assert response.headers["cross-origin-opener-policy"] == "same-origin"
+        assert response.json()["jev_configured"] is False
+
+
+def test_jev_rerank_puts_choice_winner_first(monkeypatch):
+    monkeypatch.setenv("JEV_API_KEY", "test-key")
+    matching = importlib.import_module("server.matching")
+
+    def fake_ask(state, questions, timeout=20):
+        keys = [key[4:] for key in questions if key.startswith("fit_")]
+        winner = keys[-1]
+        answers = {
+            "best": {"type": "choice", "choice": winner, "confidence": 0.92, "probabilities": {winner: 0.92, "none": 0.08}},
+        }
+        for key in keys:
+            answers[f"fit_{key}"] = {"type": "score", "score": 3.0 if key == winner else 0.8}
+            answers[f"exchange_{key}"] = {"type": "noul", "noul": 0.88 if key == winner else 0.18}
+            answers[f"clone_{key}"] = {"type": "noul", "noul": 0.08}
+        return {"model": "jev-latest", "answers": answers}
+
+    monkeypatch.setattr(matching.jev, "ask", fake_ask)
+    ranked = matching.rank_matches(
+        {"id": 1, "experience": "做过 AI 产品需求拆解", "looking_for": "Agent 评测", "role": "产品", "tags": ["产品"]},
+        [
+            {"id": 2, "experience": "也在做 AI 产品需求", "looking_for": "产品工作流", "role": "产品", "tags": ["产品"]},
+            {"id": 3, "experience": "做过 Agent 评测与模型边界", "looking_for": "产品落地", "role": "算法", "tags": ["AI"]},
+        ],
+    )
+    assert ranked[0]["candidate_id"] == 3
+    assert "互补" in ranked[0]["reason"]
 
 
 def test_manual_payment_can_be_reviewed_and_approved(tmp_path, monkeypatch):
