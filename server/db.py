@@ -118,9 +118,24 @@ CREATE TABLE IF NOT EXISTS reports (
   FOREIGN KEY (target_user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
+CREATE TABLE IF NOT EXISTS pinpin_payment_requests (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL UNIQUE,
+  order_code TEXT NOT NULL UNIQUE,
+  payer_nickname TEXT NOT NULL DEFAULT '',
+  amount_cents INTEGER NOT NULL DEFAULT 1000,
+  status TEXT NOT NULL DEFAULT 'pending',
+  reviewed_by TEXT NOT NULL DEFAULT '',
+  reviewed_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE INDEX IF NOT EXISTS idx_matches_user ON matches(user_id, rank);
 CREATE INDEX IF NOT EXISTS idx_users_seed ON users(is_seed);
 CREATE INDEX IF NOT EXISTS idx_views_user_period ON member_views(user_id, period);
+CREATE INDEX IF NOT EXISTS idx_pinpin_payment_requests_status ON pinpin_payment_requests(status, created_at);
 """
 
 MIGRATIONS = {

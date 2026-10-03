@@ -42,8 +42,21 @@ DISABLE_DOCS=true
 ALLOW_SIMULATED_PAYMENT=false
 ```
 
-## 支付状态
+## 内测人工核账
 
-仓库没有伪造真实扣款。`/api/pinpin/simulate` 默认关闭，仅能在明确设置 `ALLOW_SIMULATED_PAYMENT=true` 的本地测试环境启用。接入商户支付、签名回调、退款和对账前，生产页面只展示“真实支付接入中”。
+无需接入支付 API 即可先以人工核账方式开放 `¥10` 拼拼卡：用户扫码付款、填写付款时显示的微信昵称，管理员核对微信账单后在 `/review` 点击开通。用户不需要添加微信，也不需要上传付款截图。
+
+生产 `.env.production` 配置如下，全部为非代码配置且不会提交到仓库：
+
+```dotenv
+MANUAL_PAYMENT_ENABLED=true
+MANUAL_PAYMENT_QR_URL=/assets/pinpin-payment-qr.jpg
+MANUAL_PAYMENT_CONTACT=微信：你的微信号
+PAYMENT_ADMIN_EMAILS=你的登录邮箱@example.com
+```
+
+收款二维码可放在 `assets/pinpin-payment-qr.jpg`，部署脚本会在文件存在时自动上传；也可填写已托管的 HTTPS 图片地址。`/review` 只允许 `PAYMENT_ADMIN_EMAILS` 中已登录的账号查看和开通订单。
+
+`/api/pinpin/simulate` 默认关闭，仅能在明确设置 `ALLOW_SIMULATED_PAYMENT=true` 的本地测试环境启用。
 
 若采用履约金模式，仍需补充真实支付渠道、订单状态机、双方履约确认、争议处理和原路退款；这些不能用前端模拟替代。

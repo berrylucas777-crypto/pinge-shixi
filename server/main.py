@@ -50,6 +50,31 @@ def _app_url() -> str:
     return (os.getenv("APP_URL") or "http://127.0.0.1:8000").rstrip("/")
 
 
+def _app_release() -> str:
+    return (os.getenv("APP_RELEASE") or "dev").strip()
+
+
+def _manual_payment_enabled() -> bool:
+    return _bool_env("MANUAL_PAYMENT_ENABLED", False) and bool(os.getenv("MANUAL_PAYMENT_QR_URL", "").strip())
+
+
+def _payment_admin_emails() -> set[str]:
+    return {item.strip().lower() for item in os.getenv("PAYMENT_ADMIN_EMAILS", "").split(",") if "@" in item}
+
+
+def _is_payment_admin(user: dict) -> bool:
+    return str(user.get("email", "")).strip().lower() in _payment_admin_emails()
+
+
+def _manual_payment_config() -> dict:
+    return {
+        "enabled": _manual_payment_enabled(),
+        "amount_cents": 1000,
+        "qr_url": os.getenv("MANUAL_PAYMENT_QR_URL", "").strip(),
+        "contact": os.getenv("MANUAL_PAYMENT_CONTACT", "").strip(),
+    }
+
+
 def _origins() -> list[str]:
     origins = {"http://localhost:8000", "http://127.0.0.1:8000", _app_url()}
     for item in (os.getenv("CORS_ORIGINS") or "").split(","):
@@ -146,6 +171,10 @@ class ReportBody(BaseModel):
     target_user_id: Optional[int] = None
     reason: str = Field(min_length=2, max_length=80)
     detail: str = Field(default="", max_length=1000)
+
+
+class PinpinPaymentRequestBody(BaseModel):
+    payer_nickname: str = Field(min_length=1, max_length=64)
 
 
 def _secret_key() -> str:
@@ -304,7 +333,7 @@ def quota_state(user: dict) -> dict:
         "is_pro": bool(user.get("is_pro")),
         "pinpin_sold": sold,
         "pinpin_cap": PINPIN_CAP,
-        "pinpin_open": _bool_env("ALLOW_SIMULATED_PAYMENT", False) and sold < PINPIN_CAP,
+        "pinpin_open": (_bool_env("ALLOW_SIMULATED_PAYMENT", False) or _manual_payment_enabled()) and sold < PINPIN_CAP,
         "can_boost": bool(user.get("is_pro")) and user.get("boost_period") != period,
         "boost_active": bool(user.get("boost_active")),
     }
@@ -446,6 +475,7 @@ def serialize_me(user: dict) -> dict:
             "tags", "learn_tags", "intro", "experience", "looking_for", "prefer_same_city", "referral_code",
             "profile_complete", "is_pro",
         )},
+        "is_payment_admin": _is_payment_admin(user),
         "unlock": unlock_state(user["id"]),
         "quota": quota_state(user),
         "email_configured": email_configured(),
@@ -475,12 +505,22 @@ def serialize_matches(user: dict) -> list[dict]:
 
 @app.get("/api/health")
 def health():
-    return {"ok": True, "email_configured": email_configured(), "payment_configured": False}
+    return {
+        "ok": True,
+        "release": _app_release(),
+        "email_configured": email_configured(),
+        "payment_configured": False,
+    }
 
 
 @app.get("/api/config")
 def config():
-    return {"email_configured": email_configured(), "app_url": _app_url(), "simulated_payment": _bool_env("ALLOW_SIMULATED_PAYMENT", False)}
+    return {
+        "email_configured": email_configured(),
+        "app_url": _app_url(),
+        "simulated_payment": _bool_env("ALLOW_SIMULATED_PAYMENT", False),
+        "manual_payment": _manual_payment_config(),
+    }
 
 
 @app.post("/api/auth/enter")
@@ -747,6 +787,108 @@ def simulate_pinpin(user: dict = Depends(current_user)):
     return data
 
 
+def _payment_request_payload(row) -> dict:
+    return {
+        "id": row["id"],
+        "order_code": row["order_code"],
+        "payer_nickname": row["payer_nickname"],
+        "amount_cents": row["amount_cents"],
+        "status": row["status"],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+        "reviewed_at": row["reviewed_at"],
+    }
+
+
+def _next_payment_order_code(conn) -> str:
+    while True:
+        code = "PP-" + secrets.token_hex(4).upper()
+        if not conn.execute("SELECT 1 FROM pinpin_payment_requests WHERE order_code=?", (code,)).fetchone():
+            return code
+
+
+@app.get("/api/pinpin/manual-order")
+def manual_payment_order(user: dict = Depends(current_user)):
+    with connect() as conn:
+        row = conn.execute("SELECT * FROM pinpin_payment_requests WHERE user_id=?", (user["id"],)).fetchone()
+    return {"payment": _manual_payment_config(), "order": _payment_request_payload(row) if row else None}
+
+
+@app.post("/api/pinpin/manual-order")
+def submit_manual_payment_order(body: PinpinPaymentRequestBody, user: dict = Depends(current_user)):
+    if not _manual_payment_enabled():
+        raise HTTPException(503, "内测收款暂未开放")
+    _rate_limit(f"manual-payment:{user['id']}", 8, 3600)
+    nickname = body.payer_nickname.strip()
+    if not nickname:
+        raise HTTPException(400, "请填写付款时显示的微信昵称")
+    with connect() as conn:
+        row = conn.execute("SELECT * FROM pinpin_payment_requests WHERE user_id=?", (user["id"],)).fetchone()
+        if row:
+            conn.execute(
+                "UPDATE pinpin_payment_requests SET payer_nickname=?,status=CASE WHEN status='approved' THEN status ELSE 'pending' END,updated_at=datetime('now') WHERE id=?",
+                (nickname, row["id"]),
+            )
+        else:
+            conn.execute(
+                "INSERT INTO pinpin_payment_requests(user_id,order_code,payer_nickname) VALUES(?,?,?)",
+                (user["id"], _next_payment_order_code(conn), nickname),
+            )
+        row = conn.execute("SELECT * FROM pinpin_payment_requests WHERE user_id=?", (user["id"],)).fetchone()
+    return {"ok": True, "order": _payment_request_payload(row)}
+
+
+def payment_admin(user: dict = Depends(current_user)) -> dict:
+    if not _is_payment_admin(user):
+        raise HTTPException(403, "此账号没有核账权限")
+    return user
+
+
+@app.get("/api/admin/pinpin-orders")
+def admin_pinpin_orders(status: str = "pending", admin: dict = Depends(payment_admin)):
+    if status not in {"pending", "approved"}:
+        raise HTTPException(400, "不支持的订单状态")
+    with connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT p.*,u.email,u.name FROM pinpin_payment_requests p
+            JOIN users u ON u.id=p.user_id
+            WHERE p.status=? ORDER BY p.updated_at DESC
+            """,
+            (status,),
+        ).fetchall()
+    return {
+        "orders": [
+            {**_payment_request_payload(row), "email": row["email"], "name": row["name"]}
+            for row in rows
+        ]
+    }
+
+
+@app.post("/api/admin/pinpin-orders/{order_id}/approve")
+def approve_pinpin_order(order_id: int, admin: dict = Depends(payment_admin)):
+    with connect() as conn:
+        row = conn.execute("SELECT * FROM pinpin_payment_requests WHERE id=?", (order_id,)).fetchone()
+        if not row:
+            raise HTTPException(404, "订单不存在")
+        if row["status"] == "approved":
+            return {"ok": True, "already_approved": True}
+        if row["status"] != "pending":
+            raise HTTPException(409, "订单当前不能开通")
+        conn.execute(
+            "UPDATE pinpin_payment_requests SET status='approved',reviewed_by=?,reviewed_at=datetime('now'),updated_at=datetime('now') WHERE id=?",
+            (admin["email"], order_id),
+        )
+        conn.execute("UPDATE users SET is_pro=1,pro_purchased_at=datetime('now') WHERE id=?", (row["user_id"],))
+    user = get_user(row["user_id"])
+    email_sent = send_mail(
+        user["email"],
+        "你的拼拼卡已开通",
+        f"你好，\n\n你的 ¥10 拼拼卡内测终身版已开通。现在可以直接查看更多匹配、使用组合筛选与每日加急曝光。\n\n进入拼个实习：{_app_url()}\n\n拼个实习",
+    )
+    return {"ok": True, "email_sent": email_sent}
+
+
 @app.post("/api/pinpin/boost")
 def boost(user: dict = Depends(current_user)):
     if not user.get("is_pro"):
@@ -773,6 +915,16 @@ def styles():
 @app.get("/app.js")
 def script():
     return FileResponse(ROOT / "app.js")
+
+
+@app.get("/review")
+def review_page():
+    return FileResponse(ROOT / "review.html")
+
+
+@app.get("/review.js")
+def review_script():
+    return FileResponse(ROOT / "review.js")
 
 
 app.mount("/assets", StaticFiles(directory=ROOT / "assets"), name="assets")

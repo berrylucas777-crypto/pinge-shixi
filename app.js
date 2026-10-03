@@ -223,21 +223,89 @@ async function buyPinpin() {
   }
 }
 
-function openPinpinSheet(reason = 'more_matches') {
+function manualPaymentHtml(payment, order) {
+  const submitted = order?.status === 'pending';
+  const approved = order?.status === 'approved';
+  if (approved) return '<p class="pinpin-note">这张拼拼卡已经开通。</p>';
+  return `
+    <div class="manual-payment">
+      ${submitted ? `<div class="manual-payment-amount">已提交核验</div>
+        <p class="pinpin-note">核对到账后会开通权益，并发送邮件到 ${escapeHtml(me?.user?.email || '你的登录邮箱')}。</p>` : `<div class="manual-payment-amount">¥10</div>
+        <img class="payment-qr" src="${escapeHtml(payment.qr_url)}" alt="微信收款码">
+        <p class="pinpin-note">扫码付款后，填写付款时显示的微信昵称。系统会用你的登录邮箱和昵称让我们核对，无需加微信或上传截图。</p>`}
+      ${order?.order_code ? `<p class="payment-order-code">订单号 <strong>${escapeHtml(order.order_code)}</strong> <button class="text-button" type="button" id="copyPaymentOrder">复制</button></p>` : ''}
+      <label class="payment-nickname-label" for="paymentNickname">${submitted ? '需要更正时，更新付款微信昵称' : '付款微信昵称'}</label>
+      <input id="paymentNickname" maxlength="64" autocomplete="off" placeholder="例如：小王同学" value="${escapeHtml(order?.payer_nickname || '')}">
+      <button class="primary-button" id="submitManualPayment" type="button"><span>${submitted ? '更新付款昵称' : '我已付款，提交核验'}</span><span class="arrow">→</span></button>
+      ${payment.contact ? `<p class="pinpin-note">核验遇到问题：${escapeHtml(payment.contact)}</p>` : ''}
+    </div>
+  `;
+}
+
+function bindManualPayment(reason, order) {
+  document.querySelector('#copyPaymentOrder')?.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(order.order_code);
+      showToast('订单号已复制');
+    } catch {
+      showToast('请手动复制订单号');
+    }
+  });
+  document.querySelector('#submitManualPayment')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    const payerNickname = document.querySelector('#paymentNickname').value.trim();
+    if (!payerNickname) {
+      showToast('请填写付款时显示的微信昵称');
+      return;
+    }
+    button.disabled = true;
+    try {
+      await api('/api/pinpin/manual-order', { method: 'POST', body: JSON.stringify({ payer_nickname: payerNickname }) });
+      showToast('已提交核验，开通后会邮件通知你');
+      await openPinpinSheet(reason);
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      button.disabled = false;
+    }
+  });
+}
+
+async function openPinpinSheet(reason = 'more_matches') {
   const data = quota();
-  const open = data.pinpin_open !== false;
   const copy = PINPIN_REASONS[reason] || PINPIN_REASONS.more_matches;
+  const canExploreFree = (data.details_used || 0) < (data.details_limit || 20);
+  let manual = null;
+  if (!isPro()) {
+    try {
+      manual = await api('/api/pinpin/manual-order');
+    } catch (error) {
+      showToast(error.message);
+    }
+  }
+  const payment = manual?.payment;
+  const order = manual?.order;
+  const open = data.pinpin_open !== false;
   openSheet(`
     <h2 id="sheetTitle">拼拼卡 · 内测终身版</h2>
     <p>${escapeHtml(copy)}</p>
     ${pinpinTableHtml()}
-    <p class="pinpin-note">首批内测用户 ¥9.8，终身解锁<strong>当前</strong>拼拼卡基础权益。不包含以后可能上线的 AI 匹配、邮件增强等增值服务。</p>
-    <p class="pinpin-note">真实支付接入前不会扣款，也不会展示虚假支付成功。名额 ${data.pinpin_sold || 0}/${data.pinpin_cap || 500}。</p>
-    ${isPro() ? '<button class="primary-button" disabled><span>已开通</span></button>' : open
+    <p class="pinpin-note">首批内测用户 ¥10，终身解锁<strong>当前</strong>拼拼卡基础权益。不包含以后可能上线的 AI 匹配、邮件增强等增值服务。</p>
+    <p class="pinpin-note">名额 ${data.pinpin_sold || 0}/${data.pinpin_cap || 500}。</p>
+    ${!isPro() && canExploreFree ? '<button class="text-button free-explore-button" id="freeExploreFromPinpin" type="button">暂不，先免费探索更多资料</button>' : ''}
+    ${isPro() ? '<button class="primary-button" disabled><span>已开通</span></button>' : payment?.enabled
+      ? manualPaymentHtml(payment, order)
+      : open
       ? '<button class="primary-button" id="simulatePinpin"><span>仅供测试环境开通</span><span class="arrow">→</span></button>'
       : '<button class="primary-button" disabled><span>真实支付接入中</span></button>'}
   `);
   bindPinpinBuy();
+  if (payment?.enabled) bindManualPayment(reason, order);
+  document.querySelector('#freeExploreFromPinpin')?.addEventListener('click', () => {
+    closeSheet();
+    setResultsView('explore');
+    explorePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 }
 
 function applyUnlock(unlock) {
@@ -528,6 +596,21 @@ async function enterApp(payload) {
   showResults();
 }
 
+function showSecondMatchUnlocked(message) {
+  renderMatches();
+  openSheet(`
+    <h2 id="sheetTitle">第 2 位已解锁</h2>
+    <p>${escapeHtml(message)}</p>
+    <button class="primary-button" id="viewSecondMatch" type="button"><span>先看看第 2 位匹配</span><span class="arrow">→</span></button>
+  `);
+  document.querySelector('#viewSecondMatch').addEventListener('click', () => {
+    closeSheet();
+    const card = matchDeck.querySelector('[data-index="1"]');
+    card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    card?.focus({ preventScroll: true });
+  });
+}
+
 function openXhsContact(id, person) {
   const handle = person.xhs || '';
   openSheet(`
@@ -543,9 +626,7 @@ function openXhsContact(id, person) {
       const result = await api(`/api/matches/${id}/contact`, { method: 'POST', body: JSON.stringify({ body: `小红书搜：${handle}` }) });
       matches = result.matches || matches;
       me.unlock = result.unlock;
-      closeSheet();
-      renderMatches();
-      showToast('已复制小红书昵称，去 App 里搜。第 2 位已解锁');
+      showSecondMatchUnlocked('小红书昵称已复制。你可以稍后去联系，先继续看看下一位匹配。');
     } catch (error) {
       showToast(error.message);
     }
@@ -574,13 +655,11 @@ function openContact(id, name) {
       const result = await api(`/api/matches/${id}/contact`, { method: 'POST', body: JSON.stringify({ body }) });
       matches = result.matches || matches;
       me.unlock = result.unlock;
-      closeSheet();
-      renderMatches();
       if (!result.sent) {
         await navigator.clipboard.writeText(body).catch(() => {});
-        showToast('邮箱尚未接通，邮件已复制，请自行发送。第 2 位已解锁');
+        showSecondMatchUnlocked('邮件内容已复制。你可以稍后发送，先继续看看下一位匹配。');
       } else {
-        showToast('邮件已发出，第 2 位搭子已解锁');
+        showSecondMatchUnlocked('认识邮件已发出。先继续看看下一位匹配。');
       }
     } catch (error) {
       showToast(error.message);
@@ -697,7 +776,7 @@ loginForm.addEventListener('submit', async (event) => {
       awaitingCode = true;
       document.querySelector('#codeField').classList.remove('is-hidden');
       document.querySelector('#loginHint').textContent = '验证码已发到邮箱，10 分钟内有效';
-      document.querySelector('#loginSubmitLabel').textContent = '验证并进入';
+      document.querySelector('#loginSubmitLabel').textContent = '验证并生成第一位匹配';
       otpInput.focus();
       showToast('验证码已发送');
       return;
@@ -838,6 +917,7 @@ avatarButton.addEventListener('click', () => {
     <p>${escapeHtml(user.role || '先写下经历，再查看匹配')}。学校只用于后台匹配，不会出现在别人看到的卡片上。</p>
     <button class="primary-button" id="editProfileButton"><span>我的档案</span><span class="arrow">→</span></button>
     ${isPro() ? '' : '<button class="text-button" id="openPinpinFromAccount" style="margin-top:12px;width:100%;">查看拼拼卡</button>'}
+    ${me?.is_payment_admin ? '<button class="text-button" id="openPaymentReview" style="margin-top:12px;width:100%;">内测核账</button>' : ''}
     <button class="text-button" id="deleteAccountButton" style="margin-top:12px;width:100%;color:#a33;">注销并删除账户</button>
     <button class="text-button" id="logoutButton" style="margin-top:12px;width:100%;">退出账户</button>
   `);
@@ -846,6 +926,7 @@ avatarButton.addEventListener('click', () => {
     showArchive();
   });
   document.querySelector('#openPinpinFromAccount')?.addEventListener('click', () => openPinpinSheet('more_matches'));
+  document.querySelector('#openPaymentReview')?.addEventListener('click', () => { window.location.href = '/review'; });
   document.querySelector('#deleteAccountButton').addEventListener('click', () => {
     openSheet(`
       <h2 id="sheetTitle">确认注销并删除账户？</h2>

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拼个实习｜内测核账</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="review-view">
+      <div class="review-heading">
+        <div>
+          <p class="review-eyebrow">拼个实习</p>
+          <h1>内测核账</h1>
+          <p>仅显示已提交付款昵称的内测订单。核对微信收款账单后，再开通权益。</p>
+        </div>
+        <a class="text-button" href="/">返回产品</a>
+      </div>
+      <section class="review-panel">
+        <div class="review-toolbar">
+          <span id="orderCount">加载中</span>
+          <button class="text-button" id="refreshOrders" type="button">刷新</button>
+        </div>
+        <div id="reviewError" class="form-error"></div>
+        <div id="orderRows"></div>
+      </section>
+    </main>
+    <script src="/review.js"></script>
+  </body>
+</html>

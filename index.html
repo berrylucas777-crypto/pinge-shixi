@@ -46,7 +46,7 @@
             <form class="login-panel" id="loginForm" novalidate>
               <div class="login-heading">
                 <h2>查看你的匹配</h2>
-                <p id="loginHint">登录后免费查看第一位候选人</p>
+                <p id="loginHint">用约 1 分钟写下经历，免费生成第一位匹配</p>
               </div>
               <label for="email">邮箱</label>
               <div class="input-wrap">
@@ -69,7 +69,7 @@
             </label>
             <p class="form-error" id="formError" role="alert"></p>
               <button class="primary-button" type="submit" id="loginSubmit">
-                <span id="loginSubmitLabel">进入匹配结果</span>
+                <span id="loginSubmitLabel">免费生成第一位匹配</span>
                 <span class="arrow" aria-hidden="true">→</span>
               </button>
               <p class="privacy-note">继续即表示你同意仅将资料用于本次匹配</p>
@@ -81,20 +81,21 @@
           <div class="profile-intro">
             <div>
               <h1 id="profileTitle">先说两件事</h1>
-              <p>匹配只看你做过什么、想找什么样的人。群聊介绍可以先贴进来识别。</p>
+              <p>约 1 分钟。只写你做过什么、想找什么样的人，就能生成第一位匹配。</p>
             </div>
           </div>
           <form class="profile-card" id="profileForm">
-            <label for="profileIntro">群聊自我介绍 <span>选填</span></label>
-            <textarea id="profileIntro" name="intro" class="intro-draft" placeholder="把群里那段介绍贴在这里，例如：&#10;林屿 / 清华研二 / 上海&#10;多模态算法实习，擅长评测和微调&#10;想了解 ToB 落地和面试复盘"></textarea>
-            <button class="text-button parse-intro-button" type="button" id="parseIntroButton">识别并填入下方</button>
             <label for="profileExperience">我的经历与项目</label>
             <textarea id="profileExperience" name="experience" class="intro-draft" required placeholder="做过什么项目、能分享什么工作流"></textarea>
             <label for="profileLooking">我想找的人 / 想学习的项目</label>
             <textarea id="profileLooking" name="looking_for" class="intro-draft" required placeholder="想找谁交换，或想补上哪一块"></textarea>
+            <p class="profile-guide">已有群聊自我介绍？可直接粘贴，系统会帮你填上面两段。</p>
+            <label for="profileIntro">群聊自我介绍 <span>选填</span></label>
+            <textarea id="profileIntro" name="intro" class="intro-draft" placeholder="例如：多模态算法实习，擅长评测和微调；想了解 ToB 落地和面试复盘"></textarea>
+            <button class="text-button parse-intro-button" type="button" id="parseIntroButton">识别并填入上方</button>
             <label class="remember-row" for="profileContentConsent">
               <input id="profileContentConsent" type="checkbox" />
-              我确认内容已脱敏，不含第三方隐私、未公开业务数据或商业秘密
+              我确认不含他人隐私或未公开业务信息
             </label>
             <p class="form-error" id="profileError" role="alert"></p>
             <button class="primary-button" type="submit" id="profileSubmit">

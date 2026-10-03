@@ -87,6 +87,36 @@ def test_simulated_payment_is_disabled_by_default(tmp_path, monkeypatch):
         assert response.status_code == 503
 
 
+def test_health_reports_release(tmp_path, monkeypatch):
+    monkeypatch.setenv("APP_RELEASE", "test-release")
+    client, _ = make_client(tmp_path, monkeypatch)
+    with client:
+        response = client.get("/api/health")
+        assert response.status_code == 200
+        assert response.json()["release"] == "test-release"
+
+
+def test_manual_payment_can_be_reviewed_and_approved(tmp_path, monkeypatch):
+    monkeypatch.setenv("MANUAL_PAYMENT_ENABLED", "true")
+    monkeypatch.setenv("MANUAL_PAYMENT_QR_URL", "/assets/pinpin-payment-qr.png")
+    monkeypatch.setenv("PAYMENT_ADMIN_EMAILS", "payment@example.com")
+    client, _ = make_client(tmp_path, monkeypatch)
+    with client:
+        register_and_onboard(client, "payment@example.com")
+        created = client.post("/api/pinpin/manual-order", json={"payer_nickname": "测试同学"})
+        assert created.status_code == 200, created.text
+        assert created.json()["order"]["status"] == "pending"
+
+        orders = client.get("/api/admin/pinpin-orders")
+        assert orders.status_code == 200, orders.text
+        order = orders.json()["orders"][0]
+        assert order["payer_nickname"] == "测试同学"
+
+        approved = client.post(f"/api/admin/pinpin-orders/{order['id']}/approve")
+        assert approved.status_code == 200, approved.text
+        assert client.get("/api/me").json()["user"]["is_pro"] is True
+
+
 def test_existing_database_receives_compatible_columns(tmp_path, monkeypatch):
     _, db = make_client(tmp_path, monkeypatch)
     legacy = db.DB_PATH

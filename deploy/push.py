@@ -1,5 +1,6 @@
 import os
 import secrets
+import subprocess
 from pathlib import Path
 
 import paramiko
@@ -12,6 +13,8 @@ UPLOAD = [
     "index.html",
     "styles.css",
     "app.js",
+    "review.html",
+    "review.js",
     "requirements.txt",
     "assets/pingo-mascot.webp",
     "server/__init__.py",
@@ -22,6 +25,9 @@ UPLOAD = [
     "server/main.py",
     "匹配池/群聊职业经历与供需数据库_OCR初版.json",
 ]
+PAYMENT_QR = "assets/pinpin-payment-qr.jpg"
+if (ROOT / PAYMENT_QR).exists():
+    UPLOAD.append(PAYMENT_QR)
 NGINX = """
 server {
     listen 80;
@@ -72,12 +78,20 @@ def main():
     password = (local_env.get("Sever_Key") or "").strip()
     prod = dotenv_values(ROOT / ".env.production")
     secret = (prod.get("SECRET_KEY") or "").strip() or secrets.token_urlsafe(32)
+    release = subprocess.check_output(["git", "rev-parse", "--short=12", "HEAD"], cwd=ROOT, text=True).strip()
+    if subprocess.run(["git", "status", "--porcelain"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip():
+        release = f"{release}-dirty"
     remote_env = "\n".join(
         [
             "APP_URL=https://shixi.seu-link.fit",
+            f"APP_RELEASE={release}",
             f"SECRET_KEY={secret}",
             "DISABLE_DOCS=true",
             "ALLOW_SIMULATED_PAYMENT=false",
+            f"MANUAL_PAYMENT_ENABLED={prod.get('MANUAL_PAYMENT_ENABLED', '').strip()}",
+            f"MANUAL_PAYMENT_QR_URL={prod.get('MANUAL_PAYMENT_QR_URL', '').strip()}",
+            f"MANUAL_PAYMENT_CONTACT={prod.get('MANUAL_PAYMENT_CONTACT', '').strip()}",
+            f"PAYMENT_ADMIN_EMAILS={prod.get('PAYMENT_ADMIN_EMAILS', '').strip()}",
             "SMTP_HOST=smtpdm.aliyun.com",
             "SMTP_PORT=465",
             "SMTP_USER=no-reply@seu-link.fit",
@@ -117,11 +131,15 @@ def main():
     run(client, "systemctl daemon-reload && systemctl enable --now pingshixi && systemctl restart pingshixi")
     run(client, "systemctl reload nginx")
     run(client, "sleep 1; curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/api/health; echo; curl -sS http://127.0.0.1:8000/api/health")
+    run(client, "test \"$(curl -sS -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/docs)\" != 200")
+    run(client, "curl -sS http://127.0.0.1:8000/api/health | grep -Fq '\"release\":\"%s\"'" % release)
     run(
         client,
         "certbot --nginx -d shixi.seu-link.fit --non-interactive --agree-tos --email 1450616433@qq.com --redirect",
     )
     run(client, "curl -sS -o /dev/null -w '%{http_code} %{url_effective}\\n' https://shixi.seu-link.fit/api/health")
+    run(client, "test \"$(curl -sS -o /dev/null -w '%{http_code}' https://shixi.seu-link.fit/docs)\" != 200")
+    run(client, "curl -sS https://shixi.seu-link.fit/api/health | grep -Fq '\"release\":\"%s\"'" % release)
     client.close()
     print("DEPLOY_OK")
 
