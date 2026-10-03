@@ -7,7 +7,7 @@
     <meta name="description" content="拼个实习，用真实经历找到可以交换工作流的实习搭子。" />
     <title>拼个实习</title>
     <link rel="icon" href="assets/pingo-mascot.webp" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20261003.3" />
   </head>
   <body>
     <div class="site-shell">
@@ -26,12 +26,13 @@
       <main>
         <section class="login-view" id="loginView" aria-labelledby="loginTitle">
           <div class="login-copy">
-            <h1 id="loginTitle">找一个真的<br />聊得上工作的人。</h1>
-            <p>把群聊里零散的自我介绍，变成三个值得认识的实习搭子。</p>
+            <h1 id="loginTitle">先入池，<br />每天 21 点再配对。</h1>
+            <p>人少的时候硬配没有意义。你先进来，每晚 21:00 准时匹配一次。</p>
+            <p class="pool-rally" id="poolRally">每天 <strong>21:00</strong> 准时匹配。现在进池，就差你了。</p>
             <div class="proof-line" aria-label="产品特点">
-              <span>真实群聊需求</span>
+              <span>每天 21:00 准时匹配</span>
               <i></i>
-              <span>AI 辅助匹配</span>
+              <span>真人先入池</span>
               <i></i>
               <span>彼此经验互补</span>
             </div>
@@ -40,13 +41,13 @@
           <div class="login-stage">
             <div class="mascot-wrap" aria-hidden="true">
               <img src="assets/pingo-mascot.webp" alt="" />
-              <div class="float-note note-one">你做模型，我懂业务</div>
-              <div class="float-note note-two">匹配度 92%</div>
+              <div class="float-note note-one">先把人攒齐</div>
+              <div class="float-note note-two">今晚 21:00</div>
             </div>
             <form class="login-panel" id="loginForm" novalidate>
               <div class="login-heading">
-                <h2>查看你的匹配</h2>
-                <p id="loginHint">用约 1 分钟写下经历，免费生成第一位匹配</p>
+                <h2>加入今日匹配池</h2>
+                <p id="loginHint">用约 1 分钟写下经历，进池等今晚 21:00</p>
               </div>
               <label for="email">邮箱</label>
               <div class="input-wrap">
@@ -69,7 +70,7 @@
             </label>
             <p class="form-error" id="formError" role="alert"></p>
               <button class="primary-button" type="submit" id="loginSubmit">
-                <span id="loginSubmitLabel">免费生成第一位匹配</span>
+                <span id="loginSubmitLabel">加入今日匹配池</span>
                 <span class="arrow" aria-hidden="true">→</span>
               </button>
               <p class="privacy-note">继续即表示你同意仅将资料用于本次匹配</p>
@@ -80,8 +81,8 @@
         <section class="profile-view is-hidden" id="profileView" aria-labelledby="profileTitle">
           <div class="profile-intro">
             <div>
-              <h1 id="profileTitle">先说两件事</h1>
-              <p>约 1 分钟。只写你做过什么、想找什么样的人，就能生成第一位匹配。</p>
+              <h1 id="profileTitle">先入池</h1>
+              <p>写一句你想交流的内容。人进池后，每天 21:00 准时匹配。</p>
             </div>
           </div>
           <form class="profile-card" id="profileForm">
@@ -94,7 +95,7 @@
             </label>
             <p class="form-error" id="profileError" role="alert"></p>
             <button class="primary-button" type="submit" id="profileSubmit">
-              <span>生成我的匹配</span>
+              <span>加入匹配池</span>
               <span class="arrow" aria-hidden="true">→</span>
             </button>
           </form>
@@ -154,10 +155,10 @@
         <section class="results-view is-hidden" id="resultsView" aria-labelledby="resultsTitle">
           <div class="results-intro">
             <div>
-              <h1 id="resultsTitle">你的实习搭子</h1>
-              <p>每天 12:00 刷新一批精选匹配。浏览额度按打开详情计算。</p>
+              <h1 id="resultsTitle">今晚的匹配池</h1>
+              <p>每天 21:00 准时匹配。人齐了再配对，结果会出现在这里。</p>
             </div>
-            <span class="sample-label" id="dataLabel">正式匹配</span>
+            <span class="sample-label" id="dataLabel">攒人中</span>
           </div>
 
           <div class="quota-bar" id="quotaBar" aria-label="今日额度"></div>
@@ -169,7 +170,7 @@
 
           <section id="matchesPanel" role="tabpanel" aria-labelledby="matchesTab">
             <div class="unlock-progress" aria-label="解锁进度">
-              <div class="progress-step is-done"><span>1</span><p><strong>注册完成</strong><small>首位搭子已解锁</small></p></div>
+              <div class="progress-step is-done"><span>1</span><p><strong>已进匹配池</strong><small>等今晚 21:00</small></p></div>
               <div class="progress-line" id="emailProgressLine"></div>
               <div class="progress-step" id="emailProgress"><span>2</span><p><strong>联系第 1 位</strong><small>解锁第 2 位</small></p></div>
               <div class="progress-line" id="inviteProgressLine"></div>
@@ -183,8 +184,8 @@
                 <img src="assets/pingo-mascot.webp" alt="" />
               </div>
               <div class="invite-copy">
-                <h2>喊一个朋友来，解锁第 3 位</h2>
-                <p>朋友完成注册后，你们都会多获得一位匹配。</p>
+                <h2>喊一个朋友进池</h2>
+                <p>朋友完成注册后一起等今晚 21:00。人越多，配对越准。</p>
               </div>
               <div class="invite-action">
                 <div class="code-box">
@@ -257,6 +258,6 @@
     </aside>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=20261003.2"></script>
+    <script src="app.js?v=20261003.3"></script>
   </body>
 </html>

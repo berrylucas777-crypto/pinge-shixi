@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import re
@@ -24,7 +23,6 @@ from pydantic import BaseModel, Field
 from .db import connect, init_db
 from .mailer import email_configured, send_mail
 from .matching import score_pair
-from .seed import SEED_USERS
 
 load_dotenv()
 
@@ -38,6 +36,24 @@ COOKIE_NAME = "pingo_session"
 PINPIN_CAP = 500
 EARLY_ACCESS_INVITE_CODE = (os.getenv("EARLY_ACCESS_INVITE_CODE") or "PINGO-START").strip().upper()
 _auth_attempts: dict[str, deque[float]] = defaultdict(deque)
+
+
+def _now() -> datetime:
+    return datetime.now(TZ)
+
+
+def _match_hour() -> int:
+    try:
+        return max(0, min(23, int((os.getenv("MATCH_HOUR") or "21").strip())))
+    except ValueError:
+        return 21
+
+
+def _pool_min() -> int:
+    try:
+        return max(2, int((os.getenv("MATCH_POOL_MIN") or "2").strip()))
+    except ValueError:
+        return 2
 
 
 def _bool_env(name: str, default: bool = False) -> bool:
@@ -88,7 +104,7 @@ def _origins() -> list[str]:
 async def lifespan(_: FastAPI):
     _secret_key()
     init_db()
-    seed_if_needed()
+    purge_seed_users()
     yield
 
 
@@ -308,17 +324,49 @@ def _rate_limit(key: str, limit: int = 6, window: int = 600) -> None:
 
 
 def _period(now: Optional[datetime] = None) -> str:
-    current = now or datetime.now(TZ)
-    day = current.date() if current.hour >= 12 else (current - timedelta(days=1)).date()
-    return day.isoformat()
+    current = now or _now()
+    hour = _match_hour()
+    day = current.date() if current.hour >= hour else (current - timedelta(days=1)).date()
+    return f"{day.isoformat()}-{hour:02d}"
+
+
+def _matching_open(now: Optional[datetime] = None) -> bool:
+    current = now or _now()
+    return current.hour >= _match_hour()
+
+
+def _next_match_at(now: Optional[datetime] = None) -> datetime:
+    current = now or _now()
+    target = current.replace(hour=_match_hour(), minute=0, second=0, microsecond=0)
+    if current >= target:
+        target += timedelta(days=1)
+    return target
 
 
 def _next_refresh_label() -> str:
-    now = datetime.now(TZ)
-    target = now.replace(hour=12, minute=0, second=0, microsecond=0)
-    if now >= target:
-        target += timedelta(days=1)
-    return target.strftime("%m-%d 12:00")
+    target = _next_match_at()
+    return target.strftime(f"%m-%d {_match_hour():02d}:00")
+
+
+def live_pool_count() -> int:
+    with connect() as conn:
+        return conn.execute(
+            "SELECT COUNT(*) n FROM users WHERE IFNULL(is_seed,0)=0 AND IFNULL(experience,'')!='' AND IFNULL(looking_for,'')!=''"
+        ).fetchone()["n"]
+
+
+def pool_state() -> dict:
+    count = live_pool_count()
+    ready = _matching_open() and count >= _pool_min()
+    return {
+        "count": count,
+        "min": _pool_min(),
+        "match_hour": _match_hour(),
+        "matching_open": _matching_open(),
+        "ready": ready,
+        "waiting": not ready,
+        "next_match_label": _next_refresh_label(),
+    }
 
 
 def quota_state(user: dict) -> dict:
@@ -347,75 +395,50 @@ def unlock_state(user_id: int) -> dict:
     return {"email_sent": contacted > 0, "referral_complete": invited > 0}
 
 
-def _pool_users() -> list[dict]:
-    files = sorted((ROOT / "匹配池").glob("*.json"))
-    if not files:
-        return []
-    try:
-        records = json.loads(files[0].read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return []
-    people = []
-    for item in records if isinstance(records, list) else []:
-        name = str(item.get("nickname") or "").strip()
-        if not name:
-            continue
-        digest = hashlib.sha256((name + str(item.get("raw_ocr") or "")).encode()).hexdigest()[:12]
-        role_tags = item.get("role_tags") or []
-        domain_tags = item.get("domain_tags") or []
-        tags = _clean_tags([*role_tags, *domain_tags])
-        people.append({
-            "email": f"pool-{digest}@pingo.local",
-            "name": name,
-            "school": "",
-            "grade": "",
-            "city": str(item.get("city") or ""),
-            "major": "",
-            "role": " / ".join(role_tags[:2]) or "经验交换",
-            "skills": str(item.get("supply") or item.get("experience") or ""),
-            "wants": str(item.get("demand") or ""),
-            "experience": str(item.get("experience") or item.get("supply") or ""),
-            "looking_for": str(item.get("demand") or ""),
-            "tags": tags or ["求职交流"],
-            "learn_tags": _infer_tags(str(item.get("demand") or "")),
-            "intro": str(item.get("cleaned_message") or ""),
-            "xhs": name,
-            "letter": name[:1].upper(),
-            "tone": TONES[int(digest[:2], 16) % len(TONES)],
-            "referral_code": "POOL-" + digest[:8].upper(),
-        })
-    return people
-
-
-def seed_if_needed() -> None:
-    people = _pool_users() or SEED_USERS
+def purge_seed_users() -> None:
     with connect() as conn:
-        for person in people:
-            tags = person.get("tags") or []
-            experience = person.get("experience") or person.get("skills") or ""
-            looking_for = person.get("looking_for") or person.get("wants") or ""
+        rows = conn.execute(
+            "SELECT id FROM users WHERE IFNULL(is_seed,0)=1 OR email LIKE '%@pingo.local'"
+        ).fetchall()
+        ids = [row["id"] for row in rows]
+        tables = {row[0] for row in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+        if ids:
+            placeholders = ",".join("?" * len(ids))
             conn.execute(
-                """
-                INSERT INTO users(email,name,school,grade,city,major,role,skills,wants,tags,learn_tags,intro,experience,looking_for,xhs,letter,tone,referral_code,is_seed)
-                VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
-                ON CONFLICT(email) DO UPDATE SET name=excluded.name,city=excluded.city,role=excluded.role,skills=excluded.skills,
-                  wants=excluded.wants,tags=excluded.tags,learn_tags=excluded.learn_tags,intro=excluded.intro,
-                  experience=excluded.experience,looking_for=excluded.looking_for,xhs=excluded.xhs,letter=excluded.letter,tone=excluded.tone
-                """,
-                (
-                    person["email"], person["name"], person.get("school", ""), person.get("grade", ""),
-                    person.get("city", ""), person.get("major", ""), person.get("role", ""), person.get("skills", ""),
-                    person.get("wants", ""), json.dumps(tags, ensure_ascii=False),
-                    json.dumps(person.get("learn_tags") or [], ensure_ascii=False), person.get("intro", ""),
-                    experience, looking_for, person.get("xhs", ""), person.get("letter") or person["name"][:1],
-                    person.get("tone", "blue"), person["referral_code"],
-                ),
+                f"UPDATE users SET invited_by_user_id=NULL WHERE invited_by_user_id IN ({placeholders})",
+                ids,
             )
+            for table, left, right in (
+                ("matches", "user_id", "candidate_id"),
+                ("contacts", "from_user_id", "to_user_id"),
+                ("member_views", "user_id", "candidate_id"),
+                ("preferences", "user_id", "candidate_id"),
+            ):
+                if table in tables:
+                    conn.execute(
+                        f"DELETE FROM {table} WHERE {left} IN ({placeholders}) OR {right} IN ({placeholders})",
+                        (*ids, *ids),
+                    )
+            if "reports" in tables:
+                conn.execute(f"DELETE FROM reports WHERE reporter_user_id IN ({placeholders})", ids)
+                conn.execute(f"UPDATE reports SET target_user_id=NULL WHERE target_user_id IN ({placeholders})", ids)
+            for table, column in (
+                ("sessions", "user_id"),
+                ("pinpin_payment_requests", "user_id"),
+                ("pinpin_orders", "user_id"),
+            ):
+                if table in tables:
+                    conn.execute(f"DELETE FROM {table} WHERE {column} IN ({placeholders})", ids)
+            conn.execute(f"DELETE FROM users WHERE id IN ({placeholders})", ids)
+        conn.execute("UPDATE users SET xhs='' WHERE IFNULL(xhs,'')!=''")
 
 
-def list_candidates(exclude_id: int) -> list[dict]:
+def list_candidates(exclude_id: int, *, live_only: bool = True) -> list[dict]:
+    query = "SELECT * FROM users WHERE id!=? AND name!='' AND experience!=''"
+    if live_only:
+        query += " AND IFNULL(is_seed,0)=0 AND email NOT LIKE '%@pingo.local'"
     with connect() as conn:
-        rows = conn.execute("SELECT * FROM users WHERE id!=? AND name!='' AND experience!=''", (exclude_id,)).fetchall()
+        rows = conn.execute(query, (exclude_id,)).fetchall()
     return [_user_dict(row) for row in rows]
 
 
@@ -428,13 +451,15 @@ def preferred_id(user_id: int) -> Optional[int]:
 def recompute_matches(user: dict, force: bool = False) -> list[dict]:
     if not user.get("profile_complete"):
         return []
+    if not _matching_open() or live_pool_count() < _pool_min():
+        return []
     with connect() as conn:
         existing = conn.execute("SELECT * FROM matches WHERE user_id=? ORDER BY rank", (user["id"],)).fetchall()
         if existing and not force and "period" in existing[0].keys() and existing[0]["period"] == _period():
             return [dict(row) for row in existing]
         conn.execute("DELETE FROM matches WHERE user_id=?", (user["id"],))
     prefer = preferred_id(user["id"])
-    scored = [score_pair(user, candidate, prefer) for candidate in list_candidates(user["id"])]
+    scored = [score_pair(user, candidate, prefer) for candidate in list_candidates(user["id"], live_only=True)]
     scored.sort(key=lambda item: item["score"], reverse=True)
     with connect() as conn:
         for rank, item in enumerate(scored[:5], 1):
@@ -461,8 +486,6 @@ def _public_person(user: dict, viewer: dict, unlocked: bool = True) -> dict:
         "tags": user.get("tags") or [],
         "letter": user.get("letter") or name[:1],
         "tone": user.get("tone") or "blue",
-        "xhs": user.get("xhs") if unlocked else "",
-        "is_seed": bool(user.get("is_seed")),
         "same_city": bool(viewer.get("city") and viewer.get("city") == user.get("city")),
         "similar_background": bool(viewer.get("major") and viewer.get("major") == user.get("major")),
         "boost_active": bool(user.get("boost_active")),
@@ -481,6 +504,7 @@ def serialize_me(user: dict) -> dict:
         "quota": quota_state(user),
         "email_configured": email_configured(),
         "app_url": _app_url(),
+        "pool": pool_state(),
     }
 
 
@@ -521,6 +545,7 @@ def config():
         "app_url": _app_url(),
         "simulated_payment": _bool_env("ALLOW_SIMULATED_PAYMENT", False),
         "manual_payment": _manual_payment_config(),
+        "pool": pool_state(),
     }
 
 
@@ -682,8 +707,27 @@ def parse_intro(body: IntroBody, user: dict = Depends(current_user)):
 @app.get("/api/matches")
 def matches(user: dict = Depends(current_user)):
     if not user.get("profile_complete"):
-        return {"matches": [], "unlock": unlock_state(user["id"]), "quota": quota_state(user)}
-    return {"matches": serialize_matches(user), "unlock": unlock_state(user["id"]), "quota": quota_state(user)}
+        return {"matches": [], "pool": pool_state(), "unlock": unlock_state(user["id"]), "quota": quota_state(user)}
+    return {"matches": serialize_matches(user), "pool": pool_state(), "unlock": unlock_state(user["id"]), "quota": quota_state(user)}
+
+
+def _can_email_user(person: dict) -> bool:
+    email = (person.get("email") or "").strip()
+    return bool(email) and not email.endswith(".local") and not person.get("is_seed")
+
+
+def _contact_mail_body(draft: str, sender: dict, candidate: dict) -> str:
+    sender_email = (sender.get("email") or "").strip()
+    candidate_email = (candidate.get("email") or "").strip()
+    sender_name = (sender.get("name") or "发起人").strip()
+    candidate_name = (candidate.get("name") or "搭子").strip()
+    return (
+        f"{draft.rstrip()}\n\n"
+        "——\n"
+        "为方便直接联系，这次匹配到的对方邮箱如下：\n"
+        f"{candidate_name}：{candidate_email}\n"
+        f"{sender_name}：{sender_email}\n"
+    )
 
 
 @app.post("/api/matches/{candidate_id}/contact")
@@ -693,9 +737,17 @@ def contact(candidate_id: int, body: ContactBody, user: dict = Depends(current_u
         raise HTTPException(403, "这位搭子尚未解锁")
     candidate = get_user(candidate_id)
     draft = body.body.strip() or f"Hi {candidate['name']}，我在「拼个实习」看到我们很匹配，想约 20 分钟交换项目工作流和求职经验。"
+    message = _contact_mail_body(draft, user, candidate)
     sent = False
-    if not candidate.get("is_seed") and not candidate["email"].endswith(".local"):
-        sent = send_mail(candidate["email"], f"来自「拼个实习」的认识邮件 · {user['name']}", draft, reply_to=user["email"])
+    if _can_email_user(candidate):
+        sent = send_mail(candidate["email"], f"来自「拼个实习」的认识邮件 · {user['name']}", message, reply_to=user["email"])
+        if _can_email_user(user):
+            send_mail(
+                user["email"],
+                f"你匹配到的搭子邮箱 · {candidate['name']}",
+                message,
+                reply_to=candidate["email"],
+            )
     with connect() as conn:
         conn.execute(
             "INSERT INTO contacts(from_user_id,to_user_id,body,sent) VALUES(?,?,?,?) ON CONFLICT(from_user_id,to_user_id) DO UPDATE SET body=excluded.body,sent=excluded.sent",
@@ -742,7 +794,12 @@ def members(q: str = "", tag: str = "", city: str = "", grade: str = "", major: 
 @app.get("/api/members/{candidate_id}")
 def member_detail(candidate_id: int, user: dict = Depends(current_user)):
     candidate = get_user(candidate_id)
-    if not candidate or candidate_id == user["id"]:
+    if (
+        not candidate
+        or candidate_id == user["id"]
+        or candidate.get("is_seed")
+        or str(candidate.get("email") or "").endswith("@pingo.local")
+    ):
         raise HTTPException(404, "没有找到这位成员")
     period = _period()
     state = quota_state(user)
