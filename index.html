@@ -57,8 +57,8 @@
                 <label for="otpCode">验证码</label>
                 <input id="otpCode" name="otpCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6 位验证码" />
               </div>
-              <label for="inviteCode">邀请码 <span>选填</span></label>
-              <input id="inviteCode" name="inviteCode" type="text" autocomplete="off" placeholder="例如 PINGO-8K2M" />
+              <input id="inviteCode" name="inviteCode" type="hidden" value="" />
+              <button class="invite-claim" id="claimInvite" type="button">点击获得我的邀请码</button>
             <label class="remember-row" for="rememberMe">
               <input id="rememberMe" name="remember" type="checkbox" checked />
               30 天内免登录
@@ -85,14 +85,9 @@
             </div>
           </div>
           <form class="profile-card" id="profileForm">
-            <label for="profileExperience">我的经历与项目</label>
-            <textarea id="profileExperience" name="experience" class="intro-draft" required placeholder="做过什么项目、能分享什么工作流"></textarea>
-            <label for="profileLooking">我想找的人 / 想学习的项目</label>
-            <textarea id="profileLooking" name="looking_for" class="intro-draft" required placeholder="想找谁交换，或想补上哪一块"></textarea>
-            <p class="profile-guide">已有群聊自我介绍？可直接粘贴，系统会帮你填上面两段。</p>
-            <label for="profileIntro">群聊自我介绍 <span>选填</span></label>
-            <textarea id="profileIntro" name="intro" class="intro-draft" placeholder="例如：多模态算法实习，擅长评测和微调；想了解 ToB 落地和面试复盘"></textarea>
-            <button class="text-button parse-intro-button" type="button" id="parseIntroButton">识别并填入上方</button>
+            <label for="profileIntro">用一句话介绍你想交流的内容</label>
+            <textarea id="profileIntro" name="intro" class="intro-draft intro-draft-compact" required rows="3" placeholder="例如：做过 AI 产品，想找 Agent 项目经验聊聊"></textarea>
+            <p class="profile-guide">写做过什么或想聊什么都可以，不用完整简历。</p>
             <label class="remember-row" for="profileContentConsent">
               <input id="profileContentConsent" type="checkbox" />
               我确认不含他人隐私或未公开业务信息

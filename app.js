@@ -8,6 +8,7 @@ const archiveForm = document.querySelector('#archiveForm');
 const emailInput = document.querySelector('#email');
 const otpInput = document.querySelector('#otpCode');
 const inviteInput = document.querySelector('#inviteCode');
+const claimInviteButton = document.querySelector('#claimInvite');
 const formError = document.querySelector('#formError');
 const profileError = document.querySelector('#profileError');
 const archiveError = document.querySelector('#archiveError');
@@ -384,9 +385,7 @@ function renderTags(containerId, selected, attr) {
 
 function fillProfileForm() {
   const user = me?.user || {};
-  if (profileForm.profileIntro) profileForm.profileIntro.value = user.intro || '';
-  if (profileForm.profileExperience) profileForm.profileExperience.value = user.experience || user.skills || '';
-  if (profileForm.profileLooking) profileForm.profileLooking.value = user.looking_for || user.wants || '';
+  if (profileForm.profileIntro) profileForm.profileIntro.value = user.intro || user.experience || user.looking_for || '';
 }
 
 function fillArchiveForm() {
@@ -840,8 +839,8 @@ profileForm.addEventListener('submit', async (event) => {
     me = await api('/api/me/onboard', {
       method: 'POST',
       body: JSON.stringify({
-        experience: profileForm.profileExperience.value.trim(),
-        looking_for: profileForm.profileLooking.value.trim(),
+        experience: profileForm.profileIntro.value.trim(),
+        looking_for: profileForm.profileIntro.value.trim(),
         intro: profileForm.profileIntro.value.trim(),
         content_confirmed: document.querySelector('#profileContentConsent')?.checked === true,
       }),
@@ -883,25 +882,11 @@ archiveForm.addEventListener('submit', async (event) => {
   }
 });
 
-document.querySelector('#parseIntroButton').addEventListener('click', async () => {
-  const text = profileForm.profileIntro.value.trim();
-  profileError.textContent = '';
-  const button = document.querySelector('#parseIntroButton');
-  button.disabled = true;
-  try {
-    const data = await api('/api/me/parse-intro', { method: 'POST', body: JSON.stringify({ text }) });
-    const profile = data.profile || {};
-    if (profile.experience) profileForm.profileExperience.value = profile.experience;
-    else if (profile.skills) profileForm.profileExperience.value = profile.skills;
-    if (profile.looking_for) profileForm.profileLooking.value = profile.looking_for;
-    else if (profile.wants) profileForm.profileLooking.value = profile.wants;
-    if (profile.intro && !profileForm.profileIntro.value) profileForm.profileIntro.value = profile.intro;
-    showToast(profile.source === 'llm' ? '已用模型识别，请确认后生成匹配' : '已识别，请确认后生成匹配');
-  } catch (error) {
-    profileError.textContent = error.message;
-  } finally {
-    button.disabled = false;
-  }
+claimInviteButton.addEventListener('click', () => {
+  inviteInput.value = 'PINGO-START';
+  claimInviteButton.textContent = '内测邀请码已领取';
+  claimInviteButton.classList.add('is-claimed');
+  showToast('邀请码已填写，注册后可在账户页查看自己的邀请码');
 });
 
 document.querySelector('#archiveSkillTags').addEventListener('click', (event) => {
@@ -933,7 +918,7 @@ document.querySelector('#aboutButton').addEventListener('click', () => {
     <h2 id="sheetTitle">三步找到实习搭子</h2>
     <p>匹配不只看岗位名，更看你们正在做什么、彼此能补上什么。</p>
     <ol>
-      <li><div><strong>写下经历和想找的人</strong><br><span>首次只需两栏。城市、年级、专业可在「我的档案」里补。</span></div></li>
+      <li><div><strong>写一句你想交流的内容</strong><br><span>首次不用填完整简历。城市、年级、专业可在「我的档案」里补。</span></div></li>
       <li><div><strong>每天 12:00 看一批精选</strong><br><span>免费先看 1 位匹配，打开详情每天 20 人。不是列表滑过就算。</span></div></li>
       <li><div><strong>需要更多时再开拼拼卡</strong><br><span>更多名单、更多匹配、加急曝光。学校不会公开展示。</span></div></li>
     </ol>
@@ -953,6 +938,7 @@ avatarButton.addEventListener('click', () => {
   openSheet(`
     <h2 id="sheetTitle">${escapeHtml(user.email || '当前用户')}</h2>
     <p>${escapeHtml(user.role || '先写下经历，再查看匹配')}。学校只用于后台匹配，不会出现在别人看到的卡片上。</p>
+    <div class="code-box"><span>我的邀请码</span><strong id="accountReferralCode">${escapeHtml(user.referral_code || '—')}</strong><button class="text-button" id="copyAccountReferral" type="button">复制</button></div>
     <button class="primary-button" id="editProfileButton"><span>我的档案</span><span class="arrow">→</span></button>
     ${isPro() ? '' : '<button class="text-button" id="openPinpinFromAccount" style="margin-top:12px;width:100%;">查看拼拼卡</button>'}
     ${me?.is_payment_admin ? '<button class="text-button" id="openPaymentReview" style="margin-top:12px;width:100%;">内测核账</button>' : ''}
@@ -962,6 +948,10 @@ avatarButton.addEventListener('click', () => {
   document.querySelector('#editProfileButton').addEventListener('click', () => {
     closeSheet();
     showArchive();
+  });
+  document.querySelector('#copyAccountReferral')?.addEventListener('click', async () => {
+    await navigator.clipboard.writeText(user.referral_code || '').catch(() => {});
+    showToast('邀请码已复制');
   });
   document.querySelector('#openPinpinFromAccount')?.addEventListener('click', () => openPinpinSheet('more_matches'));
   document.querySelector('#openPaymentReview')?.addEventListener('click', () => { window.location.href = '/review'; });

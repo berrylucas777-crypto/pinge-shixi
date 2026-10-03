@@ -87,6 +87,17 @@ def test_simulated_payment_is_disabled_by_default(tmp_path, monkeypatch):
         assert response.status_code == 503
 
 
+def test_early_access_invite_does_not_require_an_existing_referrer(tmp_path, monkeypatch):
+    client, _ = make_client(tmp_path, monkeypatch)
+    with client:
+        response = client.post(
+            "/api/auth/enter",
+            json={"email": "early-access@example.com", "invite_code": "PINGO-START", "remember": True, "accept_terms": True},
+        )
+        assert response.status_code == 200, response.text
+        assert response.json()["user"]["referral_code"].startswith("PINGO-")
+
+
 def test_health_reports_release(tmp_path, monkeypatch):
     monkeypatch.setenv("APP_RELEASE", "test-release")
     client, _ = make_client(tmp_path, monkeypatch)

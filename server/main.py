@@ -36,6 +36,7 @@ SESSION_SHORT = 12 * 60 * 60
 SESSION_LONG = 30 * 24 * 60 * 60
 COOKIE_NAME = "pingo_session"
 PINPIN_CAP = 500
+EARLY_ACCESS_INVITE_CODE = (os.getenv("EARLY_ACCESS_INVITE_CODE") or "PINGO-START").strip().upper()
 _auth_attempts: dict[str, deque[float]] = defaultdict(deque)
 
 
@@ -530,7 +531,7 @@ def enter(body: EnterBody, request: Request, response: Response):
     existing = get_user_by_email(email)
     invite = body.invite_code.strip().upper()
     invited_by = None
-    if invite:
+    if invite and invite != EARLY_ACCESS_INVITE_CODE:
         with connect() as conn:
             host = conn.execute("SELECT id FROM users WHERE referral_code=?", (invite,)).fetchone()
         if not host:
