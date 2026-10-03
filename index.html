@@ -7,7 +7,7 @@
     <meta name="description" content="拼个实习，用真实经历找到可以交换工作流的实习搭子。" />
     <title>拼个实习</title>
     <link rel="icon" href="assets/pingo-mascot.webp" />
-    <link rel="stylesheet" href="styles.css?v=20261003.5" />
+    <link rel="stylesheet" href="styles.css?v=20261003.6" />
   </head>
   <body>
     <div class="site-shell">
@@ -26,26 +26,27 @@
       <main>
         <section class="login-view" id="loginView" aria-labelledby="loginTitle">
           <div class="login-copy">
-            <h1 id="loginTitle">先入池，<br />每天 21 点再配对。</h1>
+            <h1 id="loginTitle">先入池，<br />周一、周三再配。</h1>
             <p>岗位名像没用。你能教的，正好是对方想补的，才配。</p>
             <ol class="match-logic" aria-label="怎么配对">
               <li><strong>先写清楚</strong>你做过什么、想学什么</li>
-              <li><strong>晚上 9 点再配</strong>人少就不硬塞</li>
-              <li><strong>能互相教才算一对</strong>看起来像不算</li>
+              <li><strong>一周两次</strong>周一、周三晚上 9 点</li>
+              <li><strong>连着 4 轮</strong>用完去邮箱点确认，才能再进</li>
             </ol>
-            <p class="pool-rally" id="poolRally">每天 <strong>21:00</strong> 准时匹配。现在进池，就差你了。</p>
+            <p class="pool-countdown" id="poolCountdown">下次匹配还在算</p>
+            <p class="pool-rally" id="poolRally">现在进池，就差你了。</p>
           </div>
 
           <div class="login-stage">
             <div class="mascot-wrap" aria-hidden="true">
               <img src="assets/pingo-mascot.webp" alt="" />
               <div class="float-note note-one">能互相教才配</div>
-              <div class="float-note note-two">今晚 21:00</div>
+              <div class="float-note note-two">周一、周三</div>
             </div>
             <form class="login-panel" id="loginForm" novalidate>
               <div class="login-heading">
                 <h2>加入今日匹配池</h2>
-                <p id="loginHint">用约 1 分钟写下经历，进池等今晚 21:00</p>
+                <p id="loginHint">用约 1 分钟写下经历，进池等下次匹配</p>
               </div>
               <label for="email">邮箱</label>
               <div class="input-wrap">
@@ -80,7 +81,7 @@
           <div class="profile-intro">
             <div>
               <h1 id="profileTitle">先入池</h1>
-              <p>写一句你想交流的内容。人进池后，每天 21:00 准时匹配。</p>
+              <p>写一句你想交流的内容。进池后，周一、周三晚上 9 点匹配。</p>
             </div>
           </div>
           <form class="profile-card" id="profileForm">
@@ -154,7 +155,7 @@
           <div class="results-intro">
             <div>
               <h1 id="resultsTitle">今晚的匹配池</h1>
-              <p>不配看起来像你的人。配能跟你换经验的人。每晚 21:00 给一批。</p>
+              <p id="resultsLead">不配看起来像你的人。周一、周三晚上 9 点各给一批。</p>
             </div>
             <span class="sample-label" id="dataLabel">攒人中</span>
           </div>
@@ -168,7 +169,7 @@
 
           <section id="matchesPanel" role="tabpanel" aria-labelledby="matchesTab">
             <div class="unlock-progress" aria-label="解锁进度">
-              <div class="progress-step is-done"><span>1</span><p><strong>已进匹配池</strong><small>等今晚 21:00</small></p></div>
+              <div class="progress-step is-done"><span>1</span><p><strong>已进匹配池</strong><small>等下次 21:00</small></p></div>
               <div class="progress-line" id="emailProgressLine"></div>
               <div class="progress-step" id="emailProgress"><span>2</span><p><strong>联系第 1 位</strong><small>解锁第 2 位</small></p></div>
               <div class="progress-line" id="inviteProgressLine"></div>
@@ -184,7 +185,7 @@
               </div>
               <div class="invite-copy">
                 <h2>喊一个朋友进池</h2>
-                <p>朋友完成注册后一起等今晚 21:00。人越多，越容易配到能互相教的。</p>
+                <p>朋友完成注册后一起等下次匹配。人越多，越容易配到能互相教的。</p>
               </div>
               <div class="invite-action">
                 <div class="code-box">
@@ -257,6 +258,6 @@
     </aside>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=20261003.5"></script>
+    <script src="app.js?v=20261003.6"></script>
   </body>
 </html>

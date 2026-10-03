@@ -37,7 +37,7 @@ const proFilters = document.querySelector('#proFilters');
 const TAG_OPTIONS = ['AI', '产品', '开发', '增长', '求职交流', 'ToB', 'Agent', 'VLM', '推荐', '安全'];
 const PINPIN_REASONS = {
   details_quota: '今天的详情已经看完。开通拼拼卡，每天可以打开 100 位同学的档案。',
-  more_matches: '今晚 21:00 匹配后，开通拼拼卡可以直接查看更多搭子。',
+  more_matches: '周一或周三 21:00 匹配后，开通拼拼卡可以直接查看更多搭子。',
   boost: '无经验、求指导时，加急曝光能让你在 24 小时内被更多人看见。',
   filter: '城市、年级、专业的组合筛选是拼拼卡权益。同城加权本身对所有人免费。',
   generic: '拼拼卡是唯一付费项。加急曝光是其中一项能力，不是另一张卡。',
@@ -53,7 +53,7 @@ let awaitingCode = false;
 let selectedTags = [];
 let selectedLearnTags = [];
 let filterOptions = { cities: [], grades: [], majors: [] };
-let pool = { count: 0, waiting: true, next_match_label: '每天 21:00', match_hour: 21 };
+let pool = { count: 0, waiting: true, next_match_label: '周一 21:00', match_hour: 21, schedule_label: '每周一、周三 21:00' };
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -194,7 +194,7 @@ function pinpinTableHtml() {
       <thead><tr><th>能力</th><th>普通用户</th><th>拼拼卡</th></tr></thead>
       <tbody>
         <tr><td>自由探索详情</td><td>每天 20 人</td><td>每天 100 人</td></tr>
-        <tr><td>每日匹配</td><td>21:00 一批</td><td>21:00 一批，可看 5 人</td></tr>
+        <tr><td>匹配</td><td>周一、周三 21:00</td><td>同一批，可看 5 人</td></tr>
         <tr><td>第 2、3 位匹配</td><td>邀请好友解锁</td><td>直接查看</td></tr>
         <tr><td>加急曝光</td><td>无</td><td>每天 1 次，24 小时</td></tr>
         <tr><td>筛选</td><td>基础标签</td><td>城市、年级、专业</td></tr>
@@ -450,37 +450,93 @@ function renderMatchCarousel() {
   sync();
 }
 
+function formatCountdown(iso) {
+  const end = new Date(iso).getTime();
+  if (!Number.isFinite(end)) return '';
+  const left = Math.max(0, end - Date.now());
+  const total = Math.floor(left / 1000);
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const mins = Math.floor((total % 3600) / 60);
+  if (days > 0) return `${days} 天 ${hours} 小时`;
+  if (hours > 0) return `${hours} 小时 ${mins} 分钟`;
+  return `${Math.max(1, mins)} 分钟`;
+}
+
+function renderCountdown() {
+  const el = document.querySelector('#poolCountdown');
+  if (!el) return;
+  const when = formatCountdown(pool.next_match_at);
+  const schedule = pool.schedule_label || '每周一、周三 21:00';
+  el.textContent = when ? `下次匹配还有 ${when} · ${schedule}` : schedule;
+}
+
 function renderPoolRally(data) {
   pool = { ...pool, ...(data || {}) };
   const el = document.querySelector('#poolRally');
   if (!el) return;
   const count = Number(pool.count || 0);
-  el.innerHTML = `现在已经有 <strong>${count}</strong> 人参与进来，就差你了 · 每天 <strong>21:00</strong> 准时匹配`;
+  el.innerHTML = `现在已经有 <strong>${count}</strong> 人参与进来，就差你了`;
+  renderCountdown();
 }
 
 function poolWaitCard() {
   const count = Number(pool.count || 0);
-  const when = pool.next_match_label || '今晚 21:00';
+  const when = formatCountdown(pool.next_match_at) || pool.next_match_label || '下次 21:00';
+  const pass = me?.pool_pass;
+  if (pass?.paused) {
+    return `
+      <article class="match-card is-active pool-wait">
+        <p class="pool-kicker">这 4 轮用完了</p>
+        <h2>去邮箱点确认，才能再进接下来 4 轮。</h2>
+        <p>不确认的话，不会再被配出去，也不会再配到你。确认信会连着发 3 天。</p>
+        <button class="primary-button" id="renewPool" type="button"><span>我已确认，再参加 4 轮</span><span class="arrow">→</span></button>
+      </article>
+    `;
+  }
+  const left = pass ? `这 4 轮还剩 ${pass.rounds_left} 次。` : '';
   return `
     <article class="match-card is-active pool-wait">
-      <p class="pool-kicker">每天 21:00 准时匹配</p>
+      <p class="pool-kicker">${escapeHtml(pool.schedule_label || '每周一、周三 21:00')}</p>
       <h2>现在已经有 ${count} 人参与进来，就差你了。</h2>
-      <p>配的是能互相教的人，不是看起来像你的人。结果会在 ${escapeHtml(when)} 后出现。</p>
+      <p>${left}配的是能互相教的人。距离下次还有 ${escapeHtml(when)}。</p>
       <div class="pool-meter"><strong>${count}</strong> 人已进池</div>
     </article>
   `;
+}
+
+async function renewPool() {
+  const button = document.querySelector('#renewPool');
+  if (button) button.disabled = true;
+  try {
+    const data = await api('/api/pool/renew', { method: 'POST' });
+    me.pool_pass = data.pool_pass;
+    me.pool = data.pool;
+    renderPoolRally(data.pool);
+    await loadMatches();
+    showToast('已确认，接下来再给你 4 轮');
+  } catch (error) {
+    if (button) button.disabled = false;
+    showToast(error.message);
+  }
 }
 
 function renderMatches() {
   const codeEl = document.querySelector('#referralCode');
   if (codeEl) codeEl.textContent = me?.user?.referral_code || '—';
   applyUnlock(me?.unlock);
-  const waiting = Boolean(pool.waiting);
   const dataLabel = document.querySelector('#dataLabel');
-  if (dataLabel) dataLabel.textContent = waiting ? '攒人中' : '今日匹配';
+  if (dataLabel) dataLabel.textContent = matches.length ? '本轮匹配' : '攒人中';
+  const lead = document.querySelector('#resultsLead');
+  if (lead && me?.pool_pass) {
+    lead.textContent = me.pool_pass.paused
+      ? '这 4 轮用完了。去邮箱点确认，才能再进接下来 4 轮。'
+      : `这 4 轮还剩 ${me.pool_pass.rounds_left} 次。周一、周三晚上 9 点各配一次。`;
+  }
   matchDeck.classList.toggle('has-five', matches.length >= 5);
-  if (waiting) {
+  if (!matches.length) {
     matchDeck.innerHTML = poolWaitCard();
+    document.querySelector('#renewPool')?.addEventListener('click', renewPool);
     renderMatchCarousel();
     return;
   }
@@ -956,8 +1012,8 @@ document.querySelector('#aboutButton').addEventListener('click', () => {
     <p>不找跟你一模一样的人。找能跟你换项目经验的人。</p>
     <ol>
       <li><div><strong>先写清楚</strong><br><span>做过什么、想补什么就行。不用完整简历。</span></div></li>
-      <li><div><strong>晚上 9 点再配</strong><br><span>人先进池。人少就不硬塞，到点给一批。</span></div></li>
-      <li><div><strong>能互相教才算一对</strong><br><span>20 分钟聊下来能带走做法，才配。看起来像不算。</span></div></li>
+      <li><div><strong>一周两次</strong><br><span>周一、周三晚上 9 点。人少就不硬塞。</span></div></li>
+      <li><div><strong>连着 4 轮</strong><br><span>用完会发邮件。点确认，才能再进接下来 4 轮。不点就不再配。</span></div></li>
     </ol>
   `);
 });
@@ -1110,6 +1166,7 @@ document.addEventListener('keydown', (event) => {
   try {
     const publicConfig = await api('/api/config');
     renderPoolRally(publicConfig.pool);
+    setInterval(renderCountdown, 30000);
   } catch {
     renderPoolRally(pool);
   }

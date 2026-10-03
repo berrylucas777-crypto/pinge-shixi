@@ -7,6 +7,7 @@ import re
 import secrets
 import string
 import time
+import asyncio
 from csv import DictReader
 from io import StringIO
 from collections import defaultdict, deque
@@ -21,7 +22,7 @@ from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
@@ -128,7 +129,15 @@ async def lifespan(_: FastAPI):
     _secret_key()
     init_db()
     purge_seed_users()
-    yield
+    try:
+        _maintain_pool()
+    except Exception:
+        pass
+    task = asyncio.create_task(_pool_maintenance())
+    try:
+        yield
+    finally:
+        task.cancel()
 
 
 app = FastAPI(
@@ -451,6 +460,62 @@ def _rate_limit(key: str, limit: int = 6, window: int = 600) -> None:
     queue.append(now)
 
 
+WEEKDAY_LABELS = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"]
+
+
+def _match_weekdays() -> set[int]:
+    days = set()
+    for item in (os.getenv("MATCH_WEEKDAYS") or "0,2").split(","):
+        item = item.strip()
+        if item.lstrip("-").isdigit():
+            days.add(int(item) % 7)
+    return days or {0, 2}
+
+
+def _round_limit() -> int:
+    try:
+        return max(1, int((os.getenv("MATCH_ROUND_LIMIT") or "4").strip()))
+    except ValueError:
+        return 4
+
+
+def _schedule_label() -> str:
+    names = "、".join(WEEKDAY_LABELS[day] for day in sorted(_match_weekdays()))
+    return f"每周{names} {_match_hour():02d}:00"
+
+
+def _slot_on(day) -> datetime:
+    return datetime(day.year, day.month, day.day, _match_hour(), 0, tzinfo=TZ)
+
+
+def _slot_period(slot: datetime) -> str:
+    return slot.strftime("%Y-%m-%d-%H")
+
+
+def _next_match_at(now: Optional[datetime] = None) -> datetime:
+    current = now or _now()
+    for offset in range(8):
+        day = (current + timedelta(days=offset)).date()
+        if day.weekday() not in _match_weekdays():
+            continue
+        slot = _slot_on(day)
+        if slot > current:
+            return slot
+    return _slot_on(current.date() + timedelta(days=7))
+
+
+def _latest_due_slot(now: Optional[datetime] = None) -> Optional[datetime]:
+    current = now or _now()
+    for offset in range(8):
+        day = (current - timedelta(days=offset)).date()
+        if day.weekday() not in _match_weekdays():
+            continue
+        slot = _slot_on(day)
+        if slot <= current:
+            return slot
+    return None
+
+
 def _period(now: Optional[datetime] = None) -> str:
     current = now or _now()
     hour = _match_hour()
@@ -458,42 +523,59 @@ def _period(now: Optional[datetime] = None) -> str:
     return f"{day.isoformat()}-{hour:02d}"
 
 
-def _matching_open(now: Optional[datetime] = None) -> bool:
-    current = now or _now()
-    return current.hour >= _match_hour()
-
-
-def _next_match_at(now: Optional[datetime] = None) -> datetime:
-    current = now or _now()
-    target = current.replace(hour=_match_hour(), minute=0, second=0, microsecond=0)
-    if current >= target:
-        target += timedelta(days=1)
-    return target
-
-
 def _next_refresh_label() -> str:
     target = _next_match_at()
-    return target.strftime(f"%m-%d {_match_hour():02d}:00")
+    return f"{WEEKDAY_LABELS[target.weekday()]} {target.strftime('%H:%M')}"
+
+
+def _pool_active_clause() -> str:
+    return "IFNULL(pool_status,'active')='active'"
 
 
 def live_pool_count() -> int:
     with connect() as conn:
         return conn.execute(
-            "SELECT COUNT(*) n FROM users WHERE IFNULL(is_seed,0)=0 AND IFNULL(experience,'')!='' AND IFNULL(looking_for,'')!=''"
+            "SELECT COUNT(*) n FROM users WHERE IFNULL(is_seed,0)=0 "
+            "AND IFNULL(experience,'')!='' AND IFNULL(looking_for,'')!='' "
+            f"AND {_pool_active_clause()}"
         ).fetchone()["n"]
 
 
+def pool_pass(user: dict) -> dict:
+    limit = _round_limit()
+    used = int(user.get("rounds_used") or 0)
+    paused = user.get("pool_status") == "paused"
+    return {
+        "rounds_used": used,
+        "rounds_limit": limit,
+        "rounds_left": 0 if paused else max(0, limit - used),
+        "paused": paused,
+        "active": not paused,
+    }
+
+
 def pool_state() -> dict:
+    latest = _latest_due_slot()
+    settled = False
+    if latest:
+        with connect() as conn:
+            settled = conn.execute(
+                "SELECT 1 FROM match_slots WHERE period=?", (_slot_period(latest),)
+            ).fetchone() is not None
+    nxt = _next_match_at()
     count = live_pool_count()
-    ready = _matching_open() and count >= _pool_min()
     return {
         "count": count,
         "min": _pool_min(),
         "match_hour": _match_hour(),
-        "matching_open": _matching_open(),
-        "ready": ready,
-        "waiting": not ready,
-        "next_match_label": _next_refresh_label(),
+        "schedule_label": _schedule_label(),
+        "matching_open": bool(settled),
+        "ready": bool(settled) and count >= _pool_min(),
+        "waiting": not settled,
+        "next_match_at": nxt.isoformat(),
+        "next_match_label": nxt.strftime("%m-%d %H:%M"),
+        "countdown_seconds": max(0, int((nxt - _now()).total_seconds())),
+        "round_limit": _round_limit(),
     }
 
 
@@ -567,7 +649,7 @@ def purge_seed_users() -> None:
 def list_candidates(exclude_id: int, *, live_only: bool = True) -> list[dict]:
     query = "SELECT * FROM users WHERE id!=? AND name!='' AND experience!=''"
     if live_only:
-        query += " AND IFNULL(is_seed,0)=0 AND email NOT LIKE '%@pingo.local'"
+        query += f" AND IFNULL(is_seed,0)=0 AND email NOT LIKE '%@pingo.local' AND {_pool_active_clause()}"
     with connect() as conn:
         rows = conn.execute(query, (exclude_id,)).fetchall()
     return [_user_dict(row) for row in rows]
@@ -579,25 +661,152 @@ def preferred_id(user_id: int) -> Optional[int]:
     return row["candidate_id"] if row else None
 
 
-def recompute_matches(user: dict, force: bool = False) -> list[dict]:
-    if not user.get("profile_complete"):
-        return []
-    if not _matching_open() or live_pool_count() < _pool_min():
-        return []
-    with connect() as conn:
-        existing = conn.execute("SELECT * FROM matches WHERE user_id=? ORDER BY rank", (user["id"],)).fetchall()
-        if existing and not force and "period" in existing[0].keys() and existing[0]["period"] == _period():
-            return [dict(row) for row in existing]
-        conn.execute("DELETE FROM matches WHERE user_id=?", (user["id"],))
+def _store_matches(user: dict, period: str) -> list[dict]:
     prefer = preferred_id(user["id"])
     scored = rank_matches(user, list_candidates(user["id"], live_only=True), prefer)
     with connect() as conn:
+        conn.execute("DELETE FROM matches WHERE user_id=?", (user["id"],))
         for rank, item in enumerate(scored[:5], 1):
             conn.execute(
                 "INSERT INTO matches(user_id,rank,candidate_id,score,reason,can_share,wants,shared_tags,period) VALUES(?,?,?,?,?,?,?,?,?)",
-                (user["id"], rank, item["candidate_id"], item["score"], item["reason"], item["can_share"], item["wants"], json.dumps(item["shared_tags"], ensure_ascii=False), _period()),
+                (user["id"], rank, item["candidate_id"], item["score"], item["reason"], item["can_share"], item["wants"], json.dumps(item["shared_tags"], ensure_ascii=False), period),
             )
         return [dict(row) for row in conn.execute("SELECT * FROM matches WHERE user_id=? ORDER BY rank", (user["id"],))]
+
+
+def settle_due_round() -> None:
+    now = _now()
+    slot = _latest_due_slot(now)
+    if not slot or slot.date() != now.date():
+        return
+    period = _slot_period(slot)
+    with connect() as conn:
+        if conn.execute("SELECT 1 FROM match_slots WHERE period=?", (period,)).fetchone():
+            return
+        rows = conn.execute(
+            "SELECT id FROM users WHERE IFNULL(is_seed,0)=0 AND IFNULL(experience,'')!='' "
+            "AND IFNULL(looking_for,'')!='' AND IFNULL(pool_status,'active')='active'"
+        ).fetchall()
+        ids = [row["id"] for row in rows]
+        if len(ids) < _pool_min():
+            return
+        conn.execute("INSERT INTO match_slots(period, participant_count) VALUES(?,?)", (period, len(ids)))
+    for user_id in ids:
+        profile = get_user(user_id)
+        if profile:
+            _store_matches(profile, period)
+    ended_on = slot.date().isoformat()
+    with connect() as conn:
+        for user_id in ids:
+            used = int(conn.execute("SELECT rounds_used FROM users WHERE id=?", (user_id,)).fetchone()["rounds_used"] or 0) + 1
+            if used >= _round_limit():
+                conn.execute(
+                    """
+                    UPDATE users
+                    SET rounds_used=?, last_round_period=?, pool_status='paused',
+                        cycle_ended_on=?, verify_token=?, reminder_count=0
+                    WHERE id=?
+                    """,
+                    (used, period, ended_on, secrets.token_urlsafe(24), user_id),
+                )
+            else:
+                conn.execute(
+                    "UPDATE users SET rounds_used=?, last_round_period=? WHERE id=?",
+                    (used, period, user_id),
+                )
+
+
+def _renew_user(user_id: int) -> None:
+    with connect() as conn:
+        conn.execute(
+            """
+            UPDATE users
+            SET pool_status='active', rounds_used=0, cycle_ended_on='', verify_token='', reminder_count=0
+            WHERE id=?
+            """,
+            (user_id,),
+        )
+
+
+def renew_by_token(token: str) -> bool:
+    token = (token or "").strip()
+    if len(token) < 16:
+        return False
+    with connect() as conn:
+        row = conn.execute("SELECT id FROM users WHERE verify_token=? AND pool_status='paused'", (token,)).fetchone()
+    if not row:
+        return False
+    _renew_user(row["id"])
+    return True
+
+
+def send_cycle_reminders() -> int:
+    sent = 0
+    today = _now().date()
+    with connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, email, name, verify_token, cycle_ended_on, reminder_count
+            FROM users
+            WHERE pool_status='paused' AND cycle_ended_on!='' AND IFNULL(reminder_count,0)<3
+              AND IFNULL(verify_token,'')!=''
+            """
+        ).fetchall()
+    for row in rows:
+        try:
+            ended = datetime.strptime(row["cycle_ended_on"], "%Y-%m-%d").date()
+        except ValueError:
+            continue
+        days = (today - ended).days
+        if not (1 <= days <= 3) or int(row["reminder_count"] or 0) >= days:
+            continue
+        url = f"{_app_url()}/verify?token={row['verify_token']}"
+        body = (
+            f"{row['name'] or '你好'}，这 4 轮匹配已经用完。\n\n"
+            "还想继续的话，点下面确认。确认后，再给你 4 轮，时间还是周一、周三晚上 9 点。\n"
+            "不点的话，就不会再被配出去，也不会再配到你。\n\n"
+            f"确认继续：{url}\n"
+        )
+        if not send_mail(row["email"], "还想继续匹配吗 · 拼个实习", body):
+            continue
+        with connect() as conn:
+            conn.execute("UPDATE users SET reminder_count=? WHERE id=? AND pool_status='paused'", (days, row["id"]))
+        sent += 1
+    return sent
+
+
+def _maintain_pool() -> None:
+    settle_due_round()
+    send_cycle_reminders()
+
+
+async def _pool_maintenance() -> None:
+    while True:
+        await asyncio.sleep(60)
+        try:
+            _maintain_pool()
+        except Exception:
+            continue
+
+
+def recompute_matches(user: dict, force: bool = False) -> list[dict]:
+    settle_due_round()
+    fresh = get_user(user["id"]) or user
+    if not fresh.get("profile_complete"):
+        return []
+    latest = _latest_due_slot()
+    if not latest:
+        return []
+    period = _slot_period(latest)
+    if fresh.get("last_round_period") != period:
+        return []
+    with connect() as conn:
+        existing = conn.execute("SELECT * FROM matches WHERE user_id=? AND period=? ORDER BY rank", (fresh["id"], period)).fetchall()
+    if existing and not force:
+        return [dict(row) for row in existing]
+    if fresh.get("pool_status") == "paused":
+        return [dict(row) for row in existing]
+    return _store_matches(fresh, period)
 
 
 def _public_person(user: dict, viewer: dict, unlocked: bool = True) -> dict:
@@ -636,6 +845,7 @@ def serialize_me(user: dict) -> dict:
         "email_configured": email_configured(),
         "app_url": _app_url(),
         "pool": pool_state(),
+        "pool_pass": pool_pass(user),
     }
 
 
@@ -679,6 +889,33 @@ def config():
         "manual_payment": _manual_payment_config(),
         "pool": pool_state(),
     }
+
+
+@app.get("/verify", response_class=HTMLResponse)
+def verify_pool_link(token: str = ""):
+    ok = renew_by_token(token)
+    if not ok:
+        return HTMLResponse(
+            "<!doctype html><meta charset='utf-8'><title>链接无效</title>"
+            "<body style='font-family:sans-serif;padding:48px'><h1>这个确认链接无效，或已经用过了。</h1>"
+            "<p><a href='/'>回首页</a></p></body>",
+            status_code=400,
+        )
+    return HTMLResponse(
+        "<!doctype html><meta charset='utf-8'><title>已确认</title>"
+        "<body style='font-family:sans-serif;padding:48px'><h1>已确认，接下来再给你 4 轮。</h1>"
+        "<p>匹配还是周一、周三晚上 9 点。这 4 轮用完后，会再发邮件问你一次。</p>"
+        "<p><a href='/'>回首页</a></p></body>"
+    )
+
+
+@app.post("/api/pool/renew")
+def renew_pool(user: dict = Depends(current_user)):
+    if user.get("pool_status") != "paused":
+        return {"ok": True, "pool_pass": pool_pass(get_user(user["id"])), "pool": pool_state()}
+    _renew_user(user["id"])
+    refreshed = get_user(user["id"])
+    return {"ok": True, "pool_pass": pool_pass(refreshed), "pool": pool_state()}
 
 
 @app.post("/api/auth/enter")

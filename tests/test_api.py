@@ -19,9 +19,9 @@ def make_client(tmp_path, monkeypatch):
     return TestClient(main.app), db
 
 
-def freeze_clock(monkeypatch, hour, minute=0):
+def freeze_clock(monkeypatch, hour, minute=0, day=5):
     main = importlib.import_module("server.main")
-    frozen = datetime(2026, 10, 3, hour, minute, tzinfo=main.TZ)
+    frozen = datetime(2026, 10, day, hour, minute, tzinfo=main.TZ)
     monkeypatch.setattr(main, "_now", lambda: frozen)
 
 
@@ -49,7 +49,7 @@ def register_and_onboard(client, email="tester@example.com"):
 
 def test_end_to_end_matching_and_account_deletion(tmp_path, monkeypatch):
     client, _ = make_client(tmp_path, monkeypatch)
-    freeze_clock(monkeypatch, 21, 30)
+    freeze_clock(monkeypatch, 10, 0)
     with client:
         me = register_and_onboard(client)
         assert me["user"]["profile_complete"] is True
@@ -62,6 +62,7 @@ def test_end_to_end_matching_and_account_deletion(tmp_path, monkeypatch):
         with cara:
             register_and_onboard(cara, "cara@example.com")
 
+        freeze_clock(monkeypatch, 21, 30)
         match_response = client.get("/api/matches")
         assert match_response.status_code == 200
         payload = match_response.json()
@@ -142,7 +143,7 @@ def test_contact_mail_includes_matched_email(tmp_path, monkeypatch):
         return True
 
     client, _ = make_client(tmp_path, monkeypatch)
-    freeze_clock(monkeypatch, 21, 30)
+    freeze_clock(monkeypatch, 10, 0)
     main = importlib.import_module("server.main")
     monkeypatch.setattr(main, "send_mail", fake_send)
     other = TestClient(main.app)
@@ -150,6 +151,7 @@ def test_contact_mail_includes_matched_email(tmp_path, monkeypatch):
         register_and_onboard(client, "alice@example.com")
         with other:
             register_and_onboard(other, "bob@example.com")
+            freeze_clock(monkeypatch, 21, 30)
             matches = other.get("/api/matches").json()["matches"]
             assert matches
             response = other.post(
@@ -237,6 +239,52 @@ def test_seed_profiles_are_purged(tmp_path, monkeypatch):
                 """
             ).fetchone()["n"]
         assert leftover == 0
+
+
+def test_four_rounds_then_pause_until_verify(tmp_path, monkeypatch):
+    captured = []
+
+    def fake_send(to, subject, body, reply_to=None):
+        captured.append({"to": to, "subject": subject, "body": body})
+        return True
+
+    client, db = make_client(tmp_path, monkeypatch)
+    main = importlib.import_module("server.main")
+    monkeypatch.setattr(main, "send_mail", fake_send)
+    with client:
+        register_and_onboard(client, "cycle@example.com")
+        other = extra_client()
+        with other:
+            register_and_onboard(other, "peer-cycle@example.com")
+        for day in (5, 7, 12, 14):
+            frozen = datetime(2026, 10, day, 21, 30, tzinfo=main.TZ)
+            monkeypatch.setattr(main, "_now", lambda f=frozen: f)
+            main.settle_due_round()
+        me = client.get("/api/me").json()
+        assert me["pool_pass"]["paused"] is True
+        assert me["pool_pass"]["rounds_used"] == 4
+        assert client.get("/api/matches").json()["matches"]
+        monkeypatch.setattr(main, "_now", lambda: datetime(2026, 10, 15, 9, 0, tzinfo=main.TZ))
+        assert main.send_cycle_reminders() == 2
+        assert main.send_cycle_reminders() == 0
+        monkeypatch.setattr(main, "_now", lambda: datetime(2026, 10, 16, 9, 0, tzinfo=main.TZ))
+        assert main.send_cycle_reminders() == 2
+        monkeypatch.setattr(main, "_now", lambda: datetime(2026, 10, 17, 9, 0, tzinfo=main.TZ))
+        assert main.send_cycle_reminders() == 2
+        monkeypatch.setattr(main, "_now", lambda: datetime(2026, 10, 18, 9, 0, tzinfo=main.TZ))
+        assert main.send_cycle_reminders() == 0
+        assert len(captured) == 6
+        assert "确认继续" in captured[0]["body"]
+        with db.connect() as conn:
+            token = conn.execute("SELECT verify_token FROM users WHERE email=?", ("cycle@example.com",)).fetchone()["verify_token"]
+        page = client.get(f"/verify?token={token}")
+        assert page.status_code == 200
+        assert "接下来" in page.text
+        renewed = client.get("/api/me").json()["pool_pass"]
+        assert renewed["paused"] is False
+        assert renewed["rounds_used"] == 0
+        members = client.get("/api/members").json()["members"]
+        assert members == []
 
 
 def test_health_reports_release(tmp_path, monkeypatch):

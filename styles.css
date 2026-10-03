@@ -80,6 +80,7 @@ main { flex: 1; }
   font-weight: 650;
 }
 .pool-rally strong { color: var(--ink); font-size: 22px; letter-spacing: -0.04em; }
+.pool-countdown { max-width: 460px; margin: 18px 0 0; color: var(--ink); font-size: 15px; font-weight: 700; letter-spacing: -0.02em; }
 .match-logic {
   max-width: 460px;
   margin: 22px 0 0;
@@ -398,7 +399,7 @@ footer button { padding: 0; color: var(--faint); font-size: 11px; }
   .login-copy { padding-left: 0; text-align: center; }
   .login-copy h1 { margin: auto; font-size: clamp(48px, 11vw, 76px); }
   .login-copy > p { margin-left: auto; margin-right: auto; }
-  .pool-rally, .match-logic { margin-left: auto; margin-right: auto; }
+  .pool-rally, .match-logic, .pool-countdown { margin-left: auto; margin-right: auto; }
   .match-logic { text-align: left; }
   .login-stage { width: min(640px, 100%); margin: auto; }
   .match-deck.has-five { grid-template-columns: 1fr 1fr; }

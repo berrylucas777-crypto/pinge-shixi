@@ -147,6 +147,12 @@ CREATE INDEX IF NOT EXISTS idx_users_seed ON users(is_seed);
 CREATE INDEX IF NOT EXISTS idx_views_user_period ON member_views(user_id, period);
 CREATE INDEX IF NOT EXISTS idx_pinpin_payment_requests_status ON pinpin_payment_requests(status, created_at);
 CREATE INDEX IF NOT EXISTS idx_import_batches_created ON import_batches(created_at);
+
+CREATE TABLE IF NOT EXISTS match_slots (
+  period TEXT PRIMARY KEY,
+  participant_count INTEGER NOT NULL DEFAULT 0,
+  ran_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 """
 
 MIGRATIONS = {
@@ -165,6 +171,12 @@ MIGRATIONS = {
         "consented_at": "TEXT",
         "content_confirmed_at": "TEXT",
         "updated_at": "TEXT NOT NULL DEFAULT ''",
+        "pool_status": "TEXT NOT NULL DEFAULT 'active'",
+        "rounds_used": "INTEGER NOT NULL DEFAULT 0",
+        "cycle_ended_on": "TEXT NOT NULL DEFAULT ''",
+        "verify_token": "TEXT NOT NULL DEFAULT ''",
+        "reminder_count": "INTEGER NOT NULL DEFAULT 0",
+        "last_round_period": "TEXT NOT NULL DEFAULT ''",
     },
     "matches": {"period": "TEXT NOT NULL DEFAULT ''"},
     "sessions": {"expires_at": "REAL NOT NULL DEFAULT 0"},
