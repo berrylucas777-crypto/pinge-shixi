@@ -481,7 +481,7 @@ def _round_limit() -> int:
 
 def _schedule_label() -> str:
     names = "、".join(WEEKDAY_LABELS[day] for day in sorted(_match_weekdays()))
-    return f"每周{names} {_match_hour():02d}:00"
+    return f"每{names} {_match_hour():02d}:00"
 
 
 def _slot_on(day) -> datetime:
