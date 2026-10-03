@@ -21,6 +21,7 @@ UPLOAD = [
     "server/db.py",
     "server/mailer.py",
     "server/matching.py",
+    "server/jev.py",
     "server/seed.py",
     "server/main.py",
 ]
@@ -39,6 +40,8 @@ ENV_KEYS = (
     "APP_RELEASE",
     "MATCH_HOUR",
     "MATCH_POOL_MIN",
+    "JEV_API_KEY",
+    "JEV_MODEL",
 )
 
 
@@ -75,9 +78,13 @@ def main():
         "APP_RELEASE": release_id(),
         "MATCH_HOUR": (prod.get("MATCH_HOUR") or "21").strip() or "21",
         "MATCH_POOL_MIN": (prod.get("MATCH_POOL_MIN") or "2").strip() or "2",
+        "JEV_API_KEY": (prod.get("JEV_API_KEY") or "").strip(),
+        "JEV_MODEL": (prod.get("JEV_MODEL") or "jev-latest").strip() or "jev-latest",
     }
     if not patch["PAYMENT_ADMIN_EMAILS"]:
         raise SystemExit("missing PAYMENT_ADMIN_EMAILS")
+    if not patch["JEV_API_KEY"]:
+        raise SystemExit("missing JEV_API_KEY")
     if patch["MANUAL_PAYMENT_ENABLED"].lower() not in {"1", "true", "yes", "on"}:
         raise SystemExit("MANUAL_PAYMENT_ENABLED must be true for this deploy")
 
@@ -177,6 +184,7 @@ def main():
         "print('review_link', \"window.location.href = '/review'\" in js)\n"
         "cfg = urllib.request.urlopen('https://shixi.seu-link.fit/api/config', timeout=8).read().decode('utf-8','replace')\n"
         "print('config_pool', '\"match_hour\": 21' in cfg.replace(' ','') or '\"match_hour\":21' in cfg)\n"
+        "print('jev_configured', '\"jev_configured\":true' in health.replace(' ',''))\n"
         "print('release', True)\n"
         "def status(url):\n"
         "    try:\n"
@@ -204,7 +212,7 @@ def main():
         "ok_code, ok_body = post('PINGO-START')\n"
         "print('fake_invite', bad_code, '无效' in bad_body)\n"
         "print('start_invite', ok_code, '18' in ok_body)\n"
-        "if '点击获得我的邀请码' not in home or '就差你了' not in home or '21' not in home or 'id=\"profileExperience\"' in home or 'PINGO-START' not in js or '小红书' in js:\n"
+        "if '点击获得我的邀请码' not in home or '就差你了' not in home or '21' not in home or 'id=\"profileExperience\"' in home or 'PINGO-START' not in js or '小红书' in js or '\"jev_configured\":true' not in health.replace(' ',''):\n"
         "    raise SystemExit('copy check failed')\n"
         "if bad_code != 400 or '无效' not in bad_body or ok_code != 400 or '18' not in ok_body:\n"
         "    raise SystemExit('PINGO-START check failed')\n"

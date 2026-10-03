@@ -24,8 +24,9 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .db import connect, init_db
+from .jev import configured as jev_configured
 from .mailer import email_configured, send_mail
-from .matching import score_pair
+from .matching import rank_matches
 
 load_dotenv()
 
@@ -574,8 +575,7 @@ def recompute_matches(user: dict, force: bool = False) -> list[dict]:
             return [dict(row) for row in existing]
         conn.execute("DELETE FROM matches WHERE user_id=?", (user["id"],))
     prefer = preferred_id(user["id"])
-    scored = [score_pair(user, candidate, prefer) for candidate in list_candidates(user["id"], live_only=True)]
-    scored.sort(key=lambda item: item["score"], reverse=True)
+    scored = rank_matches(user, list_candidates(user["id"], live_only=True), prefer)
     with connect() as conn:
         for rank, item in enumerate(scored[:5], 1):
             conn.execute(
@@ -650,6 +650,7 @@ def health():
         "ok": True,
         "release": _app_release(),
         "email_configured": email_configured(),
+        "jev_configured": jev_configured(),
         "payment_configured": False,
     }
 

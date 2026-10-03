@@ -23,6 +23,7 @@ UPLOAD = [
     "server/db.py",
     "server/mailer.py",
     "server/matching.py",
+    "server/jev.py",
     "server/seed.py",
     "server/main.py",
 ]

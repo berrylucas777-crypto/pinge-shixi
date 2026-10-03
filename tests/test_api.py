@@ -11,6 +11,7 @@ def make_client(tmp_path, monkeypatch):
     monkeypatch.setenv("SMTP_PASSWORD", "")
     monkeypatch.setenv("MATCH_HOUR", "21")
     monkeypatch.setenv("MATCH_POOL_MIN", "2")
+    monkeypatch.setenv("JEV_API_KEY", "")
     db = importlib.import_module("server.db")
     db.DB_PATH = tmp_path / "pingo-test.db"
     main = importlib.import_module("server.main")
@@ -245,6 +246,35 @@ def test_health_reports_release(tmp_path, monkeypatch):
         response = client.get("/api/health")
         assert response.status_code == 200
         assert response.json()["release"] == "test-release"
+        assert response.json()["jev_configured"] is False
+
+
+def test_jev_rerank_puts_choice_winner_first(monkeypatch):
+    monkeypatch.setenv("JEV_API_KEY", "test-key")
+    matching = importlib.import_module("server.matching")
+
+    def fake_ask(state, questions, timeout=20):
+        keys = [key[4:] for key in questions if key.startswith("fit_")]
+        winner = keys[-1]
+        answers = {
+            "best": {"type": "choice", "choice": winner, "confidence": 0.92, "probabilities": {winner: 0.92, "none": 0.08}},
+        }
+        for key in keys:
+            answers[f"fit_{key}"] = {"type": "score", "score": 3.0 if key == winner else 0.8}
+            answers[f"exchange_{key}"] = {"type": "noul", "noul": 0.88 if key == winner else 0.18}
+            answers[f"clone_{key}"] = {"type": "noul", "noul": 0.08}
+        return {"model": "jev-latest", "answers": answers}
+
+    monkeypatch.setattr(matching.jev, "ask", fake_ask)
+    ranked = matching.rank_matches(
+        {"id": 1, "experience": "做过 AI 产品需求拆解", "looking_for": "Agent 评测", "role": "产品", "tags": ["产品"]},
+        [
+            {"id": 2, "experience": "也在做 AI 产品需求", "looking_for": "产品工作流", "role": "产品", "tags": ["产品"]},
+            {"id": 3, "experience": "做过 Agent 评测与模型边界", "looking_for": "产品落地", "role": "算法", "tags": ["AI"]},
+        ],
+    )
+    assert ranked[0]["candidate_id"] == 3
+    assert "互补" in ranked[0]["reason"]
 
 
 def test_manual_payment_can_be_reviewed_and_approved(tmp_path, monkeypatch):
