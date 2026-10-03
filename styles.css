@@ -166,6 +166,16 @@ input:focus { border-color: var(--blue-strong); box-shadow: 0 0 0 4px rgba(21, 1
 .review-order-meta { display: grid; gap: 3px; }
 .review-approve { width: 148px; min-height: 42px; grid-row: 1 / span 2; align-self: center; font-size: 12px; }
 .review-empty { margin: 26px 0 6px; color: var(--muted); text-align: center; }
+.import-view { max-width: 940px; }
+.import-panel, .import-history { margin-bottom: 16px; }
+.import-grid { display: grid; grid-template-columns: 1fr 180px; gap: 14px; }
+.import-panel label, .import-preview label { display: grid; gap: 7px; margin: 14px 0; color: #444951; font-size: 13px; font-weight: 650; }
+.import-panel input, .import-panel select { height: 42px; border: 1px solid var(--line); border-radius: 8px; padding: 0 11px; background: white; color: var(--ink); }
+.import-text { width: 100%; min-height: 190px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #f6f8fa; color: var(--ink); font: 13px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; resize: vertical; }
+.import-preview .import-text { min-height: 260px; }
+.import-batch { display: grid; gap: 4px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.import-batch span, .import-batch small { color: var(--muted); font-size: 12px; }
+@media (max-width: 620px) { .import-grid { grid-template-columns: 1fr; } }
 @media (max-width: 620px) { .review-view { width: min(100% - 28px, 840px); padding-top: 36px; } .review-heading { display: block; } .review-heading > .text-button { display: inline-block; margin-top: 12px; } .review-order { grid-template-columns: 1fr; } .review-approve { width: 100%; grid-row: auto; } }
 .lock-copy .text-button { margin-top: 10px; color: var(--blue-strong); }
 .profile-view { width: min(760px, calc(100% - 48px)); margin: 0 auto; padding: 36px 0 90px; }

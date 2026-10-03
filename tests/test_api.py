@@ -98,6 +98,35 @@ def test_early_access_invite_does_not_require_an_existing_referrer(tmp_path, mon
         assert response.json()["user"]["referral_code"].startswith("PINGO-")
 
 
+def test_data_admin_can_preview_and_import_authorized_ocr_text(tmp_path, monkeypatch):
+    monkeypatch.setenv("DATA_ADMIN_EMAILS", "data-admin@example.com")
+    client, db = make_client(tmp_path, monkeypatch)
+    with client:
+        entered = client.post("/api/auth/enter", json={"email": "data-admin@example.com", "remember": True, "accept_terms": True})
+        assert entered.status_code == 200
+        preview = client.post(
+            "/api/admin/imports/preview",
+            json={
+                "source_name": "授权社群资料",
+                "source_format": "ocr_text",
+                "content": "昵称：小北\n方向：AI 产品\n自我介绍：做过 Agent 项目，想交流产品落地\n小红书：xiaobei",
+            },
+        )
+        assert preview.status_code == 200, preview.text
+        row = preview.json()["rows"][0]
+        committed = client.post(
+            "/api/admin/imports/commit",
+            json={"source_name": "授权社群资料", "source_format": "ocr_text", "consent_confirmed": True, "rows": [row]},
+        )
+        assert committed.status_code == 200, committed.text
+        assert committed.json()["imported_count"] == 1
+        with db.connect() as conn:
+            imported = conn.execute("SELECT email,xhs,is_seed FROM users WHERE name='小北'").fetchone()
+            assert imported["email"].endswith("@pingo.local")
+            assert imported["xhs"] == "xiaobei"
+            assert imported["is_seed"] == 1
+
+
 def test_health_reports_release(tmp_path, monkeypatch):
     monkeypatch.setenv("APP_RELEASE", "test-release")
     client, _ = make_client(tmp_path, monkeypatch)

@@ -974,6 +974,7 @@ avatarButton.addEventListener('click', () => {
     <button class="primary-button" id="editProfileButton"><span>我的档案</span><span class="arrow">→</span></button>
     ${isPro() ? '' : '<button class="text-button" id="openPinpinFromAccount" style="margin-top:12px;width:100%;">查看拼拼卡</button>'}
     ${me?.is_payment_admin ? '<button class="text-button" id="openPaymentReview" style="margin-top:12px;width:100%;">内测核账</button>' : ''}
+    ${me?.is_data_admin ? '<button class="text-button" id="openImportConsole" style="margin-top:12px;width:100%;">资料同步</button>' : ''}
     <button class="text-button" id="deleteAccountButton" style="margin-top:12px;width:100%;color:#a33;">注销并删除账户</button>
     <button class="text-button" id="logoutButton" style="margin-top:12px;width:100%;">退出账户</button>
   `);
@@ -987,6 +988,7 @@ avatarButton.addEventListener('click', () => {
   });
   document.querySelector('#openPinpinFromAccount')?.addEventListener('click', () => openPinpinSheet('more_matches'));
   document.querySelector('#openPaymentReview')?.addEventListener('click', () => { window.location.href = '/review'; });
+  document.querySelector('#openImportConsole')?.addEventListener('click', () => { window.location.href = '/imports'; });
   document.querySelector('#deleteAccountButton').addEventListener('click', () => {
     openSheet(`
       <h2 id="sheetTitle">确认注销并删除账户？</h2>

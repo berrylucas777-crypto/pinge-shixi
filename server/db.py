@@ -132,10 +132,21 @@ CREATE TABLE IF NOT EXISTS pinpin_payment_requests (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS import_batches (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  source_name TEXT NOT NULL,
+  source_format TEXT NOT NULL,
+  imported_count INTEGER NOT NULL DEFAULT 0,
+  skipped_count INTEGER NOT NULL DEFAULT 0,
+  imported_by TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE INDEX IF NOT EXISTS idx_matches_user ON matches(user_id, rank);
 CREATE INDEX IF NOT EXISTS idx_users_seed ON users(is_seed);
 CREATE INDEX IF NOT EXISTS idx_views_user_period ON member_views(user_id, period);
 CREATE INDEX IF NOT EXISTS idx_pinpin_payment_requests_status ON pinpin_payment_requests(status, created_at);
+CREATE INDEX IF NOT EXISTS idx_import_batches_created ON import_batches(created_at);
 """
 
 MIGRATIONS = {

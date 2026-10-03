@@ -7,6 +7,8 @@ import re
 import secrets
 import string
 import time
+from csv import DictReader
+from io import StringIO
 from collections import defaultdict, deque
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
@@ -65,6 +67,15 @@ def _payment_admin_emails() -> set[str]:
 
 def _is_payment_admin(user: dict) -> bool:
     return str(user.get("email", "")).strip().lower() in _payment_admin_emails()
+
+
+def _data_admin_emails() -> set[str]:
+    configured = {item.strip().lower() for item in os.getenv("DATA_ADMIN_EMAILS", "").split(",") if "@" in item}
+    return configured or _payment_admin_emails()
+
+
+def _is_data_admin(user: dict) -> bool:
+    return str(user.get("email", "")).strip().lower() in _data_admin_emails()
 
 
 def _manual_payment_config() -> dict:
@@ -178,6 +189,19 @@ class PinpinPaymentRequestBody(BaseModel):
     payer_nickname: str = Field(min_length=1, max_length=64)
 
 
+class ImportPreviewBody(BaseModel):
+    source_name: str = Field(min_length=2, max_length=80)
+    source_format: str = Field(pattern="^(csv|json|ocr_text)$")
+    content: str = Field(min_length=2, max_length=300000)
+
+
+class ImportCommitBody(BaseModel):
+    source_name: str = Field(min_length=2, max_length=80)
+    source_format: str = Field(pattern="^(csv|json|ocr_text)$")
+    consent_confirmed: bool = False
+    rows: list[dict] = Field(min_length=1, max_length=2000)
+
+
 def _secret_key() -> str:
     env = os.getenv("SECRET_KEY", "").strip()
     if env:
@@ -225,6 +249,93 @@ def _infer_tags(text: str) -> list[str]:
     }
     lowered = text.lower()
     return [tag for tag, words in mapping.items() if any(word.lower() in lowered for word in words)] or ["求职交流"]
+
+
+IMPORT_ALIASES = {
+    "name": ("name", "姓名", "昵称", "小红书昵称", "用户名"),
+    "role": ("role", "岗位", "方向", "目标岗位"),
+    "city": ("city", "城市", "所在地"),
+    "school": ("school", "学校"),
+    "grade": ("grade", "年级"),
+    "major": ("major", "专业"),
+    "skills": ("skills", "擅长", "技能", "经历", "项目经历"),
+    "wants": ("wants", "想找", "需求", "想学习"),
+    "intro": ("intro", "自我介绍", "介绍", "内容", "文本"),
+    "xhs": ("xhs", "小红书", "小红书号", "xhs号"),
+}
+
+
+def _import_value(row: dict, key: str) -> str:
+    normalized = {str(name).strip().lower(): value for name, value in row.items()}
+    for alias in IMPORT_ALIASES[key]:
+        value = normalized.get(alias.lower())
+        if value is not None and str(value).strip():
+            return str(value).strip()
+    return ""
+
+
+def _normalize_import_row(row: dict) -> Optional[dict]:
+    name = _import_value(row, "name")[:40]
+    intro = _import_value(row, "intro")[:3000]
+    skills = _import_value(row, "skills")[:1000]
+    wants = _import_value(row, "wants")[:1000]
+    role = _import_value(row, "role")[:100]
+    if not name and not intro:
+        return None
+    if not name:
+        name = (role or "匿名同学")[:40]
+    if not intro:
+        intro = "；".join(part for part in (skills, wants, role) if part)[:3000]
+    if len(intro) < 2:
+        return None
+    return {
+        "name": name,
+        "role": role,
+        "city": _import_value(row, "city")[:40],
+        "school": _import_value(row, "school")[:80],
+        "grade": _import_value(row, "grade")[:30],
+        "major": _import_value(row, "major")[:80],
+        "skills": skills or intro[:1000],
+        "wants": wants or "交流实习经验",
+        "intro": intro,
+        "xhs": _import_value(row, "xhs")[:100],
+    }
+
+
+def _ocr_blocks(content: str) -> list[dict]:
+    blocks = [block.strip() for block in re.split(r"\n\s*\n", content) if block.strip()]
+    rows = []
+    for block in blocks:
+        values = {}
+        free_lines = []
+        for line in block.splitlines():
+            match = re.match(r"\s*([^:：]{1,20})\s*[:：]\s*(.+)", line)
+            if match:
+                values[match.group(1)] = match.group(2)
+            else:
+                free_lines.append(line.strip())
+        if free_lines:
+            values.setdefault("昵称", free_lines[0])
+            values.setdefault("自我介绍", " ".join(free_lines[1:]) or free_lines[0])
+        rows.append(values)
+    return rows
+
+
+def _parse_import_content(source_format: str, content: str) -> tuple[list[dict], int]:
+    if source_format == "json":
+        payload = json.loads(content)
+        raw_rows = payload.get("rows", []) if isinstance(payload, dict) else payload
+        if not isinstance(raw_rows, list):
+            raise HTTPException(400, "JSON 需要是数组，或包含 rows 数组")
+    elif source_format == "csv":
+        raw_rows = list(DictReader(StringIO(content.lstrip("\ufeff"))))
+    else:
+        raw_rows = _ocr_blocks(content)
+    if not raw_rows:
+        raise HTTPException(400, "没有找到可导入的资料")
+    normalized = [_normalize_import_row(row) for row in raw_rows if isinstance(row, dict)]
+    rows = [row for row in normalized if row]
+    return rows[:2000], max(0, len(raw_rows) - len(rows))
 
 
 def _user_dict(row) -> Optional[dict]:
@@ -477,6 +588,7 @@ def serialize_me(user: dict) -> dict:
             "profile_complete", "is_pro",
         )},
         "is_payment_admin": _is_payment_admin(user),
+        "is_data_admin": _is_data_admin(user),
         "unlock": unlock_state(user["id"]),
         "quota": quota_state(user),
         "email_configured": email_configured(),
@@ -776,6 +888,80 @@ def report(body: ReportBody, user: dict = Depends(current_user)):
     return {"ok": True, "report_id": cursor.lastrowid}
 
 
+def data_admin(user: dict = Depends(current_user)) -> dict:
+    if not _is_data_admin(user):
+        raise HTTPException(403, "此账号没有资料同步权限")
+    return user
+
+
+@app.post("/api/admin/imports/preview")
+def preview_import(body: ImportPreviewBody, admin: dict = Depends(data_admin)):
+    try:
+        rows, skipped = _parse_import_content(body.source_format, body.content)
+    except json.JSONDecodeError:
+        raise HTTPException(400, "JSON 格式不正确")
+    if not rows:
+        raise HTTPException(400, "没有找到至少包含昵称或自我介绍的有效资料")
+    return {"source_name": body.source_name.strip(), "rows": rows, "skipped_count": skipped}
+
+
+def _import_candidate(source_name: str, row: dict) -> None:
+    normalized = _normalize_import_row(row)
+    if not normalized:
+        return
+    identity = "|".join([source_name, normalized["name"], normalized["xhs"], normalized["intro"]])
+    digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()
+    email = f"import-{digest[:32]}@pingo.local"
+    referral = f"IMPORT-{digest[:10].upper()}"
+    tags = _infer_tags(" ".join([normalized["role"], normalized["skills"], normalized["wants"], normalized["intro"]]))
+    with connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO users(email,name,school,grade,city,major,role,skills,wants,tags,intro,experience,looking_for,xhs,letter,tone,referral_code,is_seed)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
+            ON CONFLICT(email) DO UPDATE SET name=excluded.name,school=excluded.school,grade=excluded.grade,city=excluded.city,
+              major=excluded.major,role=excluded.role,skills=excluded.skills,wants=excluded.wants,tags=excluded.tags,intro=excluded.intro,
+              experience=excluded.experience,looking_for=excluded.looking_for,xhs=excluded.xhs,letter=excluded.letter,updated_at=datetime('now')
+            """,
+            (
+                email, normalized["name"], normalized["school"], normalized["grade"], normalized["city"], normalized["major"],
+                normalized["role"] or tags[0], normalized["skills"], normalized["wants"], json.dumps(tags, ensure_ascii=False),
+                normalized["intro"], normalized["skills"], normalized["wants"], normalized["xhs"], normalized["name"][:1].upper(),
+                TONES[int(digest[:2], 16) % len(TONES)], referral,
+            ),
+        )
+
+
+@app.post("/api/admin/imports/commit")
+def commit_import(body: ImportCommitBody, admin: dict = Depends(data_admin)):
+    if not body.consent_confirmed:
+        raise HTTPException(400, "请确认资料已获得授权或来自可公开使用的来源")
+    rows = [_normalize_import_row(row) for row in body.rows]
+    rows = [row for row in rows if row]
+    if not rows:
+        raise HTTPException(400, "没有可写入的有效资料")
+    for row in rows:
+        _import_candidate(body.source_name.strip(), row)
+    with connect() as conn:
+        conn.execute(
+            "INSERT INTO import_batches(source_name,source_format,imported_count,skipped_count,imported_by) VALUES(?,?,?,?,?)",
+            (body.source_name.strip(), body.source_format, len(rows), len(body.rows) - len(rows), admin["email"]),
+        )
+        profile_ids = [row["id"] for row in conn.execute("SELECT id FROM users WHERE experience!='' AND is_seed=0").fetchall()]
+    for user_id in profile_ids:
+        profile = get_user(user_id)
+        if profile:
+            recompute_matches(profile, force=True)
+    return {"ok": True, "imported_count": len(rows), "skipped_count": len(body.rows) - len(rows)}
+
+
+@app.get("/api/admin/imports/batches")
+def import_batches(admin: dict = Depends(data_admin)):
+    with connect() as conn:
+        rows = conn.execute("SELECT source_name,source_format,imported_count,skipped_count,imported_by,created_at FROM import_batches ORDER BY id DESC LIMIT 20").fetchall()
+    return {"batches": [dict(row) for row in rows]}
+
+
 @app.post("/api/pinpin/simulate")
 def simulate_pinpin(user: dict = Depends(current_user)):
     if not _bool_env("ALLOW_SIMULATED_PAYMENT", False):
@@ -926,6 +1112,16 @@ def review_page():
 @app.get("/review.js")
 def review_script():
     return FileResponse(ROOT / "review.js")
+
+
+@app.get("/imports")
+def imports_page():
+    return FileResponse(ROOT / "imports.html")
+
+
+@app.get("/imports.js")
+def imports_script():
+    return FileResponse(ROOT / "imports.js")
 
 
 app.mount("/assets", StaticFiles(directory=ROOT / "assets"), name="assets")

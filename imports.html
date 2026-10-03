@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拼个实习｜资料同步</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="review-view import-view">
+      <div class="review-heading">
+        <div>
+          <p class="review-eyebrow">拼个实习</p>
+          <h1>资料同步</h1>
+          <p>粘贴已获授权的 CSV、JSON 或图片 OCR 文本。先预览和编辑，再写入匹配池。</p>
+        </div>
+        <a class="text-button" href="/">返回产品</a>
+      </div>
+      <section class="review-panel import-panel">
+        <div class="import-grid">
+          <label>来源名称<input id="sourceName" maxlength="80" placeholder="例如：校园社群 10 月资料" /></label>
+          <label>资料格式<select id="sourceFormat"><option value="ocr_text">OCR 文本</option><option value="csv">CSV</option><option value="json">JSON</option></select></label>
+        </div>
+        <label>原始资料<textarea id="sourceContent" class="import-text" maxlength="300000" placeholder="OCR 文本可按空行分隔每位成员；也可写：昵称：小王&#10;方向：AI 产品&#10;自我介绍：做过...&#10;&#10;CSV 建议列：昵称、方向、城市、擅长、想找、小红书"></textarea></label>
+        <button class="primary-button" id="previewImport" type="button"><span>解析并预览</span><span class="arrow">→</span></button>
+        <p class="form-error" id="importError" role="alert"></p>
+      </section>
+      <section class="review-panel import-preview is-hidden" id="importPreview">
+        <div class="review-toolbar"><span id="previewCount">0 条待导入</span><span id="previewSkipped"></span></div>
+        <label>确认后的资料（可直接编辑 JSON）<textarea id="normalizedRows" class="import-text" spellcheck="false"></textarea></label>
+        <label class="remember-row"><input id="importConsent" type="checkbox" /> 我确认资料已获得当事人授权，或来自允许公开使用的来源。</label>
+        <button class="primary-button" id="commitImport" type="button"><span>确认写入匹配池</span><span class="arrow">→</span></button>
+      </section>
+      <section class="review-panel import-history">
+        <div class="review-toolbar"><span>最近同步</span><button class="text-button" id="refreshBatches" type="button">刷新</button></div>
+        <div id="batchRows"></div>
+      </section>
+    </main>
+    <script src="/imports.js"></script>
+  </body>
+</html>
