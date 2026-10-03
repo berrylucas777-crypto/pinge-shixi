@@ -41,6 +41,7 @@ const PINPIN_REASONS = {
   boost: '无经验、求指导时，加急曝光能让你在 24 小时内被更多人看见。',
   filter: '城市、年级、专业的组合筛选是拼拼卡权益。同城加权本身对所有人免费。',
   generic: '拼拼卡是唯一付费项。加急曝光是其中一项能力，不是另一张卡。',
+  early_match: '开通拼拼卡后可以马上出结果。核对通过后就可以配，不用等到周一、周三。',
 };
 
 let toastTimer;
@@ -194,7 +195,7 @@ function pinpinTableHtml() {
       <thead><tr><th>能力</th><th>普通用户</th><th>拼拼卡</th></tr></thead>
       <tbody>
         <tr><td>自由探索详情</td><td>每天 20 人</td><td>每天 100 人</td></tr>
-        <tr><td>匹配</td><td>周一、周三 21:00</td><td>同一批，可看 5 人</td></tr>
+        <tr><td>匹配</td><td>周一、周三 21:00</td><td>可提前优先匹配，并看 5 人</td></tr>
         <tr><td>第 2、3 位匹配</td><td>邀请好友解锁</td><td>直接查看</td></tr>
         <tr><td>加急曝光</td><td>无</td><td>每天 1 次，24 小时</td></tr>
         <tr><td>筛选</td><td>基础标签</td><td>城市、年级、专业</td></tr>
@@ -495,14 +496,85 @@ function poolWaitCard() {
     `;
   }
   const left = pass ? `这 4 轮还剩 ${pass.rounds_left} 次。` : '';
+  const early = me?.user?.profile_complete
+    ? '<button class="text-button early-match-button" id="earlyMatch" type="button">现在就要匹配</button>'
+    : '';
   return `
     <article class="match-card is-active pool-wait">
       <p class="pool-kicker">${escapeHtml(pool.schedule_label || '每周一、周三 21:00')}</p>
       <h2>现在已经有 ${count} 人参与进来，就差你了。</h2>
       <p>${left}配的是能互相教的人。距离下次还有 ${escapeHtml(when)}。</p>
       <div class="pool-meter"><strong>${count}</strong> 人已进池</div>
+      ${early}
     </article>
   `;
+}
+
+function earlyMatchHint() {
+  const count = Number(pool.count || 0);
+  const hint = pool.early_match;
+  if (hint?.text) return hint;
+  if (count > 25) return { level: 'ready', count, text: '现在匹配人数充足，可以提前优先匹配。' };
+  if (count >= 10) return { level: 'choice', count, text: `池里现在有 ${count} 人。可以现在配，也可以再等等，人会更多。` };
+  return { level: 'wait', count, text: `池里现在只有 ${count} 人。建议再等等，周一、周三晚上人会多一些。` };
+}
+
+function openEarlyMatchSheet() {
+  const hint = earlyMatchHint();
+  const pro = isPro();
+  const payNote = pro
+    ? ''
+    : '<p class="pinpin-note">付费开通拼拼卡后可以马上出结果。核对通过后就可以配。</p>';
+  const nowLabel = pro ? '现在就配' : '开通后马上配';
+  const nowSecondary = pro ? '还是现在配' : '还是想现在配';
+  let actions = '';
+  if (hint.level === 'ready') {
+    actions = `
+      <button class="primary-button" id="confirmEarlyMatch" type="button"><span>${nowLabel}</span><span class="arrow">→</span></button>
+      <button class="text-button early-dismiss" id="waitForPool" type="button">再等等</button>
+    `;
+  } else if (hint.level === 'choice') {
+    actions = `
+      <button class="primary-button" id="confirmEarlyMatch" type="button"><span>${nowLabel}</span><span class="arrow">→</span></button>
+      <button class="text-button early-dismiss" id="waitForPool" type="button">再等等，人会更多</button>
+    `;
+  } else {
+    actions = `
+      <button class="primary-button" id="waitForPool" type="button"><span>再等等</span><span class="arrow">→</span></button>
+      <button class="text-button early-dismiss" id="confirmEarlyMatch" type="button">${nowSecondary}</button>
+    `;
+  }
+  openSheet(`
+    <h2 id="sheetTitle">现在就要匹配</h2>
+    <p>${escapeHtml(hint.text)}</p>
+    ${payNote}
+    ${actions}
+  `);
+  document.querySelector('#waitForPool')?.addEventListener('click', closeSheet);
+  document.querySelector('#confirmEarlyMatch')?.addEventListener('click', confirmEarlyMatch);
+}
+
+async function confirmEarlyMatch() {
+  if (!isPro()) {
+    await openPinpinSheet('early_match');
+    return;
+  }
+  const button = document.querySelector('#confirmEarlyMatch');
+  if (button) button.disabled = true;
+  try {
+    const data = await api('/api/matches/early', { method: 'POST' });
+    matches = data.matches || [];
+    if (data.pool) {
+      me = { ...me, pool: data.pool };
+      renderPoolRally(data.pool);
+    }
+    closeSheet();
+    renderMatches();
+    showToast(matches.length ? '已经按现在的池子配好了' : '现在还配不到人，先等等');
+  } catch (error) {
+    if (button) button.disabled = false;
+    showToast(error.message);
+  }
 }
 
 async function renewPool() {
@@ -537,6 +609,7 @@ function renderMatches() {
   if (!matches.length) {
     matchDeck.innerHTML = poolWaitCard();
     document.querySelector('#renewPool')?.addEventListener('click', renewPool);
+    document.querySelector('#earlyMatch')?.addEventListener('click', openEarlyMatchSheet);
     renderMatchCarousel();
     return;
   }

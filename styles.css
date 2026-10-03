@@ -280,6 +280,19 @@ input:focus { border-color: var(--blue-strong); box-shadow: 0 0 0 4px rgba(21, 1
   font-size: 15px;
 }
 .pool-meter strong { font-size: 28px; letter-spacing: -0.04em; }
+.match-card.pool-wait .early-match-button {
+  display: block;
+  margin: 16px 0 0;
+  padding-left: 0;
+  color: #0b6ea8;
+  font-weight: 700;
+}
+.bottom-sheet .early-dismiss {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  text-align: center;
+}
 .match-topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
 .match-number { color: var(--muted); font-size: 13px; }
 .match-score { color: var(--green); font-size: 12px; }

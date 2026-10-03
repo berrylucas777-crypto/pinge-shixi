@@ -554,6 +554,15 @@ def pool_pass(user: dict) -> dict:
     }
 
 
+def early_match_hint(count: int) -> dict:
+    people = max(0, int(count))
+    if people > 25:
+        return {"level": "ready", "count": people, "text": "现在匹配人数充足，可以提前优先匹配。"}
+    if people >= 10:
+        return {"level": "choice", "count": people, "text": f"池里现在有 {people} 人。可以现在配，也可以再等等，人会更多。"}
+    return {"level": "wait", "count": people, "text": f"池里现在只有 {people} 人。建议再等等，周一、周三晚上人会多一些。"}
+
+
 def pool_state() -> dict:
     latest = _latest_due_slot()
     settled = False
@@ -576,6 +585,7 @@ def pool_state() -> dict:
         "next_match_label": nxt.strftime("%m-%d %H:%M"),
         "countdown_seconds": max(0, int((nxt - _now()).total_seconds())),
         "round_limit": _round_limit(),
+        "early_match": early_match_hint(count),
     }
 
 
@@ -795,18 +805,24 @@ def recompute_matches(user: dict, force: bool = False) -> list[dict]:
     if not fresh.get("profile_complete"):
         return []
     latest = _latest_due_slot()
-    if not latest:
-        return []
-    period = _slot_period(latest)
-    if fresh.get("last_round_period") != period:
-        return []
-    with connect() as conn:
-        existing = conn.execute("SELECT * FROM matches WHERE user_id=? AND period=? ORDER BY rank", (fresh["id"], period)).fetchall()
-    if existing and not force:
-        return [dict(row) for row in existing]
-    if fresh.get("pool_status") == "paused":
-        return [dict(row) for row in existing]
-    return _store_matches(fresh, period)
+    period = _slot_period(latest) if latest else ""
+    if period and fresh.get("last_round_period") == period:
+        with connect() as conn:
+            existing = conn.execute("SELECT * FROM matches WHERE user_id=? AND period=? ORDER BY rank", (fresh["id"], period)).fetchall()
+        if existing and not force:
+            return [dict(row) for row in existing]
+        if fresh.get("pool_status") == "paused":
+            return [dict(row) for row in existing]
+        return _store_matches(fresh, period)
+    if fresh.get("is_pro"):
+        with connect() as conn:
+            early = conn.execute(
+                "SELECT * FROM matches WHERE user_id=? AND period LIKE 'early-%' ORDER BY rank",
+                (fresh["id"],),
+            ).fetchall()
+        if early:
+            return [dict(row) for row in early]
+    return []
 
 
 def _public_person(user: dict, viewer: dict, unlocked: bool = True) -> dict:
@@ -1078,6 +1094,25 @@ def matches(user: dict = Depends(current_user)):
     if not user.get("profile_complete"):
         return {"matches": [], "pool": pool_state(), "unlock": unlock_state(user["id"]), "quota": quota_state(user)}
     return {"matches": serialize_matches(user), "pool": pool_state(), "unlock": unlock_state(user["id"]), "quota": quota_state(user)}
+
+
+@app.post("/api/matches/early")
+def early_match(user: dict = Depends(current_user)):
+    fresh = get_user(user["id"]) or user
+    if not fresh.get("is_pro"):
+        raise HTTPException(403, "开通拼拼卡后可以马上匹配")
+    if not fresh.get("profile_complete"):
+        raise HTTPException(400, "先写一句经历，再匹配")
+    if fresh.get("pool_status") == "paused":
+        raise HTTPException(403, "这 4 轮用完了，先去邮箱确认")
+    latest = _latest_due_slot()
+    if latest and fresh.get("last_round_period") == _slot_period(latest):
+        return {"matches": serialize_matches(fresh), "pool": pool_state(), "already": True}
+    if live_pool_count() < _pool_min():
+        raise HTTPException(409, "池里还不到 2 人，先等等")
+    _store_matches(fresh, "early-" + _now().strftime("%Y-%m-%d-%H%M"))
+    refreshed = get_user(user["id"])
+    return {"matches": serialize_matches(refreshed), "pool": pool_state()}
 
 
 def _can_email_user(person: dict) -> bool:

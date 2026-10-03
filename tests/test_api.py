@@ -376,3 +376,52 @@ def test_existing_database_receives_compatible_columns(tmp_path, monkeypatch):
         match_columns = {row["name"] for row in conn.execute("PRAGMA table_info(matches)")}
     assert {"experience", "looking_for", "consent_version", "content_confirmed_at"} <= user_columns
     assert "period" in match_columns
+
+
+def test_early_match_hint_follows_pool_size(tmp_path, monkeypatch):
+    make_client(tmp_path, monkeypatch)
+    main = importlib.import_module("server.main")
+    small = main.early_match_hint(4)
+    assert small["level"] == "wait"
+    assert "只有 4 人" in small["text"]
+    middle = main.early_match_hint(10)
+    assert middle["level"] == "choice"
+    assert "10 人" in middle["text"]
+    assert main.early_match_hint(25)["level"] == "choice"
+    ready = main.early_match_hint(26)
+    assert ready == {"level": "ready", "count": 26, "text": "现在匹配人数充足，可以提前优先匹配。"}
+
+
+def test_pro_can_match_before_the_scheduled_round(tmp_path, monkeypatch):
+    client, db = make_client(tmp_path, monkeypatch)
+    freeze_clock(monkeypatch, 10, 0)
+    with client:
+        register_and_onboard(client, "now@example.com")
+        denied = client.post("/api/matches/early")
+        assert denied.status_code == 403
+        peer = extra_client()
+        with peer:
+            register_and_onboard(peer, "peer-now@example.com")
+        hint = client.get("/api/config").json()["pool"]["early_match"]
+        assert hint["level"] == "wait"
+        assert hint["count"] >= 2
+        assert "只有" in hint["text"]
+        with db.connect() as conn:
+            conn.execute("UPDATE users SET is_pro=1 WHERE email=?", ("now@example.com",))
+        early = client.post("/api/matches/early")
+        assert early.status_code == 200, early.text
+        assert len(early.json()["matches"]) >= 1
+        with db.connect() as conn:
+            row = conn.execute(
+                "SELECT rounds_used, last_round_period FROM users WHERE email=?",
+                ("now@example.com",),
+            ).fetchone()
+            stored = conn.execute(
+                "SELECT period FROM matches WHERE user_id=(SELECT id FROM users WHERE email=?)",
+                ("now@example.com",),
+            ).fetchall()
+        assert row["rounds_used"] == 0
+        assert not row["last_round_period"]
+        assert stored and all(item["period"].startswith("early-") for item in stored)
+        again = client.get("/api/matches").json()
+        assert len(again["matches"]) >= 1
