@@ -7,7 +7,7 @@
     <meta name="description" content="拼个实习，用真实经历找到可以交换工作流的实习搭子。" />
     <title>拼个实习</title>
     <link rel="icon" href="assets/pingo-mascot.webp" />
-    <link rel="stylesheet" href="styles.css?v=20261003.3" />
+    <link rel="stylesheet" href="styles.css?v=20261003.5" />
   </head>
   <body>
     <div class="site-shell">
@@ -27,21 +27,19 @@
         <section class="login-view" id="loginView" aria-labelledby="loginTitle">
           <div class="login-copy">
             <h1 id="loginTitle">先入池，<br />每天 21 点再配对。</h1>
-            <p>人少的时候硬配没有意义。你先进来，每晚 21:00 准时匹配一次。</p>
+            <p>岗位名像没用。你能教的，正好是对方想补的，才配。</p>
+            <ol class="match-logic" aria-label="怎么配对">
+              <li><strong>先写清楚</strong>你做过什么、想学什么</li>
+              <li><strong>晚上 9 点再配</strong>人少就不硬塞</li>
+              <li><strong>能互相教才算一对</strong>看起来像不算</li>
+            </ol>
             <p class="pool-rally" id="poolRally">每天 <strong>21:00</strong> 准时匹配。现在进池，就差你了。</p>
-            <div class="proof-line" aria-label="产品特点">
-              <span>每天 21:00 准时匹配</span>
-              <i></i>
-              <span>真人先入池</span>
-              <i></i>
-              <span>彼此经验互补</span>
-            </div>
           </div>
 
           <div class="login-stage">
             <div class="mascot-wrap" aria-hidden="true">
               <img src="assets/pingo-mascot.webp" alt="" />
-              <div class="float-note note-one">先把人攒齐</div>
+              <div class="float-note note-one">能互相教才配</div>
               <div class="float-note note-two">今晚 21:00</div>
             </div>
             <form class="login-panel" id="loginForm" novalidate>
@@ -156,7 +154,7 @@
           <div class="results-intro">
             <div>
               <h1 id="resultsTitle">今晚的匹配池</h1>
-              <p>每天 21:00 准时匹配。人齐了再配对，结果会出现在这里。</p>
+              <p>不配看起来像你的人。配能跟你换经验的人。每晚 21:00 给一批。</p>
             </div>
             <span class="sample-label" id="dataLabel">攒人中</span>
           </div>
@@ -186,7 +184,7 @@
               </div>
               <div class="invite-copy">
                 <h2>喊一个朋友进池</h2>
-                <p>朋友完成注册后一起等今晚 21:00。人越多，配对越准。</p>
+                <p>朋友完成注册后一起等今晚 21:00。人越多，越容易配到能互相教的。</p>
               </div>
               <div class="invite-action">
                 <div class="code-box">
@@ -202,7 +200,7 @@
             <div class="explore-head">
               <div>
                 <h2>看看大家都在做什么</h2>
-                <p id="exploreHint">含实习交流群里公开过的自我介绍</p>
+                <p id="exploreHint">只看池里的真人。学校不会出现在卡片上。</p>
               </div>
               <label class="member-search" for="memberSearch">
                 <span class="search-icon" aria-hidden="true"></span>
@@ -259,6 +257,6 @@
     </aside>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=20261003.3"></script>
+    <script src="app.js?v=20261003.5"></script>
   </body>
 </html>

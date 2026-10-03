@@ -465,7 +465,7 @@ function poolWaitCard() {
     <article class="match-card is-active pool-wait">
       <p class="pool-kicker">每天 21:00 准时匹配</p>
       <h2>现在已经有 ${count} 人参与进来，就差你了。</h2>
-      <p>你已经在池里。人再多一点，配对才有意义。结果会在 ${escapeHtml(when)} 后出现。</p>
+      <p>配的是能互相教的人，不是看起来像你的人。结果会在 ${escapeHtml(when)} 后出现。</p>
       <div class="pool-meter"><strong>${count}</strong> 人已进池</div>
     </article>
   `;
@@ -952,12 +952,12 @@ exploreTab.addEventListener('click', () => setResultsView('explore'));
 
 document.querySelector('#aboutButton').addEventListener('click', () => {
   openSheet(`
-    <h2 id="sheetTitle">三步找到实习搭子</h2>
-    <p>匹配不只看岗位名，更看你们正在做什么、彼此能补上什么。</p>
+    <h2 id="sheetTitle">怎么配对</h2>
+    <p>不找跟你一模一样的人。找能跟你换项目经验的人。</p>
     <ol>
-      <li><div><strong>写一句你想交流的内容</strong><br><span>首次不用填完整简历。城市、年级、专业可在「我的档案」里补。</span></div></li>
-      <li><div><strong>每天 21:00 准时匹配</strong><br><span>先把人攒进池里。人少时不硬配，到点再给一批。</span></div></li>
-      <li><div><strong>需要更多时再开拼拼卡</strong><br><span>更多名单、更多匹配、加急曝光。学校不会公开展示。</span></div></li>
+      <li><div><strong>先写清楚</strong><br><span>做过什么、想补什么就行。不用完整简历。</span></div></li>
+      <li><div><strong>晚上 9 点再配</strong><br><span>人先进池。人少就不硬塞，到点给一批。</span></div></li>
+      <li><div><strong>能互相教才算一对</strong><br><span>20 分钟聊下来能带走做法，才配。看起来像不算。</span></div></li>
     </ol>
   `);
 });
