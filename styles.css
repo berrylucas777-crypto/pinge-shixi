@@ -205,6 +205,7 @@ input:focus { border-color: var(--blue-strong); box-shadow: 0 0 0 4px rgba(21, 1
 .progress-line.is-done { background: var(--blue-strong); }
 .match-deck { display: grid; grid-template-columns: 1.45fr .775fr .775fr; gap: 14px; }
 .match-card { min-height: 530px; padding: 28px; border-radius: 16px; background: var(--white); box-shadow: 0 16px 42px rgba(39, 53, 69, .08); overflow: hidden; position: relative; }
+.match-carousel-indicator { display: none; }
 .match-topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
 .match-number { color: var(--muted); font-size: 13px; }
 .match-score { color: var(--green); font-size: 12px; }
@@ -367,10 +368,14 @@ footer button { padding: 0; color: var(--faint); font-size: 11px; }
   .progress-step strong { font-size: 11px; }
   .progress-step small { margin: 0; }
   .progress-line { width: 1px; height: 8px; margin: -2px 0 -2px 11px; }
-  .match-deck { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 16px 28px; margin: 0 -16px; scrollbar-width: none; }
+  .match-deck { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 16px 18px; margin: 0 -16px; scrollbar-width: none; }
   .match-deck::-webkit-scrollbar { display: none; }
-  .match-card { flex: 0 0 calc(100vw - 48px); min-height: 550px; scroll-snap-align: center; padding: 22px; }
+  .match-card { flex: 0 0 clamp(250px, calc((100vw - 32px) * .714), 360px); min-height: 550px; scroll-snap-align: start; padding: 22px; }
   .match-card.is-locked { padding: 0; }
+  .match-carousel-indicator { display: flex; justify-content: center; align-items: center; gap: 6px; margin: 4px 0 22px; }
+  .match-carousel-indicator.is-hidden { display: none; }
+  .carousel-dot { width: 7px; height: 7px; padding: 0; border: 0; border-radius: 50%; background: #ccd4db; cursor: pointer; transition: width 180ms ease, background 180ms ease; }
+  .carousel-dot.is-active { width: 22px; border-radius: 999px; background: var(--blue-strong); }
   .exchange-grid { grid-template-columns: 1fr; }
   .invite-strip { display: block; padding: 0 18px 20px; }
   .invite-visual { height: 126px; margin: 0 -18px 18px; }

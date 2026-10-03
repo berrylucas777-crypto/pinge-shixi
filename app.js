@@ -27,6 +27,7 @@ const matchDeck = document.querySelector('#matchDeck');
 const memberRowsEl = document.querySelector('#memberRows');
 const referralCodeEl = document.querySelector('#referralCode');
 const inviteStrip = document.querySelector('#inviteStrip');
+const matchCarouselIndicator = document.querySelector('#matchCarouselIndicator');
 const quotaBar = document.querySelector('#quotaBar');
 const filterCity = document.querySelector('#filterCity');
 const filterGrade = document.querySelector('#filterGrade');
@@ -420,6 +421,36 @@ function hintHtml(person) {
   return hints.length ? `<div class="hint-row">${hints.map((item) => `<span class="hint-chip">${item}</span>`).join('')}</div>` : '';
 }
 
+function renderMatchCarousel() {
+  const cards = [...matchDeck.querySelectorAll('.match-card')].slice(0, 3);
+  if (cards.length < 2) {
+    matchCarouselIndicator.innerHTML = '';
+    matchCarouselIndicator.classList.add('is-hidden');
+    matchDeck.onscroll = null;
+    return;
+  }
+  matchCarouselIndicator.classList.remove('is-hidden');
+  matchCarouselIndicator.innerHTML = cards.map((_, index) => (
+    `<button type="button" class="carousel-dot${index === 0 ? ' is-active' : ''}" aria-label="查看第 ${index + 1} 位匹配" aria-current="${index === 0 ? 'true' : 'false'}"></button>`
+  )).join('');
+  const dots = [...matchCarouselIndicator.querySelectorAll('.carousel-dot')];
+  const sync = () => {
+    const activeIndex = cards.reduce((closest, card, index) => (
+      Math.abs(card.offsetLeft - matchDeck.scrollLeft) < Math.abs(cards[closest].offsetLeft - matchDeck.scrollLeft) ? index : closest
+    ), 0);
+    dots.forEach((dot, index) => {
+      const active = index === activeIndex;
+      dot.classList.toggle('is-active', active);
+      dot.setAttribute('aria-current', String(active));
+    });
+  };
+  matchDeck.onscroll = () => requestAnimationFrame(sync);
+  dots.forEach((dot, index) => dot.addEventListener('click', () => {
+    cards[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
+  }));
+  sync();
+}
+
 function renderMatches() {
   const codeEl = document.querySelector('#referralCode');
   if (codeEl) codeEl.textContent = me?.user?.referral_code || '—';
@@ -510,6 +541,7 @@ function renderMatches() {
       }
     });
   });
+  renderMatchCarousel();
 }
 
 function personMeta(row) {
