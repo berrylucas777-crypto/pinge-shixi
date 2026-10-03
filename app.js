@@ -671,6 +671,42 @@ function openCandidate(id) {
   openPersonDetail(id);
 }
 
+function openReport(id, name) {
+  openSheet(`
+    <h2 id="sheetTitle">举报资料</h2>
+    <p>请告诉我们 ${escapeHtml(name || '这位成员')} 的资料哪里需要复核。我们会人工查看，不会向对方展示举报人信息。</p>
+    <label for="reportReason">原因</label>
+    <select id="reportReason">
+      <option value="资料疑似不实">资料疑似不实</option>
+      <option value="包含不当内容">包含不当内容</option>
+      <option value="侵犯他人隐私">侵犯他人隐私</option>
+      <option value="其他需要复核">其他需要复核</option>
+    </select>
+    <label for="reportDetail">补充说明（选填）</label>
+    <textarea class="email-draft" id="reportDetail" maxlength="1000" placeholder="例如：哪一段内容需要核实"></textarea>
+    <button class="primary-button" id="submitReport" type="button"><span>提交举报</span><span class="arrow">→</span></button>
+  `);
+  document.querySelector('#submitReport').addEventListener('click', async () => {
+    const submit = document.querySelector('#submitReport');
+    submit.disabled = true;
+    try {
+      await api('/api/reports', {
+        method: 'POST',
+        body: JSON.stringify({
+          target_user_id: id,
+          reason: document.querySelector('#reportReason').value,
+          detail: document.querySelector('#reportDetail').value.trim(),
+        }),
+      });
+      closeSheet();
+      showToast('已提交，我们会尽快复核');
+    } catch (error) {
+      submit.disabled = false;
+      showToast(error.message);
+    }
+  });
+}
+
 function personSheetHtml(person, extra = '') {
   const meta = [person.role, person.city, person.grade, person.major].filter(Boolean).join(' · ');
   return `
@@ -682,6 +718,7 @@ function personSheetHtml(person, extra = '') {
     ${person.skills ? `<p><strong>擅长：</strong>${escapeHtml(person.skills)}</p>` : ''}
     ${person.xhs ? `<p><strong>小红书：</strong>${escapeHtml(person.xhs)}</p>` : ''}
     ${extra}
+    <button class="text-button report-button" type="button">举报这份资料</button>
   `;
 }
 
@@ -729,6 +766,7 @@ async function openPersonDetail(id) {
         showToast(error.message);
       }
     });
+    document.querySelector('.report-button')?.addEventListener('click', () => openReport(id, person.name));
   } catch (error) {
     showToast(error.message);
   }
