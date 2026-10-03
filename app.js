@@ -37,7 +37,7 @@ const proFilters = document.querySelector('#proFilters');
 const TAG_OPTIONS = ['AI', '产品', '开发', '增长', '求职交流', 'ToB', 'Agent', 'VLM', '推荐', '安全'];
 const PINPIN_REASONS = {
   details_quota: '今天的详情已经看完。开通拼拼卡，每天可以打开 100 位同学的档案。',
-  more_matches: '今天的第一位匹配已经给你。开通拼拼卡，每天直接查看 5 位，不必再等邀请。',
+  more_matches: '今晚 21:00 匹配后，开通拼拼卡可以直接查看更多搭子。',
   boost: '无经验、求指导时，加急曝光能让你在 24 小时内被更多人看见。',
   filter: '城市、年级、专业的组合筛选是拼拼卡权益。同城加权本身对所有人免费。',
   generic: '拼拼卡是唯一付费项。加急曝光是其中一项能力，不是另一张卡。',
@@ -53,6 +53,7 @@ let awaitingCode = false;
 let selectedTags = [];
 let selectedLearnTags = [];
 let filterOptions = { cities: [], grades: [], majors: [] };
+let pool = { count: 0, waiting: true, next_match_label: '每天 21:00', match_hour: 21 };
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -176,7 +177,7 @@ function renderQuota() {
   if (!quotaBar) return;
   const used = data.details_used ?? 0;
   const limit = data.details_limit ?? 20;
-  const refresh = data.next_refresh_label || '每天 12:00';
+  const refresh = data.next_refresh_label || pool.next_match_label || '每天 21:00';
   quotaBar.innerHTML = `
     <span>今日详情 <strong>${used}/${limit}</strong></span>
     <span>下次刷新 <strong>${escapeHtml(refresh)}</strong></span>
@@ -193,7 +194,7 @@ function pinpinTableHtml() {
       <thead><tr><th>能力</th><th>普通用户</th><th>拼拼卡</th></tr></thead>
       <tbody>
         <tr><td>自由探索详情</td><td>每天 20 人</td><td>每天 100 人</td></tr>
-        <tr><td>每日新匹配</td><td>1 人</td><td>5 人</td></tr>
+        <tr><td>每日匹配</td><td>21:00 一批</td><td>21:00 一批，可看 5 人</td></tr>
         <tr><td>第 2、3 位匹配</td><td>邀请好友解锁</td><td>直接查看</td></tr>
         <tr><td>加急曝光</td><td>无</td><td>每天 1 次，24 小时</td></tr>
         <tr><td>筛选</td><td>基础标签</td><td>城市、年级、专业</td></tr>
@@ -407,9 +408,6 @@ function fillArchiveForm() {
 }
 
 function contactCta(person, contacted) {
-  if (person?.xhs) {
-    return contacted ? '已记下小红书昵称' : '复制小红书昵称去搜';
-  }
   return contacted ? '已发出认识邮件' : '发一封认识邮件';
 }
 
@@ -422,6 +420,7 @@ function hintHtml(person) {
 }
 
 function renderMatchCarousel() {
+  if (!matchCarouselIndicator) return;
   const cards = [...matchDeck.querySelectorAll('.match-card')].slice(0, 3);
   if (cards.length < 2) {
     matchCarouselIndicator.innerHTML = '';
@@ -451,11 +450,40 @@ function renderMatchCarousel() {
   sync();
 }
 
+function renderPoolRally(data) {
+  pool = { ...pool, ...(data || {}) };
+  const el = document.querySelector('#poolRally');
+  if (!el) return;
+  const count = Number(pool.count || 0);
+  el.innerHTML = `现在已经有 <strong>${count}</strong> 人参与进来，就差你了 · 每天 <strong>21:00</strong> 准时匹配`;
+}
+
+function poolWaitCard() {
+  const count = Number(pool.count || 0);
+  const when = pool.next_match_label || '今晚 21:00';
+  return `
+    <article class="match-card is-active pool-wait">
+      <p class="pool-kicker">每天 21:00 准时匹配</p>
+      <h2>现在已经有 ${count} 人参与进来，就差你了。</h2>
+      <p>你已经在池里。人再多一点，配对才有意义。结果会在 ${escapeHtml(when)} 后出现。</p>
+      <div class="pool-meter"><strong>${count}</strong> 人已进池</div>
+    </article>
+  `;
+}
+
 function renderMatches() {
   const codeEl = document.querySelector('#referralCode');
   if (codeEl) codeEl.textContent = me?.user?.referral_code || '—';
   applyUnlock(me?.unlock);
+  const waiting = Boolean(pool.waiting);
+  const dataLabel = document.querySelector('#dataLabel');
+  if (dataLabel) dataLabel.textContent = waiting ? '攒人中' : '今日匹配';
   matchDeck.classList.toggle('has-five', matches.length >= 5);
+  if (waiting) {
+    matchDeck.innerHTML = poolWaitCard();
+    renderMatchCarousel();
+    return;
+  }
   matchDeck.innerHTML = matches.map((item, index) => {
     const person = item.person;
     const tags = (item.shared_tags || person.tags || []).map((tag) => `<span>${escapeHtml(tag)}</span>`).join('');
@@ -483,7 +511,7 @@ function renderMatches() {
             <div><span>他可以分享</span><p>${escapeHtml(item.can_share)}</p></div>
             <div><span>他想了解</span><p>${escapeHtml(item.wants)}</p></div>
           </div>
-          <button class="primary-button contact-button" data-id="${person.id}" data-name="${escapeHtml(person.name)}" ${item.contacted && !person.xhs ? 'disabled' : ''}>
+          <button class="primary-button contact-button" data-id="${person.id}" data-name="${escapeHtml(person.name)}" ${item.contacted ? 'disabled' : ''}>
             <span>${contactCta(person, item.contacted)}</span>
             <span class="arrow" aria-hidden="true">→</span>
           </button>
@@ -491,12 +519,9 @@ function renderMatches() {
       `;
     }
     const lockedClass = item.unlocked ? 'is-unlocked' : 'is-locked';
-    const firstUsesXhs = Boolean(matches[0]?.person?.xhs);
-    const lockTitle = index === 1
-      ? (firstUsesXhs ? '记下第 1 位的小红书昵称' : '发出第一封认识邮件')
-      : '喊一个朋友来拼';
+    const lockTitle = index === 1 ? '发出第一封认识邮件' : '喊一个朋友来拼';
     const lockCopy = index === 1
-      ? (firstUsesXhs ? '复制昵称去小红书搜后解锁，或开通拼拼卡直接查看' : '联系第 1 位搭子后解锁，或开通拼拼卡直接查看')
+      ? '联系第 1 位搭子后解锁，或开通拼拼卡直接查看'
       : '好友完成注册后解锁，或开通拼拼卡直接查看';
     return `
       <article class="match-card ${lockedClass}" data-id="${person.id}" data-index="${index}" data-unlocked="${item.unlocked ? '1' : '0'}" tabindex="0" role="button">
@@ -551,7 +576,7 @@ function personMeta(row) {
 function renderMembers() {
   memberRowsEl.innerHTML = members.map((row) => `
     <button class="member-row" type="button" data-id="${row.id}">
-      <span class="member-person"><i class="member-avatar tone-${escapeHtml(row.tone)}">${escapeHtml(row.letter)}</i><span><strong>${escapeHtml(row.name)}${row.boost_active ? '<span class="boost-badge">加急</span>' : ''}</strong><small>${escapeHtml(personMeta(row) || '方向待补充')}${row.is_seed ? ' · 群资料' : ''}${row.same_city ? ' · 同城' : ''}</small></span></span>
+      <span class="member-person"><i class="member-avatar tone-${escapeHtml(row.tone)}">${escapeHtml(row.letter)}</i><span><strong>${escapeHtml(row.name)}${row.boost_active ? '<span class="boost-badge">加急</span>' : ''}</strong><small>${escapeHtml(personMeta(row) || '方向待补充')}${row.same_city ? ' · 同城' : ''}</small></span></span>
       <span class="member-skill">${escapeHtml(row.skills)}</span>
       <span class="member-tags">${(row.tags || []).map((tag) => `<i>${escapeHtml(tag)}</i>`).join('')}</span>
     </button>
@@ -580,12 +605,20 @@ function syncProFilters(filters) {
 
 async function loadMe() {
   me = await api('/api/me');
+  if (me?.pool) {
+    pool = { ...pool, ...me.pool };
+    renderPoolRally(me.pool);
+  }
   return me;
 }
 
 async function loadMatches() {
   const data = await api('/api/matches');
   matches = data.matches || [];
+  if (data.pool) {
+    pool = { ...pool, ...data.pool };
+    renderPoolRally(data.pool);
+  }
   if (me) {
     me.unlock = data.unlock;
     if (data.quota) me.quota = data.quota;
@@ -617,6 +650,10 @@ async function loadMembers() {
 
 async function enterApp(payload) {
   me = payload;
+  if (me?.pool) {
+    pool = { ...pool, ...me.pool };
+    renderPoolRally(me.pool);
+  }
   clearLocalAuth();
   avatarButton.classList.remove('is-hidden');
   if (!me.user.profile_complete) {
@@ -642,35 +679,9 @@ function showSecondMatchUnlocked(message) {
   });
 }
 
-function openXhsContact(id, person) {
-  const handle = person.xhs || '';
-  openSheet(`
-    <h2 id="sheetTitle">去小红书搜这位搭子</h2>
-    <p>群资料没有邮箱。复制下面的昵称，打开小红书搜索即可。</p>
-    <div class="xhs-handle">${escapeHtml(handle)}</div>
-    <button class="primary-button" id="copyXhs"><span>复制昵称去搜</span><span class="arrow">→</span></button>
-    <p class="xhs-hint">搜不到时，试着只用其中几个字。</p>
-  `);
-  document.querySelector('#copyXhs').addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(handle).catch(() => {});
-      const result = await api(`/api/matches/${id}/contact`, { method: 'POST', body: JSON.stringify({ body: `小红书搜：${handle}` }) });
-      matches = result.matches || matches;
-      me.unlock = result.unlock;
-      showSecondMatchUnlocked('小红书昵称已复制。你可以稍后去联系，先继续看看下一位匹配。');
-    } catch (error) {
-      showToast(error.message);
-    }
-  });
-}
-
 function openContact(id, name) {
   const match = matches.find((item) => item.person.id === id);
   const person = match?.person || {};
-  if (person.xhs) {
-    openXhsContact(id, person);
-    return;
-  }
   const personName = name || person.name || '搭子';
   const overlap = (match?.shared_tags || []).slice(0, 2).join('、') || '实习方向';
   const draft = `Hi ${personName}，\n\n我在「拼个实习」看到我们在${overlap}上很匹配。我目前在做 ${me.user.role || '实习项目'}，很想和你交换一下工作流、项目细节和面试准备经验。\n\n如果你愿意，我们可以先约 20 分钟线上聊聊。`;
@@ -747,7 +758,6 @@ function personSheetHtml(person, extra = '') {
     ${person.experience ? `<p><strong>经历与项目：</strong>${escapeHtml(person.experience)}</p>` : ''}
     ${person.looking_for ? `<p><strong>想找 / 想学：</strong>${escapeHtml(person.looking_for)}</p>` : ''}
     ${person.skills ? `<p><strong>擅长：</strong>${escapeHtml(person.skills)}</p>` : ''}
-    ${person.xhs ? `<p><strong>小红书：</strong>${escapeHtml(person.xhs)}</p>` : ''}
     ${extra}
     <button class="text-button report-button" type="button">举报这份资料</button>
   `;
@@ -770,19 +780,14 @@ async function openPersonDetail(id) {
     const extra = match
       ? `<p><strong>为什么匹配：</strong>${escapeHtml(match.reason)}</p>
          <button class="primary-button candidate-contact"><span>${contactCta(person, match.contacted)}</span><span class="arrow">→</span></button>`
-      : `${person.xhs ? `<button class="primary-button copy-xhs-explore"><span>复制小红书昵称去搜</span><span class="arrow">→</span></button>` : ''}
-         <button class="primary-button explore-match-button"><span>看看我们是否适合拼</span><span class="arrow">→</span></button>`;
+      : `<button class="primary-button explore-match-button"><span>看看我们是否适合拼</span><span class="arrow">→</span></button>`;
     openSheet(personSheetHtml(person, extra));
     if (data.quota?.just_hit_limit && !isPro()) {
-      showToast('今天的 20 个详情已看完，明天 12:00 刷新');
+      showToast('今天的 20 个详情已看完，明天 21:00 后再看');
     }
     document.querySelector('.candidate-contact')?.addEventListener('click', () => {
       closeSheet();
       openContact(id, person.name);
-    });
-    document.querySelector('.copy-xhs-explore')?.addEventListener('click', async () => {
-      await navigator.clipboard.writeText(person.xhs || '').catch(() => {});
-      showToast('已复制小红书昵称，去 App 里搜');
     });
     document.querySelector('.explore-match-button')?.addEventListener('click', async () => {
       try {
@@ -845,7 +850,7 @@ loginForm.addEventListener('submit', async (event) => {
       awaitingCode = true;
       document.querySelector('#codeField').classList.remove('is-hidden');
       document.querySelector('#loginHint').textContent = '验证码已发到邮箱，10 分钟内有效';
-      document.querySelector('#loginSubmitLabel').textContent = '验证并生成第一位匹配';
+      document.querySelector('#loginSubmitLabel').textContent = '验证并加入匹配池';
       otpInput.focus();
       showToast('验证码已发送');
       return;
@@ -951,7 +956,7 @@ document.querySelector('#aboutButton').addEventListener('click', () => {
     <p>匹配不只看岗位名，更看你们正在做什么、彼此能补上什么。</p>
     <ol>
       <li><div><strong>写一句你想交流的内容</strong><br><span>首次不用填完整简历。城市、年级、专业可在「我的档案」里补。</span></div></li>
-      <li><div><strong>每天 12:00 看一批精选</strong><br><span>免费先看 1 位匹配，打开详情每天 20 人。不是列表滑过就算。</span></div></li>
+      <li><div><strong>每天 21:00 准时匹配</strong><br><span>先把人攒进池里。人少时不硬配，到点再给一批。</span></div></li>
       <li><div><strong>需要更多时再开拼拼卡</strong><br><span>更多名单、更多匹配、加急曝光。学校不会公开展示。</span></div></li>
     </ol>
   `);
@@ -960,7 +965,7 @@ document.querySelector('#aboutButton').addEventListener('click', () => {
 document.querySelector('#privacyButton').addEventListener('click', () => {
   openSheet(`
     <h2 id="sheetTitle">隐私说明</h2>
-    <p>邮箱和自我介绍只用于生成匹配、发送结果与建立联系。发出认识邮件时，对方会看到你的邮箱以便回复。群资料没有邮箱，只提供小红书昵称，需自行搜索。</p>
+    <p>邮箱和自我介绍只用于生成匹配、发送结果与建立联系。发出认识邮件时，对方会看到你的邮箱以便回复。</p>
     <p>登录后会把会话写在 HttpOnly Cookie 里，默认 30 天免登录。退出账户会立即作废。</p>
   `);
 });
@@ -1102,6 +1107,12 @@ document.addEventListener('keydown', (event) => {
   const params = new URLSearchParams(window.location.search);
   const invite = params.get('code') || params.get('invite');
   if (invite && !inviteInput.value) inviteInput.value = invite;
+  try {
+    const publicConfig = await api('/api/config');
+    renderPoolRally(publicConfig.pool);
+  } catch {
+    renderPoolRally(pool);
+  }
   try {
     await loadMe();
     await enterApp(me);

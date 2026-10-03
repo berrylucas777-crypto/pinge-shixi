@@ -68,6 +68,18 @@ main { flex: 1; }
 .login-copy { padding-left: clamp(0px, 3vw, 42px); }
 .login-copy h1 { max-width: 620px; margin: 0; font-size: clamp(48px, 6.3vw, 84px); line-height: 0.99; letter-spacing: -0.04em; font-weight: 750; }
 .login-copy > p { max-width: 460px; margin: 28px 0 0; color: var(--muted); font-size: 18px; line-height: 1.7; }
+.pool-rally {
+  max-width: 460px;
+  margin: 22px 0 0;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #e7f5fd;
+  color: #0b6ea8;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 650;
+}
+.pool-rally strong { color: var(--ink); font-size: 22px; letter-spacing: -0.04em; }
 .proof-line { margin-top: 34px; display: flex; align-items: center; gap: 12px; color: #4f555e; font-size: 13px; }
 .proof-line i { width: 3px; height: 3px; border-radius: 50%; background: #b2b7bf; }
 
@@ -216,6 +228,24 @@ input:focus { border-color: var(--blue-strong); box-shadow: 0 0 0 4px rgba(21, 1
 .match-deck { display: grid; grid-template-columns: 1.45fr .775fr .775fr; gap: 14px; }
 .match-card { min-height: 530px; padding: 28px; border-radius: 16px; background: var(--white); box-shadow: 0 16px 42px rgba(39, 53, 69, .08); overflow: hidden; position: relative; }
 .match-carousel-indicator { display: none; }
+.match-card.pool-wait {
+  min-height: 0;
+  grid-column: 1 / -1;
+  background: linear-gradient(180deg, #eef8fd 0%, #fff 42%);
+}
+.pool-kicker { margin: 0 0 10px; color: #0b6ea8; font-size: 13px; font-weight: 750; letter-spacing: 0.04em; }
+.match-card.pool-wait h2 { margin: 0 0 12px; max-width: 16ch; font-size: clamp(28px, 4vw, 42px); line-height: 1.1; letter-spacing: -0.04em; }
+.match-card.pool-wait > p { margin: 0; max-width: 42ch; color: var(--muted); font-size: 16px; line-height: 1.65; }
+.pool-meter {
+  margin-top: 28px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 10px 28px rgba(39, 53, 69, .06);
+  color: var(--ink);
+  font-size: 15px;
+}
+.pool-meter strong { font-size: 28px; letter-spacing: -0.04em; }
 .match-topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
 .match-number { color: var(--muted); font-size: 13px; }
 .match-score { color: var(--green); font-size: 12px; }
@@ -315,8 +345,6 @@ footer button { padding: 0; color: var(--faint); font-size: 11px; }
 #sheetContent li { counter-increment: step; display: grid; grid-template-columns: 32px 1fr; gap: 12px; margin: 18px 0; line-height: 1.55; }
 #sheetContent li::before { content: counter(step); width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; background: var(--blue); font-size: 12px; font-weight: 700; }
 .email-draft { width: 100%; min-height: 180px; resize: vertical; margin: 10px 0 14px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: #f6f8fa; font: 13px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; }
-.xhs-handle { margin: 18px 0 16px; padding: 18px 16px; border-radius: 12px; background: var(--surface); color: var(--ink); font-size: 22px; line-height: 1.35; font-weight: 700; letter-spacing: -0.02em; text-align: center; word-break: break-word; }
-.xhs-hint { margin: 12px 0 0; color: var(--faint) !important; font-size: 12px; }
 .toast { position: fixed; z-index: 30; left: 50%; bottom: 24px; transform: translate(-50%, 18px); opacity: 0; pointer-events: none; padding: 11px 16px; border-radius: 999px; background: rgba(22,23,25,.92); color: white; font-size: 12px; transition: opacity 220ms ease, transform 320ms var(--ease-out); }
 .toast.is-visible { opacity: 1; transform: translate(-50%, 0); }
 
@@ -337,6 +365,7 @@ footer button { padding: 0; color: var(--faint); font-size: 11px; }
   .login-copy { padding-left: 0; text-align: center; }
   .login-copy h1 { margin: auto; font-size: clamp(48px, 11vw, 76px); }
   .login-copy > p { margin-left: auto; margin-right: auto; }
+  .pool-rally { margin-left: auto; margin-right: auto; }
   .proof-line { justify-content: center; }
   .login-stage { width: min(640px, 100%); margin: auto; }
   .match-deck.has-five { grid-template-columns: 1fr 1fr; }

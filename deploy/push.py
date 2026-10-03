@@ -25,7 +25,6 @@ UPLOAD = [
     "server/matching.py",
     "server/seed.py",
     "server/main.py",
-    "匹配池/群聊职业经历与供需数据库_OCR初版.json",
 ]
 PAYMENT_QR = "assets/pinpin-payment-qr.jpg"
 if (ROOT / PAYMENT_QR).exists():
@@ -111,7 +110,7 @@ def main():
     client.connect(HOST, username="root", password=password, timeout=20, allow_agent=False, look_for_keys=False)
     sftp = client.open_sftp()
 
-    run(client, f"mkdir -p {REMOTE}/server {REMOTE}/assets {REMOTE}/data {REMOTE}/匹配池")
+    run(client, f"mkdir -p {REMOTE}/server {REMOTE}/assets {REMOTE}/data")
     run(client, f"if [ -f {REMOTE}/data/pingo.db ]; then cp {REMOTE}/data/pingo.db {REMOTE}/data/pingo.db.predeploy; fi")
     for rel in UPLOAD:
         local = ROOT / rel
