@@ -134,6 +134,8 @@ def test_health_reports_release(tmp_path, monkeypatch):
         response = client.get("/api/health")
         assert response.status_code == 200
         assert response.json()["release"] == "test-release"
+        assert response.headers["cache-control"] == "no-store"
+        assert response.headers["cross-origin-opener-policy"] == "same-origin"
 
 
 def test_manual_payment_can_be_reviewed_and_approved(tmp_path, monkeypatch):

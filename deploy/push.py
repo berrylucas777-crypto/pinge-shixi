@@ -36,6 +36,11 @@ server {
     listen [::]:80;
     server_name shixi.seu-link.fit;
     client_max_body_size 8m;
+    server_tokens off;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "DENY" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host $host;
@@ -86,6 +91,7 @@ def main():
     remote_env = "\n".join(
         [
             "APP_URL=https://shixi.seu-link.fit",
+            "ALLOWED_HOSTS=shixi.seu-link.fit,127.0.0.1,localhost",
             f"APP_RELEASE={release}",
             f"SECRET_KEY={secret}",
             "DISABLE_DOCS=true",

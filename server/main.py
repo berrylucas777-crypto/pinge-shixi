@@ -14,11 +14,13 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
+from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -95,6 +97,14 @@ def _origins() -> list[str]:
     return sorted(origins)
 
 
+def _allowed_hosts() -> list[str]:
+    configured = [item.strip() for item in os.getenv("ALLOWED_HOSTS", "").split(",") if item.strip()]
+    if configured:
+        return configured
+    hostname = urlparse(_app_url()).hostname
+    return [host for host in (hostname, "localhost", "127.0.0.1", "testserver") if host]
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     _secret_key()
@@ -116,6 +126,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["Authorization", "Content-Type", "X-Pingo-Client"],
 )
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=_allowed_hosts())
 
 
 @app.middleware("http")
@@ -125,12 +136,16 @@ async def security_headers(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
+    response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; "
         "connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
     )
     if _app_url().startswith("https://"):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    if request.url.path.startswith("/api/") or request.url.path in {"/review", "/imports"}:
+        response.headers["Cache-Control"] = "no-store"
     return response
 
 
@@ -896,6 +911,7 @@ def data_admin(user: dict = Depends(current_user)) -> dict:
 
 @app.post("/api/admin/imports/preview")
 def preview_import(body: ImportPreviewBody, admin: dict = Depends(data_admin)):
+    _rate_limit(f"import-preview:{admin['id']}", 30, 3600)
     try:
         rows, skipped = _parse_import_content(body.source_format, body.content)
     except json.JSONDecodeError:
@@ -934,6 +950,7 @@ def _import_candidate(source_name: str, row: dict) -> None:
 
 @app.post("/api/admin/imports/commit")
 def commit_import(body: ImportCommitBody, admin: dict = Depends(data_admin)):
+    _rate_limit(f"import-commit:{admin['id']}", 12, 3600)
     if not body.consent_confirmed:
         raise HTTPException(400, "请确认资料已获得授权或来自可公开使用的来源")
     rows = [_normalize_import_row(row) for row in body.rows]
