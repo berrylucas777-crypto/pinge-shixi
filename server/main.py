@@ -173,6 +173,10 @@ async def security_headers(request: Request, call_next):
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
     if request.url.path.startswith("/api/") or request.url.path in {"/review", "/imports"}:
         response.headers["Cache-Control"] = "no-store"
+    if request.url.path.startswith("/api/") or request.url.path in {
+        "/ops", "/review", "/review.js", "/imports", "/imports.js", "/docs", "/redoc", "/openapi.json"
+    }:
+        response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     return response
 
 
@@ -1452,6 +1456,26 @@ def boost(user: dict = Depends(current_user)):
 @app.get("/")
 def index():
     return FileResponse(ROOT / "index.html")
+
+
+@app.get("/about", include_in_schema=False)
+def about_page():
+    return FileResponse(ROOT / "about.html")
+
+
+@app.get("/robots.txt", include_in_schema=False)
+def robots_file():
+    return FileResponse(ROOT / "robots.txt", media_type="text/plain")
+
+
+@app.get("/sitemap.xml", include_in_schema=False)
+def sitemap_file():
+    return FileResponse(ROOT / "sitemap.xml", media_type="application/xml")
+
+
+@app.get("/llms.txt", include_in_schema=False)
+def llms_file():
+    return FileResponse(ROOT / "llms.txt", media_type="text/plain")
 
 
 @app.get("/styles.css")

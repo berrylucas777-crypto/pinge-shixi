@@ -9,6 +9,10 @@ REMOTE = "/opt/pingshixi"
 HOST = "122.51.95.61"
 UPLOAD = [
     "index.html",
+    "about.html",
+    "robots.txt",
+    "sitemap.xml",
+    "llms.txt",
     "styles.css",
     "app.js",
     "review.html",

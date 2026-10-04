@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /api/
+Disallow: /ops
+Disallow: /review
+Disallow: /imports
+Disallow: /docs
+Disallow: /redoc
+Disallow: /openapi.json
+
+Sitemap: https://shixi.seu-link.fit/sitemap.xml
