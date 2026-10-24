@@ -22,7 +22,7 @@
     <title>拼个实习｜发现实习机会，找到一起准备的人</title>
     <link rel="icon" href="assets/pingo-mascot.webp" />
     <link rel="stylesheet" href="styles.css?v=20261004.seo1" />
-    <link rel="stylesheet" href="jobs.css?v=20261024.4" />
+    <link rel="stylesheet" href="jobs.css?v=20261024.5" />
   </head>
   <body>
     <div class="site-shell">
@@ -47,8 +47,8 @@
       <main>
         <section id="jobsView" class="jobs-workspace" data-mode="discover" aria-labelledby="jobsTitle">
           <div class="jobs-intro">
-            <div><p class="workspace-date">一点新机会，一起向前。</p><h1 id="jobsTitle">下一站，实习。</h1><p id="jobsSubtitle">发现值得投递的机会，也找到一起准备的人。</p></div>
-            <div class="brand-companion"><img src="assets/pingo-mascot.webp" width="100" height="100" alt="拼个实习吉祥物" /><span>机会在前面<br /><strong>我们一起找</strong></span></div>
+            <div><h1 id="jobsTitle">发现实习</h1><p id="jobsSubtitle">看招聘要求，也看做过的人怎么说。</p></div>
+            <div class="brand-companion"><img src="assets/pingo-mascot.webp" width="40" height="40" alt="拼个实习吉祥物" /></div>
           </div>
           <div class="jobs-toolbar">
             <label class="job-search"><i data-lucide="search"></i><input id="jobSearch" type="search" placeholder="搜索岗位、公司或城市" aria-label="搜索岗位、公司或城市" autocomplete="off" /><span id="searchShortcut" aria-hidden="true">⌕</span></label>
@@ -59,7 +59,7 @@
             <div class="job-categories" role="group" aria-label="岗位方向">
               <button class="is-active" data-category="" aria-pressed="true">全部机会</button><button data-category="技术 / 工程" aria-pressed="false">技术 / 工程</button><button data-category="AI / 数据" aria-pressed="false">AI / 数据</button><button data-category="产品 / 设计" aria-pressed="false">产品 / 设计</button><button data-category="运营 / 市场" aria-pressed="false">运营 / 市场</button>
             </div>
-            <button class="source-status" id="jobSources"><span class="status-dot"></span><span id="sourceStatus">正在读取岗位</span><i data-lucide="chevron-down"></i></button>
+            <button class="source-status" id="jobSources" aria-label="查看岗位来源" title="查看岗位来源"><span class="status-dot"></span><span id="sourceStatus">正在读取岗位</span><i data-lucide="chevron-down"></i></button>
           </div>
           <div class="tracker-filters is-hidden" id="trackerFilters" role="group" aria-label="投递进展">
             <button data-stage="all" class="is-active">全部</button><button data-stage="saved">已收藏</button><button data-stage="applied">已投递</button><button data-stage="interview">面试中</button><button data-stage="offer">已获 Offer</button><button data-stage="rejected">已结束</button>
@@ -310,7 +310,7 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="assets/lucide.min.js"></script>
-    <script src="app.js?v=20261024.1"></script>
-    <script src="jobs.js?v=20261024.4"></script>
+    <script src="app.js?v=20261024.5"></script>
+    <script src="jobs.js?v=20261024.5"></script>
   </body>
 </html>

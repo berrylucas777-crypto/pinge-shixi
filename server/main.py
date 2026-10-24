@@ -31,6 +31,7 @@ from .jev import configured as jev_configured
 from .mailer import email_configured, send_mail
 from .matching import rank_matches
 from .jobs import create_router as jobs_router
+from .job_experiences import create_router as experiences_router
 
 load_dotenv()
 
@@ -103,8 +104,9 @@ def _is_data_admin(user: dict) -> bool:
 def _manual_payment_config() -> dict:
     return {
         "enabled": _manual_payment_enabled(),
+        "accepting_new_orders": _bool_env("PINPIN_SALES_ENABLED", False),
         "amount_cents": 1000,
-        "qr_url": os.getenv("MANUAL_PAYMENT_QR_URL", "").strip(),
+        "qr_url": os.getenv("MANUAL_PAYMENT_QR_URL", "").strip() if _bool_env("PINPIN_SALES_ENABLED", False) else "",
         "contact": os.getenv("MANUAL_PAYMENT_CONTACT", "").strip(),
     }
 
@@ -607,7 +609,8 @@ def quota_state(user: dict) -> dict:
         "is_pro": bool(user.get("is_pro")),
         "pinpin_sold": sold,
         "pinpin_cap": PINPIN_CAP,
-        "pinpin_open": (_bool_env("ALLOW_SIMULATED_PAYMENT", False) or _manual_payment_enabled()) and sold < PINPIN_CAP,
+        "pinpin_sales_enabled": _bool_env("PINPIN_SALES_ENABLED", False),
+        "pinpin_open": _bool_env("PINPIN_SALES_ENABLED", False) and (_bool_env("ALLOW_SIMULATED_PAYMENT", False) or _manual_payment_enabled()) and sold < PINPIN_CAP,
         "can_boost": bool(user.get("is_pro")) and user.get("boost_period") != period,
         "boost_active": bool(user.get("boost_active")),
     }
@@ -1329,7 +1332,7 @@ def import_batches(admin: dict = Depends(data_admin)):
 
 @app.post("/api/pinpin/simulate")
 def simulate_pinpin(user: dict = Depends(current_user)):
-    if not _bool_env("ALLOW_SIMULATED_PAYMENT", False):
+    if not _bool_env("ALLOW_SIMULATED_PAYMENT", False) or not _bool_env("PINPIN_SALES_ENABLED", False):
         raise HTTPException(503, "真实支付尚未开放，当前不会产生扣款")
     with connect() as conn:
         conn.execute("UPDATE users SET is_pro=1,pro_purchased_at=datetime('now') WHERE id=?", (user["id"],))
@@ -1376,6 +1379,8 @@ def submit_manual_payment_order(body: PinpinPaymentRequestBody, user: dict = Dep
         raise HTTPException(400, "请填写付款时显示的微信昵称")
     with connect() as conn:
         row = conn.execute("SELECT * FROM pinpin_payment_requests WHERE user_id=?", (user["id"],)).fetchone()
+        if not row and not _bool_env("PINPIN_SALES_ENABLED", False):
+            raise HTTPException(503, "新拼拼卡暂停售卖，已有订单仍可核验")
         if row:
             conn.execute(
                 "UPDATE pinpin_payment_requests SET payer_nickname=?,status=CASE WHEN status='approved' THEN status ELSE 'pending' END,updated_at=datetime('now') WHERE id=?",
@@ -1520,4 +1525,5 @@ def imports_script():
 
 
 app.include_router(jobs_router(current_user))
+app.include_router(experiences_router(current_user, data_admin, _rate_limit))
 app.mount("/assets", StaticFiles(directory=ROOT / "assets"), name="assets")

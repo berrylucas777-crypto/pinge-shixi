@@ -12,6 +12,8 @@
   let jobs = [], personal = [], sources = [], selected = null, category = '', stage = 'all';
   let destination = 'discover', pendingAction = null, loaded = false, busy = false;
   let returnFocusId = null, scrollLock = null;
+  let pendingExperience = null;
+  const experienceDrafts = new Map();
   const sharedJob = new URLSearchParams(location.search).get('job');
   let sharedOpened = false;
   const esc = escapeHtml;
@@ -66,8 +68,8 @@
     const rows = filtered();
     const tracking = destination === 'saved';
     view.dataset.mode = destination;
-    document.querySelector('#jobsTitle').textContent = tracking ? '每一步，都算数。' : '下一站，实习。';
-    document.querySelector('#jobsSubtitle').textContent = tracking ? '收藏、投递、面试。把你的机会放在一起。' : '发现值得投递的机会，也找到一起准备的人。';
+    document.querySelector('#jobsTitle').textContent = tracking ? '我的机会' : '发现实习';
+    document.querySelector('#jobsSubtitle').textContent = tracking ? '收藏与投递进展' : '看招聘要求，也看做过的人怎么说。';
     document.querySelector('#trackerFilters').classList.toggle('is-hidden', !tracking);
     document.querySelectorAll('[data-stage]').forEach(button => {
       const key = button.dataset.stage;
@@ -90,7 +92,7 @@
     if (!rows.some(j => j.id === selected)) selected = rows[0].id;
     list.innerHTML = rows.map(j => {
       const action = state(j.id);
-      return `<article class="job-card ${tracking && j.id === selected ? 'is-selected' : ''}"><button class="job-open" data-job-id="${esc(j.id)}" aria-label="查看 ${esc(j.company)} ${esc(j.title)}" ${tracking ? `aria-pressed="${j.id === selected}"` : 'aria-haspopup="dialog" aria-controls="jobDialog"'}><div class="company-line">${mark(j)}<span>${esc(j.company)}</span>${region(j.location)==='china'?'<span class="domestic-label">国内</span>':''}</div><h2>${esc(j.title)}</h2><div class="job-card-meta">${icon('map-pin')}<span>${esc(j.location.replace('中国大陆 · ',''))}</span></div><div class="job-card-bottom"><span class="job-tag">${esc(j.category)}</span><span>${!j.active ? '原站已下架' : action.stage !== 'none' ? stages[action.stage] : `${date(j.updated_at)} 发布 / 更新`}</span></div></button><button class="icon-command job-save" data-save-id="${esc(j.id)}" aria-label="${action.saved ? '取消收藏' : '收藏'} ${esc(j.title)}" title="${action.saved ? '取消收藏' : '收藏岗位'}" aria-pressed="${Boolean(action.saved)}">${icon('bookmark')}</button></article>`;
+      return `<article class="job-card ${tracking && j.id === selected ? 'is-selected' : ''}"><button class="job-open" data-job-id="${esc(j.id)}" aria-label="查看 ${esc(j.company)} ${esc(j.title)}" ${tracking ? `aria-pressed="${j.id === selected}"` : 'aria-haspopup="dialog" aria-controls="jobDialog"'}><div class="company-line">${mark(j)}<span>${esc(j.company)}</span>${region(j.location)==='china'?'<span class="domestic-label">国内</span>':''}</div><h2>${esc(j.title)}</h2><div class="job-card-meta">${icon('map-pin')}<span>${esc(j.location.replace('中国大陆 · ',''))}</span></div>${j.experience_count ? `<span class="experience-availability">同公司同方向 · ${Number(j.experience_count)} 条经历</span>` : ''}<div class="job-card-bottom"><span class="job-tag">${esc(j.category)}</span><span>${!j.active ? '原站已下架' : action.stage !== 'none' ? stages[action.stage] : `${date(j.updated_at)} 发布 / 更新`}</span></div></button><button class="icon-command job-save" data-save-id="${esc(j.id)}" aria-label="${action.saved ? '取消收藏' : '收藏'} ${esc(j.title)}" title="${action.saved ? '取消收藏' : '收藏岗位'}" aria-pressed="${Boolean(action.saved)}">${icon('bookmark')}</button></article>`;
     }).join('');
     list.querySelectorAll('[data-job-id]').forEach(button => button.onclick = () => {
       selected = button.dataset.jobId;
@@ -109,7 +111,7 @@
     const s = state(j.id);
     const paragraphs = j.description.split(/\n\n+/).filter(Boolean);
     const paragraphHtml = rows => rows.map(p=>`<p>${esc(p)}</p>`).join('');
-    detail.innerHTML = `<button id="jobDetailClose" class="detail-close">${icon('chevron-left')}返回岗位列表</button><div class="detail-scroll"><div class="detail-topline"><div class="detail-company">${mark(j)}${esc(j.company)}</div><span class="job-tag">${j.active ? '官网公开岗位' : '原站已下架'}</span></div><h2 id="jobDetailTitle">${esc(j.title)}</h2><div class="detail-facts"><span>${icon('map-pin')}${esc(j.location)}</span><span>${icon('briefcase-business')}实习</span>${j.remote ? `<span>${icon('laptop')}远程</span>` : ''}</div><div class="detail-social">${icon('messages-square')}<p><strong>找个搭子，一起准备</strong>项目互评 · 模拟面试 · 经验交流</p><button id="jobFindPeople">找准备搭子</button></div><div class="description-heading"><h3>岗位介绍</h3><span>企业原文</span></div><div class="job-description">${paragraphHtml(paragraphs.slice(0,5)) || '<p>完整职位要求请查看原站。</p>'}${paragraphs.length>5 ? `<details><summary>展开完整岗位介绍</summary>${paragraphHtml(paragraphs.slice(5))}</details>` : ''}</div><div class="detail-source">来源：${esc(j.company)} 招聘页 · ${date(j.checked_at)} 读取<br />薪资、资格及截止日期以企业原站为准。</div></div><div class="detail-actions">${j.active ? `<a class="apply-link" href="${esc(j.url)}" target="_blank" rel="noopener noreferrer">原站申请${icon('arrow-up-right')}</a>` : '<span class="job-tag">该岗位已结束招聘</span>'}<button id="detailSave" class="icon-command" aria-label="${s.saved ? '取消收藏' : '收藏岗位'}" title="${s.saved ? '取消收藏' : '收藏岗位'}" aria-pressed="${Boolean(s.saved)}">${icon(s.saved ? 'bookmark-check' : 'bookmark')}</button><button id="detailShare" class="icon-command" aria-label="复制岗位链接" title="复制岗位链接">${icon('share-2')}</button><label class="stage-select"><select id="applicationStage" aria-label="投递进展">${Object.entries(stages).map(([key,label])=>`<option value="${key}" ${s.stage===key?'selected':''}>${label}</option>`).join('')}</select></label></div>`;
+    detail.innerHTML = `<button id="jobDetailClose" class="detail-close">${icon('chevron-left')}返回岗位列表</button><div class="detail-scroll"><div class="detail-topline"><div class="detail-company">${mark(j)}${esc(j.company)}</div><span class="job-tag">${j.active ? '官网公开岗位' : '原站已下架'}</span></div><h2 id="jobDetailTitle">${esc(j.title)}</h2><div class="detail-facts"><span>${icon('map-pin')}${esc(j.location)}</span><span>${icon('briefcase-business')}实习</span>${j.remote ? `<span>${icon('laptop')}远程</span>` : ''}</div><section id="jobExperiences" class="job-experiences" aria-label="实际工作经历" data-job-id="${esc(j.id)}"><p class="experience-muted">正在读取工作经历…</p></section><div class="description-heading"><h3>企业 JD</h3><span>来自招聘官网</span></div><div class="job-description">${paragraphHtml(paragraphs.slice(0,5)) || '<p>完整职位要求请查看原站。</p>'}${paragraphs.length>5 ? `<details><summary>展开完整岗位介绍</summary>${paragraphHtml(paragraphs.slice(5))}</details>` : ''}</div><div class="detail-source">来源：${esc(j.company)} 招聘页 · ${date(j.checked_at)} 读取<br />薪资、资格及截止日期以企业原站为准。</div></div><div class="detail-actions">${j.active ? `<a class="apply-link" href="${esc(j.url)}" target="_blank" rel="noopener noreferrer">原站申请${icon('arrow-up-right')}</a>` : '<span class="job-tag">该岗位已结束招聘</span>'}<button id="detailSave" class="icon-command" aria-label="${s.saved ? '取消收藏' : '收藏岗位'}" title="${s.saved ? '取消收藏' : '收藏岗位'}" aria-pressed="${Boolean(s.saved)}">${icon(s.saved ? 'bookmark-check' : 'bookmark')}</button><button id="detailShare" class="icon-command" aria-label="复制岗位链接" title="复制岗位链接">${icon('share-2')}</button><label class="stage-select"><select id="applicationStage" aria-label="投递进展">${Object.entries(stages).map(([key,label])=>`<option value="${key}" ${s.stage===key?'selected':''}>${label}</option>`).join('')}</select></label></div>`;
     detail.classList.add('has-content');
     detail.querySelector('.detail-close').onclick = closeDetail;
     document.querySelector('#detailSave').onclick = () => action(j.id,{saved:!s.saved});
@@ -119,10 +121,106 @@
       try { await navigator.clipboard.writeText(`${j.company} · ${j.title}\n一起看看这个实习机会：${link}`); showToast('岗位分享链接已复制'); }
       catch { showToast('复制失败，请从原站复制链接'); }
     };
-    document.querySelector('#jobFindPeople').onclick = () => {
-      window.pingoJobContext = {company:j.company,title:j.title,url:j.url,category:j.category};
-      closeDetail(); navigate('community');
-    };
+    if (dialog.open || destination === 'saved' && !matchMedia('(max-width:720px)').matches) loadExperiences(j);
+  }
+  async function loadExperiences(j) {
+    const region = detail.querySelector('#jobExperiences');
+    if (!j || !region || region.dataset.jobId !== j.id) return;
+    try {
+      const [publicData, ownData] = await Promise.all([
+        api('/api/jobs/' + encodeURIComponent(j.id) + '/experiences'),
+        me?.user ? api('/api/jobs/' + encodeURIComponent(j.id) + '/experiences/mine') : Promise.resolve({experiences: []})
+      ]);
+      if (!region.isConnected) return;
+      const own = ownData.experiences;
+      const statuses = {pending: '待审核', published: '已公开', rejected: '未通过 / 已下架'};
+      const entries = publicData.experiences.concat(own.filter(e => e.status !== 'published'));
+      region.innerHTML = '<div class="experience-heading"><h3>实际工作经历</h3><span>' + publicData.experiences.length + ' 条公开经历</span></div>' +
+        '<p class="experience-muted">同公司 · 同方向的本人自述，未核验任职。不代表当前团队或这份 JD 的实际情况。</p>' +
+        (entries.length ? entries.map(e => {
+          const mine = own.find(row => row.id === e.id);
+          return '<article class="experience-entry"><div class="experience-meta"><strong>' + esc(e.role_title) + '</strong><span>' + e.year + ' 年 · ' + (mine ? statuses[mine.status] : '本人自述') + '</span></div>' +
+            '<p class="experience-body">' + esc(e.body) + '</p>' +
+            (mine ? '<button class="experience-withdraw text-button" data-experience-id="' + e.id + '">撤回这条经历</button>' :
+              '<details class="experience-report"><summary>举报</summary><form data-report-id="' + e.id + '"><select aria-label="举报原因"><option>包含隐私或机密</option><option>疑似虚假经历</option><option>攻击或广告</option><option>其他问题</option></select><button type="submit">提交举报</button></form></details>') + '</article>';
+        }).join('') : '<p class="experience-empty">还没有这类工作的经历分享。当前只能参考企业 JD，不将招聘描述当作实际工作结论。</p>') +
+        '<details class="experience-editor"><summary>我做过，写一条</summary><form id="experienceForm">' +
+        '<div class="experience-fields"><label>当时的岗位<input name="role_title" maxlength="100" value="' + esc(j.title.slice(0,100)) + '"></label>' +
+        '<label>经历年份<select name="year" aria-label="经历年份">' + Array.from({length: new Date().getFullYear() - 1999}, (_,i) => new Date().getFullYear() - i).map(y => '<option>' + y + '</option>').join('') + '</select></label></div>' +
+        '<label>实际上做了什么<textarea name="body" rows="3" minlength="20" maxlength="1600" required placeholder="比如：日常主要做什么；与 JD 有什么落差；入职前最该问清哪件事。"></textarea></label>' +
+        '<label class="experience-consent"><input name="confirmed" type="checkbox" required>这是本人经历，不含他人隐私、客户资料或未公开业务信息</label>' +
+        '<p class="experience-muted">公开时不显示姓名和邮箱；具体经历仍可能让熟人识别你。内容审核不等于任职核验，提交后可撤回。</p>' +
+        '<button class="experience-submit" type="submit">' + icon('send') + '提交审核</button></form></details>' +
+        '<p class="experience-feedback" role="status"></p>';
+      const editor = region.querySelector('.experience-editor');
+      const form = region.querySelector('#experienceForm');
+      const draft = experienceDrafts.get(j.id);
+      if (draft) {
+        for (const [key, value] of Object.entries(draft)) {
+          if (form.elements[key]) {
+            if (key === 'confirmed') form.elements[key].checked = value;
+            else form.elements[key].value = value;
+          }
+        }
+        editor.open = Boolean(draft.open && me?.user);
+      }
+      const captureDraft = () => experienceDrafts.set(j.id, {
+        role_title: form.elements.role_title.value, year: form.elements.year.value,
+        body: form.elements.body.value, confirmed: form.elements.confirmed.checked, open: editor.open
+      });
+      form.addEventListener('input', captureDraft);
+      editor.addEventListener('toggle', captureDraft);
+      editor.querySelector('summary').onclick = event => {
+        if (me?.user) return;
+        event.preventDefault();
+        experienceDrafts.set(j.id, {open:true});
+        pendingExperience = j.id;
+        login();
+      };
+      form.onsubmit = async event => {
+        event.preventDefault();
+        const button = form.querySelector('button[type=submit]');
+        button.disabled = true;
+        try {
+          await api('/api/jobs/' + encodeURIComponent(j.id) + '/experiences', {method:'POST', body:JSON.stringify({
+            role_title: form.elements.role_title.value, year:Number(form.elements.year.value),
+            body:form.elements.body.value, confirmed:form.elements.confirmed.checked
+          })});
+          experienceDrafts.delete(j.id);
+          await loadExperiences(j);
+          showToast('已提交审核，暂未公开');
+        } catch (error) {
+          region.querySelector('.experience-feedback').textContent = error.message;
+          button.disabled = false;
+        }
+      };
+      region.querySelectorAll('.experience-withdraw').forEach(button => button.onclick = async () => {
+        if (!window.confirm('撤回后将从公开页面删除，确定撤回？')) return;
+        button.disabled = true;
+        try {
+          await api('/api/job-experiences/' + button.dataset.experienceId, {method:'DELETE'});
+          await loadExperiences(j);
+          showToast('经历已撤回');
+        } catch (error) { region.querySelector('.experience-feedback').textContent = error.message; button.disabled = false; }
+      });
+      region.querySelectorAll('[data-report-id]').forEach(form => form.onsubmit = async event => {
+        event.preventDefault();
+        if (!me?.user) { pendingExperience = j.id; login(); return; }
+        const button = form.querySelector('button');
+        button.disabled = true;
+        try {
+          await api('/api/job-experiences/' + form.dataset.reportId + '/report', {method:'POST', body:JSON.stringify({reason:form.querySelector('select').value})});
+          form.closest('details').open = false;
+          region.querySelector('.experience-feedback').textContent = '举报已提交，待人工复核。';
+        } catch (error) { region.querySelector('.experience-feedback').textContent = error.message; }
+        finally { button.disabled = false; }
+      });
+      icons();
+    } catch (error) {
+      if (!region.isConnected) return;
+      region.innerHTML = '<p class="experience-muted">工作经历暂时无法读取。</p><button class="text-button" id="retryExperiences">重新读取</button>';
+      region.querySelector('button').onclick = () => loadExperiences(j);
+    }
   }
   function focusCard() {
     [...list.querySelectorAll('[data-job-id]')].find(button => button.dataset.jobId === returnFocusId)?.focus({preventScroll:true});
@@ -137,6 +235,7 @@
     document.body.style.overflow = 'hidden';
     shell.style.overflow = 'hidden';
     detail.querySelector('.detail-close').focus({preventScroll:true});
+    loadExperiences(jobs.find(j => j.id === selected) || personal.find(j => j.id === selected));
   }
   function closeDetail() {
     if (!dialog.open) return;
@@ -192,6 +291,7 @@
     }
   }
   async function navigate(next) {
+    const preserveView = next === destination && !view.classList.contains('is-hidden');
     if (next !== destination && next !== 'community') {
       document.querySelector('.site-shell').scrollTop=0;
       search.value=''; category=''; stage='all';
@@ -221,7 +321,8 @@
       catch(error) { showToast(error.message); }
       return;
     }
-    hideAllViews(); view.classList.remove('is-hidden'); pinpinButton.classList.add('is-hidden'); updateNav();
+    if (!preserveView) { hideAllViews(); view.classList.remove('is-hidden'); }
+    pinpinButton.classList.add('is-hidden'); updateNav();
     if (loaded) render(); else await refresh();
     if (sharedJob && !sharedOpened && next==='discover') {
       const target = [...list.querySelectorAll('[data-job-id]')].find(b=>b.dataset.jobId===sharedJob);
@@ -232,9 +333,15 @@
     await loadPersonal(); updateNav();
     if (pendingAction) { const pending=pendingAction; pendingAction=null; await action(pending.id,pending.patch); }
     await navigate(destination);
+    if (pendingExperience) {
+      const id = pendingExperience;
+      pendingExperience = null;
+      const button = [...list.querySelectorAll('[data-job-id]')].find(b => b.dataset.jobId === id);
+      button?.click();
+    }
   }
   document.querySelectorAll('[data-destination]').forEach(b=>b.addEventListener('click',()=>{
-    if (!loginView.classList.contains('is-hidden')) pendingAction=null;
+    if (!loginView.classList.contains('is-hidden')) { pendingAction=null; pendingExperience=null; }
     if(b.dataset.destination==='community') window.pingoJobContext=null;
     navigate(b.dataset.destination);
   }));
@@ -250,6 +357,6 @@
     document.querySelectorAll('[data-category]').forEach(el=>{el.classList.toggle('is-active',el===b);el.setAttribute('aria-pressed',String(el===b));});render();
   });
   document.querySelectorAll('[data-stage]').forEach(b=>b.onclick=()=>{stage=b.dataset.stage;document.querySelectorAll('[data-stage]').forEach(el=>el.classList.toggle('is-active',el===b));render();});
-  window.PingoJobs={navigate,hide,authChanged,community:()=>destination==='community',signedOut:()=>{personal=[];pendingAction=null;navigate('discover');}};
+  window.PingoJobs={navigate,hide,authChanged,community:()=>destination==='community',signedOut:()=>{personal=[];pendingAction=null;pendingExperience=null;experienceDrafts.clear();navigate('discover');}};
   icons(); refresh();
 })();

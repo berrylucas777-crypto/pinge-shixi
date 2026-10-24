@@ -85,3 +85,31 @@ document.querySelector('#commitImport').addEventListener('click', async (event) 
 
 document.querySelector('#refreshBatches').addEventListener('click', loadBatches);
 loadBatches();
+
+async function loadExperiences() {
+  const region = document.querySelector('#experienceReviewRows');
+  try {
+    const status = document.querySelector('#experienceStatus').value;
+    const data = await request('/api/admin/job-experiences?status=' + encodeURIComponent(status));
+    region.innerHTML = data.experiences.length ? data.experiences.map(row =>
+      '<article class="experience-entry"><div class="experience-meta"><strong>' + escapeHtml(row.company + ' · ' + row.role_title) + '</strong><span>' + row.year + ' 年 · ' + escapeHtml(row.category) + '</span></div>' +
+      '<p class="experience-body">' + escapeHtml(row.body) + '</p>' +
+      '<p class="experience-muted">' + row.reports.map(r => escapeHtml(r.reason) + ' × ' + r.n).join('；') + '</p>' +
+      '<button class="text-button" data-review-id="' + row.id + '" data-status="published">通过并公开</button> ' +
+      '<button class="text-button" data-review-id="' + row.id + '" data-status="rejected">不公开 / 下架</button></article>'
+    ).join('') : '<p class="experience-muted">没有此状态的经历。</p>';
+    region.querySelectorAll('[data-review-id]').forEach(button => button.onclick = async () => {
+      if (!window.confirm(button.dataset.status === 'published' ? '确认内容适合公开？这不代表已核验任职。' : '确认不公开或下架这条内容？')) return;
+      button.disabled = true;
+      try {
+        await request('/api/admin/job-experiences/' + button.dataset.reviewId, {method:'PATCH', body:JSON.stringify({status:button.dataset.status})});
+        await loadExperiences();
+      } catch (error) { button.disabled = false; region.insertAdjacentHTML('afterbegin', '<p role="alert">' + escapeHtml(error.message) + '</p>'); }
+    });
+  } catch (error) {
+    region.innerHTML = '<p class="form-error">' + escapeHtml(error.message === '请先登录' ? '请先在产品首页登录资料管理员账号。' : error.message) + '</p>';
+  }
+}
+document.querySelector('#experienceStatus').onchange = loadExperiences;
+document.querySelector('#refreshExperiences').onclick = loadExperiences;
+loadExperiences();

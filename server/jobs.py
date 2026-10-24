@@ -19,7 +19,10 @@ def create_router(current_user):
     @router.get('/api/jobs')
     def list_jobs():
         with connect() as conn:
-            rows = conn.execute('SELECT * FROM jobs WHERE active=1 ORDER BY updated_at DESC, id LIMIT 1000').fetchall()
+            rows = conn.execute("""SELECT j.*, COALESCE(e.n,0) experience_count FROM jobs j
+                LEFT JOIN (SELECT company,category,COUNT(*) n FROM job_experiences WHERE status='published' GROUP BY company,category) e
+                ON e.company=j.company AND e.category=j.category
+                WHERE j.active=1 ORDER BY j.updated_at DESC,j.id LIMIT 1000""").fetchall()
             sources = conn.execute('SELECT source, checked_at, count, error, complete FROM job_sync_runs ORDER BY source').fetchall()
         return {'jobs': [dict(row) for row in rows], 'sources': [dict(row, name=DOMESTIC[row['source']][0] if row['source'] in DOMESTIC else row['source'].title()) for row in sources]}
 

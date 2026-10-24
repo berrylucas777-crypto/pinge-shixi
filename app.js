@@ -142,7 +142,7 @@ function showProfile() {
   hideAllViews();
   profileView.classList.remove('is-hidden');
   avatarButton.classList.remove('is-hidden');
-  pinpinButton.classList.remove('is-hidden');
+  pinpinButton.classList.toggle('is-hidden', !isPro() && !pinpinSalesOpen());
   avatarButton.textContent = (me?.user?.name || me?.user?.email || 'U').charAt(0).toUpperCase();
   fillProfileForm();
 }
@@ -151,7 +151,7 @@ function showArchive() {
   hideAllViews();
   archiveView.classList.remove('is-hidden');
   avatarButton.classList.remove('is-hidden');
-  pinpinButton.classList.remove('is-hidden');
+  pinpinButton.classList.toggle('is-hidden', !isPro() && !pinpinSalesOpen());
   avatarButton.textContent = (me?.user?.name || me?.user?.email || 'U').charAt(0).toUpperCase();
   fillArchiveForm();
 }
@@ -160,7 +160,7 @@ function showResults() {
   hideAllViews();
   resultsView.classList.remove('is-hidden');
   avatarButton.classList.remove('is-hidden');
-  pinpinButton.classList.remove('is-hidden');
+  pinpinButton.classList.toggle('is-hidden', !isPro() && !pinpinSalesOpen());
   avatarButton.textContent = (me?.user?.name || me?.user?.email || 'U').charAt(0).toUpperCase();
   renderQuota();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -174,6 +174,10 @@ function isPro() {
   return Boolean(me?.user?.is_pro || quota().is_pro);
 }
 
+function pinpinSalesOpen() {
+  return quota().pinpin_sales_enabled === true;
+}
+
 function renderQuota() {
   const data = quota();
   if (!quotaBar) return;
@@ -183,11 +187,12 @@ function renderQuota() {
   quotaBar.innerHTML = `
     <span>今日详情 <strong>${used}/${limit}</strong></span>
     <span>下次刷新 <strong>${escapeHtml(refresh)}</strong></span>
-    <span>${isPro() ? '拼拼卡已开通' : `内测 ${data.pinpin_sold || 0}/${data.pinpin_cap || 500}`}</span>
-    ${isPro() ? '' : '<button class="text-button" type="button" id="quotaPinpin">开通拼拼卡</button>'}
+    <span>${isPro() ? '既有拼拼卡权益有效' : ''}</span>
+    ${!isPro() && pinpinSalesOpen() ? '<button class="text-button" type="button" id="quotaPinpin">开通拼拼卡</button>' : ''}
   `;
   document.querySelector('#quotaPinpin')?.addEventListener('click', () => openPinpinSheet('generic'));
   pinpinButton.textContent = isPro() ? '拼拼卡权益' : '拼拼卡';
+  pinpinButton.classList.toggle('is-hidden', !isPro() && !pinpinSalesOpen());
 }
 
 function pinpinTableHtml() {
@@ -281,15 +286,23 @@ async function openPinpinSheet(reason = 'more_matches') {
   const copy = PINPIN_REASONS[reason] || PINPIN_REASONS.more_matches;
   const canExploreFree = (data.details_used || 0) < (data.details_limit || 20);
   let manual = null;
-  if (!isPro()) {
-    try {
-      manual = await api('/api/pinpin/manual-order');
-    } catch (error) {
-      showToast(error.message);
-    }
+  try {
+    manual = await api('/api/pinpin/manual-order');
+  } catch (error) {
+    showToast(error.message);
   }
   const payment = manual?.payment;
   const order = manual?.order;
+  if (!pinpinSalesOpen()) {
+    openSheet(`
+      <h2 id="sheetTitle">既有权益与付款记录</h2>
+      <p>新拼拼卡暂停售卖。浏览岗位与工作经历不收费，也不需要邀请好友解锁。</p>
+      ${isPro() ? '<p>你已购买的拼拼卡权益继续有效。</p>' + pinpinTableHtml() : ''}
+      ${order ? manualPaymentHtml(payment || {}, order) : isPro() ? '' : '<p>当前账号没有付款记录。已付款但未提交的，请联系 3456371500@qq.com 核对处理，请勿重复付款。</p>'}
+    `);
+    if (order) bindManualPayment(reason, order);
+    return;
+  }
   const open = data.pinpin_open !== false;
   openSheet(`
     <h2 id="sheetTitle">拼拼卡 · 内测终身版</h2>
@@ -344,7 +357,7 @@ function applyUnlock(unlock) {
     strip.dataset.complete = 'true';
     strip.innerHTML = `
       <div class="invite-visual" aria-hidden="true"><img src="assets/pingo-mascot.webp" alt=""></div>
-      <div class="invite-copy"><h2>朋友来了，第 3 位搭子已解锁</h2><p>你们都获得了一位新的匹配。想看更多，也可以开通拼拼卡。</p></div>
+      <div class="invite-copy"><h2>朋友来了，第 3 位搭子已解锁</h2><p>你们都获得了一位新的匹配。可以继续查看和联系。</p></div>
       <div class="invite-action"><button class="primary-button" id="moreMatchesButton"><span>查看更多匹配</span><span class="arrow">→</span></button></div>
     `;
     document.querySelector('#moreMatchesButton')?.addEventListener('click', () => openPinpinSheet('more_matches'));
@@ -497,7 +510,7 @@ function poolWaitCard() {
     `;
   }
   const left = pass ? `这 4 轮还剩 ${pass.rounds_left} 次。` : '';
-  const early = me?.user?.profile_complete
+  const early = me?.user?.profile_complete && (isPro() || pinpinSalesOpen())
     ? '<button class="text-button early-match-button" id="earlyMatch" type="button">现在就要匹配</button>'
     : '';
   return `
@@ -651,8 +664,8 @@ function renderMatches() {
     const lockedClass = item.unlocked ? 'is-unlocked' : 'is-locked';
     const lockTitle = index === 1 ? '发出第一封认识邮件' : '喊一个朋友来拼';
     const lockCopy = index === 1
-      ? '联系第 1 位搭子后解锁，或开通拼拼卡直接查看'
-      : '好友完成注册后解锁，或开通拼拼卡直接查看';
+      ? `联系第 1 位搭子后解锁${pinpinSalesOpen() ? '，或开通拼拼卡直接查看' : ''}`
+      : `好友完成注册后解锁${pinpinSalesOpen() ? '，或开通拼拼卡直接查看' : ''}`;
     return `
       <article class="match-card ${lockedClass}" data-id="${person.id}" data-index="${index}" data-unlocked="${item.unlocked ? '1' : '0'}" tabindex="0" role="button">
         <div class="locked-preview preview-${escapeHtml(person.tone)}">
@@ -666,7 +679,7 @@ function renderMatches() {
             <div class="lock-icon" aria-hidden="true"></div>
             <h3>${lockTitle}</h3>
             <p>${lockCopy}</p>
-            <button class="text-button pinpin-lock-button" type="button">开通拼拼卡直接查看</button>
+            ${pinpinSalesOpen() ? '<button class="text-button pinpin-lock-button" type="button">开通拼拼卡直接查看</button>' : ''}
           </div>
         `}
       </article>
@@ -1104,6 +1117,7 @@ document.querySelector('#privacyButton').addEventListener('click', () => {
   openSheet(`
     <h2 id="sheetTitle">隐私说明</h2>
     <p>邮箱和自我介绍只用于生成匹配、发送结果与建立联系。发出认识邮件时，对方会看到你的邮箱以便回复。</p>
+    <p>工作经历投稿会保存到你的账号，审核后以不显示姓名、邮箱的方式公开。年份、岗位与内容本身仍可能让熟人识别你，请勿包含可识别个人或未公开业务的信息；你可随时撤回。</p>
     <p>登录后会把会话写在 HttpOnly Cookie 里，默认 30 天免登录。退出账户会立即作废。</p>
   `);
 });
@@ -1115,9 +1129,9 @@ avatarButton.addEventListener('click', () => {
     <p>${escapeHtml(user.role || '先写下经历，再查看匹配')}。学校只用于后台匹配，不会出现在别人看到的卡片上。</p>
     <div class="code-box"><span>我的邀请码</span><strong id="accountReferralCode">${escapeHtml(user.referral_code || '—')}</strong><button class="text-button" id="copyAccountReferral" type="button">复制</button></div>
     <button class="primary-button" id="editProfileButton"><span>我的档案</span><span class="arrow">→</span></button>
-    ${isPro() ? '' : '<button class="text-button" id="openPinpinFromAccount" style="margin-top:12px;width:100%;">查看拼拼卡</button>'}
+    <button class="text-button" id="openPinpinFromAccount">既有权益与付款记录</button>
     ${me?.is_payment_admin ? '<button class="text-button" id="openPaymentReview" style="margin-top:12px;width:100%;">内测核账</button>' : ''}
-    ${me?.is_data_admin ? '<button class="text-button" id="openImportConsole" style="margin-top:12px;width:100%;">资料同步</button>' : ''}
+    ${me?.is_data_admin ? '<button class="text-button" id="openImportConsole" style="margin-top:12px;width:100%;">内容管理</button>' : ''}
     <button class="text-button" id="deleteAccountButton" style="margin-top:12px;width:100%;color:#a33;">注销并删除账户</button>
     <button class="text-button" id="logoutButton" style="margin-top:12px;width:100%;">退出账户</button>
   `);

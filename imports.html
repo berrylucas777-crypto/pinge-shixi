@@ -5,17 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>拼个实习｜资料同步</title>
     <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/jobs.css?v=20261024.5">
   </head>
   <body>
     <main class="review-view import-view">
       <div class="review-heading">
         <div>
           <p class="review-eyebrow">拼个实习</p>
-          <h1>资料同步</h1>
-          <p>粘贴已获授权的 CSV、JSON 或图片 OCR 文本。先预览和编辑，再写入匹配池。</p>
+          <h1>内容管理</h1>
+          <p>工作经历先审核后公开；审核通过不代表已核验任职。资料导入独立管理，不进入真人匹配池。</p>
         </div>
         <a class="text-button" href="/">返回产品</a>
       </div>
+      <section class="review-panel" aria-label="工作经历审核">
+        <div class="review-toolbar"><strong>工作经历审核</strong><label>状态 <select id="experienceStatus"><option value="pending">待审核</option><option value="reported">被举报</option><option value="published">已公开</option><option value="rejected">未通过 / 已下架</option></select></label><button class="text-button" id="refreshExperiences" type="button">刷新</button></div>
+        <p>仅保留本人工作内容与建议。移除隐私、机密、广告及人身攻击，不因评价负面而下架。</p>
+        <div id="experienceReviewRows" aria-live="polite"></div>
+      </section>
       <section class="review-panel import-panel">
         <div class="import-grid">
           <label>来源名称<input id="sourceName" maxlength="80" placeholder="例如：校园社群 10 月资料" /></label>
@@ -29,13 +35,13 @@
         <div class="review-toolbar"><span id="previewCount">0 条待导入</span><span id="previewSkipped"></span></div>
         <label>确认后的资料（可直接编辑 JSON）<textarea id="normalizedRows" class="import-text" spellcheck="false"></textarea></label>
         <label class="remember-row"><input id="importConsent" type="checkbox" /> 我确认资料已获得当事人授权，或来自允许公开使用的来源。</label>
-        <button class="primary-button" id="commitImport" type="button"><span>确认写入匹配池</span><span class="arrow">→</span></button>
+        <button class="primary-button" id="commitImport" type="button"><span>确认保存资料</span><span class="arrow">→</span></button>
       </section>
       <section class="review-panel import-history">
         <div class="review-toolbar"><span>最近同步</span><button class="text-button" id="refreshBatches" type="button">刷新</button></div>
         <div id="batchRows"></div>
       </section>
     </main>
-    <script src="/imports.js"></script>
+    <script src="/imports.js?v=20261024.5"></script>
   </body>
 </html>

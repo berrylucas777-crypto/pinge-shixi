@@ -183,9 +183,33 @@ CREATE TABLE IF NOT EXISTS job_sync_runs (
   error TEXT NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_jobs_active ON jobs(active, updated_at);
+
+CREATE TABLE IF NOT EXISTS job_experiences (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  company TEXT NOT NULL,
+  category TEXT NOT NULL,
+  role_title TEXT NOT NULL,
+  year INTEGER NOT NULL,
+  body TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','published','rejected')),
+  reviewed_by TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_experiences_scope ON job_experiences(company,category,status);
+CREATE TABLE IF NOT EXISTS job_experience_reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  experience_id INTEGER NOT NULL REFERENCES job_experiences(id) ON DELETE CASCADE,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  reason TEXT NOT NULL,
+  resolved INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE(experience_id,user_id)
+);
 """
 
 MIGRATIONS = {
+    "job_experience_reports": {"resolved": "INTEGER NOT NULL DEFAULT 0"},
     "job_sync_runs": {"complete": "INTEGER NOT NULL DEFAULT 1"},
     "users": {
         "major": "TEXT NOT NULL DEFAULT ''",

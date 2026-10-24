@@ -328,6 +328,7 @@ def test_jev_rerank_puts_choice_winner_first(monkeypatch):
 
 
 def test_manual_payment_can_be_reviewed_and_approved(tmp_path, monkeypatch):
+    monkeypatch.setenv("PINPIN_SALES_ENABLED", "true")
     monkeypatch.setenv("MANUAL_PAYMENT_ENABLED", "true")
     monkeypatch.setenv("MANUAL_PAYMENT_QR_URL", "/assets/pinpin-payment-qr.png")
     monkeypatch.setenv("PAYMENT_ADMIN_EMAILS", "payment@example.com")

@@ -20,6 +20,7 @@ UPLOAD = [
     "assets/lucide.min.js",
     "assets/lucide-LICENSE.txt",
     "server/jobs.py",
+    "server/job_experiences.py",
     "server/sync_jobs.py",
     "server/job_sources.py",
     "requirements-jobs.txt",
@@ -44,6 +45,7 @@ if (ROOT / PAYMENT_QR).exists():
 ENV_KEYS = (
     "DISABLE_DOCS",
     "ALLOW_SIMULATED_PAYMENT",
+    "PINPIN_SALES_ENABLED",
     "MANUAL_PAYMENT_ENABLED",
     "MANUAL_PAYMENT_QR_URL",
     "MANUAL_PAYMENT_CONTACT",
@@ -82,6 +84,7 @@ def main():
     patch = {
         "DISABLE_DOCS": "true",
         "ALLOW_SIMULATED_PAYMENT": "false",
+        "PINPIN_SALES_ENABLED": (prod.get("PINPIN_SALES_ENABLED") or "false").strip(),
         "MANUAL_PAYMENT_ENABLED": (prod.get("MANUAL_PAYMENT_ENABLED") or "true").strip() or "true",
         "MANUAL_PAYMENT_QR_URL": (prod.get("MANUAL_PAYMENT_QR_URL") or "/assets/pinpin-payment-qr.jpg").strip(),
         "MANUAL_PAYMENT_CONTACT": (prod.get("MANUAL_PAYMENT_CONTACT") or "").strip(),
