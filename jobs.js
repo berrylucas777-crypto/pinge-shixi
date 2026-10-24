@@ -3,11 +3,15 @@
   const view = document.querySelector('#jobsView');
   const list = document.querySelector('#jobList');
   const detail = document.querySelector('#jobDetail');
+  const dialog = document.querySelector('#jobDialog');
+  const detailHome = detail.parentElement;
+  const shell = document.querySelector('.site-shell');
+  const toastHome = toast.parentElement;
   const search = document.querySelector('#jobSearch');
   const stages = { none: '未投递', applied: '已投递', interview: '面试中', offer: '已获 Offer', rejected: '已结束' };
   let jobs = [], personal = [], sources = [], selected = null, category = '', stage = 'all';
   let destination = 'discover', pendingAction = null, loaded = false, busy = false;
-  let returnFocus = null;
+  let returnFocusId = null, scrollLock = null;
   const sharedJob = new URLSearchParams(location.search).get('job');
   let sharedOpened = false;
   const esc = escapeHtml;
@@ -55,7 +59,9 @@
     if (me?.user) avatarButton.textContent = (me.user.name || me.user.email).charAt(0).toUpperCase();
   }
   function render() {
-    const focusId = detail.classList.contains('mobile-open') ? document.activeElement?.id : null;
+    const focusId = dialog.open ? document.activeElement?.id : null;
+    const detailScroll = dialog.open ? detail.querySelector('.detail-scroll')?.scrollTop : 0;
+    const expanded = dialog.open && detail.querySelector('details')?.open;
     updateNav();
     const rows = filtered();
     const tracking = destination === 'saved';
@@ -73,7 +79,7 @@
     document.querySelector('#jobResultCount').textContent = `${rows.length} 个${tracking ? '我的机会' : '实习机会'}`;
     list.setAttribute('aria-busy','false');
     if (!rows.length) {
-      if (detail.classList.contains('mobile-open')) closeDetail();
+      closeDetail();
       const loggedOut = tracking && !me?.user;
       list.innerHTML = `<div class="jobs-empty">${icon(loggedOut ? 'bookmark' : 'search')}<h2>${loggedOut ? '把心动的机会留下来' : tracking ? '这里还没有机会' : '暂时没有符合条件的岗位'}</h2><p>${loggedOut ? '登录后，你的收藏和投递进展会保存在这里。' : !jobs.length && !tracking ? '岗位库还在更新，请稍后再来看看。' : '试试其他方向或地区，看看新的可能。'}</p><button id="jobsEmptyAction">${loggedOut ? '登录 / 注册' : '浏览全部机会'}</button></div>`;
       document.querySelector('#jobsEmptyAction').onclick = () => loggedOut ? login() : reset();
@@ -84,30 +90,28 @@
     if (!rows.some(j => j.id === selected)) selected = rows[0].id;
     list.innerHTML = rows.map(j => {
       const action = state(j.id);
-      return `<article class="job-card ${j.id === selected ? 'is-selected' : ''}"><button class="job-open" data-job-id="${esc(j.id)}" aria-label="查看 ${esc(j.company)} ${esc(j.title)}" aria-pressed="${j.id === selected}"><div class="company-line">${mark(j)}<span>${esc(j.company)}</span>${region(j.location)==='china'?'<span class="domestic-label">国内</span>':''}</div><h2>${esc(j.title)}</h2><div class="job-card-meta">${icon('map-pin')}<span>${esc(j.location.replace('中国大陆 · ',''))}</span></div><div class="job-card-bottom"><span class="job-tag">${esc(j.category)}</span><span>${!j.active ? '原站已下架' : action.stage !== 'none' ? stages[action.stage] : `${date(j.updated_at)} 发布 / 更新`}</span></div></button><button class="icon-command job-save" data-save-id="${esc(j.id)}" aria-label="${action.saved ? '取消收藏' : '收藏'} ${esc(j.title)}" title="${action.saved ? '取消收藏' : '收藏岗位'}" aria-pressed="${Boolean(action.saved)}">${icon('bookmark')}</button></article>`;
+      return `<article class="job-card ${tracking && j.id === selected ? 'is-selected' : ''}"><button class="job-open" data-job-id="${esc(j.id)}" aria-label="查看 ${esc(j.company)} ${esc(j.title)}" ${tracking ? `aria-pressed="${j.id === selected}"` : 'aria-haspopup="dialog" aria-controls="jobDialog"'}><div class="company-line">${mark(j)}<span>${esc(j.company)}</span>${region(j.location)==='china'?'<span class="domestic-label">国内</span>':''}</div><h2>${esc(j.title)}</h2><div class="job-card-meta">${icon('map-pin')}<span>${esc(j.location.replace('中国大陆 · ',''))}</span></div><div class="job-card-bottom"><span class="job-tag">${esc(j.category)}</span><span>${!j.active ? '原站已下架' : action.stage !== 'none' ? stages[action.stage] : `${date(j.updated_at)} 发布 / 更新`}</span></div></button><button class="icon-command job-save" data-save-id="${esc(j.id)}" aria-label="${action.saved ? '取消收藏' : '收藏'} ${esc(j.title)}" title="${action.saved ? '取消收藏' : '收藏岗位'}" aria-pressed="${Boolean(action.saved)}">${icon('bookmark')}</button></article>`;
     }).join('');
     list.querySelectorAll('[data-job-id]').forEach(button => button.onclick = () => {
       selected = button.dataset.jobId;
-      returnFocus = button;
       render();
-      // Re-find focus after replacing the list.
-      returnFocus = [...list.querySelectorAll('[data-job-id]')].find(b => b.dataset.jobId === selected);
-      if (matchMedia('(max-width:720px)').matches) {
-        detail.classList.add('mobile-open'); detail.setAttribute('role','dialog'); detail.setAttribute('aria-modal','true');
-        document.body.style.overflow='hidden'; detail.querySelector('.detail-mobile-close').focus();
-      } else returnFocus?.focus({preventScroll:true});
+      returnFocusId = selected;
+      if (destination === 'discover' || matchMedia('(max-width:720px)').matches) openDetail();
+      else focusCard();
     });
     list.querySelectorAll('[data-save-id]').forEach(button => button.onclick = () => action(button.dataset.saveId, {saved:!state(button.dataset.saveId).saved}));
     renderDetail(rows.find(j => j.id === selected)); icons();
+    if (expanded && detail.querySelector('details')) detail.querySelector('details').open = true;
+    if (detailScroll) detail.querySelector('.detail-scroll').scrollTop = detailScroll;
     if (focusId) document.getElementById(focusId)?.focus({preventScroll:true});
   }
   function renderDetail(j) {
     const s = state(j.id);
     const paragraphs = j.description.split(/\n\n+/).filter(Boolean);
     const paragraphHtml = rows => rows.map(p=>`<p>${esc(p)}</p>`).join('');
-    detail.innerHTML = `<button class="detail-mobile-close">${icon('chevron-left')}返回岗位列表</button><div class="detail-scroll"><div class="detail-topline"><div class="detail-company">${mark(j)}${esc(j.company)}</div><span class="job-tag">${j.active ? '官网公开岗位' : '原站已下架'}</span></div><h2>${esc(j.title)}</h2><div class="detail-facts"><span>${icon('map-pin')}${esc(j.location)}</span><span>${icon('briefcase-business')}实习</span>${j.remote ? `<span>${icon('laptop')}远程</span>` : ''}</div><div class="detail-social">${icon('messages-square')}<p><strong>找个搭子，一起准备</strong>项目互评 · 模拟面试 · 经验交流</p><button id="jobFindPeople">找准备搭子</button></div><div class="description-heading"><h3>岗位介绍</h3><span>企业原文</span></div><div class="job-description">${paragraphHtml(paragraphs.slice(0,5)) || '<p>完整职位要求请查看原站。</p>'}${paragraphs.length>5 ? `<details><summary>展开完整岗位介绍</summary>${paragraphHtml(paragraphs.slice(5))}</details>` : ''}</div><div class="detail-source">来源：${esc(j.company)} 招聘页 · ${date(j.checked_at)} 读取<br />薪资、资格及截止日期以企业原站为准。</div></div><div class="detail-actions">${j.active ? `<a class="apply-link" href="${esc(j.url)}" target="_blank" rel="noopener noreferrer">原站申请${icon('arrow-up-right')}</a>` : '<span class="job-tag">该岗位已结束招聘</span>'}<button id="detailSave" class="icon-command" aria-label="${s.saved ? '取消收藏' : '收藏岗位'}" title="${s.saved ? '取消收藏' : '收藏岗位'}" aria-pressed="${Boolean(s.saved)}">${icon(s.saved ? 'bookmark-check' : 'bookmark')}</button><button id="detailShare" class="icon-command" aria-label="复制岗位链接" title="复制岗位链接">${icon('share-2')}</button><label class="stage-select"><select id="applicationStage" aria-label="投递进展">${Object.entries(stages).map(([key,label])=>`<option value="${key}" ${s.stage===key?'selected':''}>${label}</option>`).join('')}</select></label></div>`;
+    detail.innerHTML = `<button id="jobDetailClose" class="detail-close">${icon('chevron-left')}返回岗位列表</button><div class="detail-scroll"><div class="detail-topline"><div class="detail-company">${mark(j)}${esc(j.company)}</div><span class="job-tag">${j.active ? '官网公开岗位' : '原站已下架'}</span></div><h2 id="jobDetailTitle">${esc(j.title)}</h2><div class="detail-facts"><span>${icon('map-pin')}${esc(j.location)}</span><span>${icon('briefcase-business')}实习</span>${j.remote ? `<span>${icon('laptop')}远程</span>` : ''}</div><div class="detail-social">${icon('messages-square')}<p><strong>找个搭子，一起准备</strong>项目互评 · 模拟面试 · 经验交流</p><button id="jobFindPeople">找准备搭子</button></div><div class="description-heading"><h3>岗位介绍</h3><span>企业原文</span></div><div class="job-description">${paragraphHtml(paragraphs.slice(0,5)) || '<p>完整职位要求请查看原站。</p>'}${paragraphs.length>5 ? `<details><summary>展开完整岗位介绍</summary>${paragraphHtml(paragraphs.slice(5))}</details>` : ''}</div><div class="detail-source">来源：${esc(j.company)} 招聘页 · ${date(j.checked_at)} 读取<br />薪资、资格及截止日期以企业原站为准。</div></div><div class="detail-actions">${j.active ? `<a class="apply-link" href="${esc(j.url)}" target="_blank" rel="noopener noreferrer">原站申请${icon('arrow-up-right')}</a>` : '<span class="job-tag">该岗位已结束招聘</span>'}<button id="detailSave" class="icon-command" aria-label="${s.saved ? '取消收藏' : '收藏岗位'}" title="${s.saved ? '取消收藏' : '收藏岗位'}" aria-pressed="${Boolean(s.saved)}">${icon(s.saved ? 'bookmark-check' : 'bookmark')}</button><button id="detailShare" class="icon-command" aria-label="复制岗位链接" title="复制岗位链接">${icon('share-2')}</button><label class="stage-select"><select id="applicationStage" aria-label="投递进展">${Object.entries(stages).map(([key,label])=>`<option value="${key}" ${s.stage===key?'selected':''}>${label}</option>`).join('')}</select></label></div>`;
     detail.classList.add('has-content');
-    detail.querySelector('.detail-mobile-close').onclick = closeDetail;
+    detail.querySelector('.detail-close').onclick = closeDetail;
     document.querySelector('#detailSave').onclick = () => action(j.id,{saved:!s.saved});
     document.querySelector('#applicationStage').onchange = event => action(j.id,{stage:event.target.value});
     document.querySelector('#detailShare').onclick = async () => {
@@ -120,10 +124,38 @@
       closeDetail(); navigate('community');
     };
   }
-  function closeDetail() {
-    detail.classList.remove('mobile-open'); detail.removeAttribute('role'); detail.removeAttribute('aria-modal');
-    document.body.style.overflow=''; returnFocus?.focus({preventScroll:true});
+  function focusCard() {
+    [...list.querySelectorAll('[data-job-id]')].find(button => button.dataset.jobId === returnFocusId)?.focus({preventScroll:true});
   }
+  function openDetail() {
+    if (dialog.open) return;
+    scrollLock = {body: document.body.style.overflow, shell: shell.style.overflow, x: scrollX, y: scrollY, top: shell.scrollTop};
+    dialog.append(detail);
+    // Native modal dialogs cover ordinary page layers, including the shared toast.
+    dialog.append(toast);
+    dialog.showModal();
+    document.body.style.overflow = 'hidden';
+    shell.style.overflow = 'hidden';
+    detail.querySelector('.detail-close').focus({preventScroll:true});
+  }
+  function closeDetail() {
+    if (!dialog.open) return;
+    dialog.close();
+    detailHome.append(detail);
+    toastHome.append(toast);
+    document.body.style.overflow = scrollLock.body;
+    shell.style.overflow = scrollLock.shell;
+    shell.scrollTop = scrollLock.top;
+    window.scrollTo(scrollLock.x, scrollLock.y);
+    scrollLock = null;
+    focusCard();
+  }
+  dialog.addEventListener('cancel', event => { event.preventDefault(); closeDetail(); });
+  dialog.addEventListener('click', event => {
+    if (event.target !== dialog) return;
+    const box = dialog.getBoundingClientRect();
+    if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) closeDetail();
+  });
   function hide() { view.classList.add('is-hidden'); closeDetail(); }
   function login() { closeDetail(); showLogin(); document.querySelector('#jobLogin').classList.add('is-hidden'); emailInput.focus(); }
   async function loadPersonal() {
@@ -193,7 +225,7 @@
     if (loaded) render(); else await refresh();
     if (sharedJob && !sharedOpened && next==='discover') {
       const target = [...list.querySelectorAll('[data-job-id]')].find(b=>b.dataset.jobId===sharedJob);
-      if (target) { sharedOpened=true; target.click(); target.scrollIntoView({block:'nearest'}); }
+      if (target) { sharedOpened=true; target.scrollIntoView({block:'nearest'}); target.click(); }
     }
   }
   async function authChanged() {
@@ -218,15 +250,6 @@
     document.querySelectorAll('[data-category]').forEach(el=>{el.classList.toggle('is-active',el===b);el.setAttribute('aria-pressed',String(el===b));});render();
   });
   document.querySelectorAll('[data-stage]').forEach(b=>b.onclick=()=>{stage=b.dataset.stage;document.querySelectorAll('[data-stage]').forEach(el=>el.classList.toggle('is-active',el===b));render();});
-  document.addEventListener('keydown',event=>{
-    if (!detail.classList.contains('mobile-open')) return;
-    if(event.key==='Escape') closeDetail();
-    if(event.key==='Tab') {
-      const nodes=[...detail.querySelectorAll('button, a, select, summary')].filter(n=>n.getClientRects().length);
-      if(event.shiftKey&&document.activeElement===nodes[0]){event.preventDefault();nodes.at(-1).focus();}
-      else if(!event.shiftKey&&document.activeElement===nodes.at(-1)){event.preventDefault();nodes[0].focus();}
-    }
-  });
   window.PingoJobs={navigate,hide,authChanged,community:()=>destination==='community',signedOut:()=>{personal=[];pendingAction=null;navigate('discover');}};
   icons(); refresh();
 })();

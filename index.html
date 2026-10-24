@@ -22,7 +22,7 @@
     <title>拼个实习｜发现实习机会，找到一起准备的人</title>
     <link rel="icon" href="assets/pingo-mascot.webp" />
     <link rel="stylesheet" href="styles.css?v=20261004.seo1" />
-    <link rel="stylesheet" href="jobs.css?v=20261024.3" />
+    <link rel="stylesheet" href="jobs.css?v=20261024.4" />
   </head>
   <body>
     <div class="site-shell">
@@ -45,7 +45,7 @@
       </header>
 
       <main>
-        <section id="jobsView" class="jobs-workspace" aria-labelledby="jobsTitle">
+        <section id="jobsView" class="jobs-workspace" data-mode="discover" aria-labelledby="jobsTitle">
           <div class="jobs-intro">
             <div><p class="workspace-date">一点新机会，一起向前。</p><h1 id="jobsTitle">下一站，实习。</h1><p id="jobsSubtitle">发现值得投递的机会，也找到一起准备的人。</p></div>
             <div class="brand-companion"><img src="assets/pingo-mascot.webp" width="100" height="100" alt="拼个实习吉祥物" /><span>机会在前面<br /><strong>我们一起找</strong></span></div>
@@ -71,6 +71,7 @@
             </section>
             <section id="jobDetail" class="job-detail" aria-label="岗位详情"><div class="detail-placeholder"><i data-lucide="briefcase-business"></i><h2>新的机会，正在路上</h2><p>岗位同步后会显示在这里。</p></div></section>
           </div>
+          <dialog id="jobDialog" class="job-dialog" aria-labelledby="jobDetailTitle"></dialog>
           <div class="jobs-endnote"><span>岗位来自企业公开招聘页 · 申请以原站为准</span><button type="button" id="bottomCommunity">和同方向的人聊聊<i data-lucide="arrow-up-right"></i></button></div>
         </section>
         <section class="login-view is-hidden" id="loginView" aria-labelledby="loginTitle">
@@ -310,6 +311,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="assets/lucide.min.js"></script>
     <script src="app.js?v=20261024.1"></script>
-    <script src="jobs.js?v=20261024.3"></script>
+    <script src="jobs.js?v=20261024.4"></script>
   </body>
 </html>
