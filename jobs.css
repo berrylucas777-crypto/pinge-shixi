@@ -1,6 +1,6 @@
-:root { --glass: rgba(255,255,255,.78); --job-accent: #27789e; --job-line: #dce4e8; --jade: #23735d; --coral: #a6534f; --porcelain: #f4f6f5; }
-body { background: var(--porcelain); }
-.topbar { width: min(1280px, calc(100% - 64px)); height: 84px; gap: 20px; border-bottom: 1px solid #dce4e580; }
+:root { --glass: rgba(255,255,255,.78); --job-accent: #087ba9; --job-line: #e1e5e9; }
+body { background: #f4f6f8; }
+.topbar { width: min(1280px, calc(100% - 64px)); height: 84px; gap: 20px; }
 .topbar .brand { flex-shrink: 0; }
 .workspace-nav { display: flex; padding: 5px; gap: 4px; border: 1px solid rgba(255,255,255,.95); border-radius: 30px; background: rgba(231,236,240,.65); box-shadow: inset 0 1px 2px #fff, 0 3px 12px #17283205; backdrop-filter: blur(20px) saturate(140%); }
 .workspace-nav button { border: 0; background: transparent; border-radius: 24px; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 39px; padding: 0 22px; color: #626b75; cursor: pointer; transition: background .2s, box-shadow .2s, color .2s; white-space: nowrap; font-size: 13px; }
@@ -13,7 +13,7 @@ body { background: var(--porcelain); }
 .jobs-workspace { max-width: 1200px; margin: 12px auto 0; width: calc(100% - 80px); }
 .jobs-intro { display: flex; justify-content: space-between; align-items: center; min-height: 112px; margin-bottom: 20px; }
 .workspace-date { margin: 0 0 12px; font-size: 12px; color: #6c7580; }
-.jobs-intro h1 { margin: 0; font-size: 36px; font-weight: 650; letter-spacing: 0; line-height: 1.3; }
+.jobs-intro h1 { margin: 0; font-size: 38px; font-weight: 650; letter-spacing: 0; line-height: 1.3; }
 .jobs-intro #jobsSubtitle { margin: 13px 0 0; font-size: 14px; color: #737b85; line-height: 1.7; }
 .brand-companion { display: flex; align-items: center; gap: 17px; padding-right: 12px; }
 .brand-companion img { width: 88px; height: 88px; object-fit: cover; border-radius: 50%; }
@@ -45,8 +45,8 @@ body { background: var(--porcelain); }
 .jobs-layout { display: grid; grid-template-columns: minmax(300px, .85fr) minmax(0, 1.35fr); gap: 27px; align-items: start; }
 .jobs-list-heading { display: flex; align-items: center; justify-content: space-between; color: #6e7780; font-size: 12px; padding: 0 3px 10px; height: 38px; }
 .job-list { display: flex; flex-direction: column; gap: 10px; max-height: clamp(340px, calc(100dvh - 380px), 710px); overflow-y: auto; padding: 1px 6px 12px 1px; scrollbar-width: thin; scrollbar-color: #d4dce3 transparent; }
-.job-card { background: #ffffffb0; border: 1px solid #dfe5e5; border-radius: 8px; position: relative; transition: border-color .18s, box-shadow .18s, background .18s; box-shadow: 0 2px 3px #263d3a03, inset 0 1px #fff; }
-.job-card.is-selected { border-color: var(--tone-border); background: #fff; box-shadow: inset 3px 0 var(--tone-ink), 0 4px 14px #263d3a08; }
+.job-card { background: #ffffffb0; border: 1px solid #e4e8ec; border-radius: 8px; position: relative; transition: border-color .18s, box-shadow .18s, background .18s; }
+.job-card.is-selected { border-color: #8cbfd8; background: #fff; box-shadow: 0 3px 14px #3981a40c; }
 .job-card:hover { background: #fff; border-color: #b6c9d7; }
 .job-open { display: block; text-align: left; width: 100%; padding: 20px; border: 0; background: transparent; cursor: pointer; border-radius: 8px; }
 .job-open:active { transform: none; }
@@ -72,7 +72,7 @@ body { background: var(--porcelain); }
 .detail-facts { display: flex; gap: 17px; flex-wrap: wrap; font-size: 12px; color: #7d8790; line-height: 1.7; }
 .detail-facts span { display: inline-flex; align-items: flex-start; gap: 5px; }
 .detail-facts .lucide { width: 14px; height: 20px; }
-.detail-social { display: flex; align-items: center; gap: 12px; background: #ecf4ef; border-block: 1px solid #dae8df; margin: 24px -30px; padding: 16px 30px; }
+.detail-social { display: flex; align-items: center; gap: 12px; background: #f0f7fb; border-block: 1px solid #e6f0f6; margin: 24px -30px; padding: 16px 30px; }
 .detail-social > .lucide { color: #528aa2; width: 23px; height: 23px; }
 .detail-social p { margin: 0; flex: 1; font-size: 12px; color: #5c7483; line-height: 1.8; }
 .detail-social strong { display: block; color: #375d72; font-weight: 550; }
@@ -117,55 +117,10 @@ body { background: var(--porcelain); }
 .workspace-date, footer, footer a, footer button { color: #606d78; }
 .jobs-endnote button { color: #386d89; }
 .detail-topline .job-tag { color: #246b5a; }
-[data-tone] { --tone-ink: #326b9d; --tone-soft: #eaf2fa; --tone-border: #a1bdd5; }
-[data-tone="jade"] { --tone-ink: #23735d; --tone-soft: #e8f4ee; --tone-border: #9cc5b3; }
-[data-tone="coral"] { --tone-ink: #a6534f; --tone-soft: #fceeea; --tone-border: #d6aaa3; }
-[data-tone="amber"] { --tone-ink: #86651f; --tone-soft: #f7f0dd; --tone-border: #cebf92; }
-[data-tone="neutral"] { --tone-ink: #626c73; --tone-soft: #edf0f1; --tone-border: #bdc7cb; }
-.workspace-nav button[data-destination="community"].is-active { color: #236d57; background: #f7fffa; }
-.workspace-nav button[data-destination="discover"].is-active { color: #276e98; background: #f8fcff; }
-.workspace-nav button[data-destination="saved"].is-active { color: #9a514a; background: #fffaf7; }
-.workspace-nav button:hover:not(.is-active) { background: #ffffff70; color: #252d32; }
-.brand-mark { background: #245b60; }.brand-mark::after,.brand-mark span:first-child,.brand-mark span:last-child { background: #245b60; }
-.workspace-date { display: flex; align-items: center; gap: 7px; }.workspace-date::before { content: ''; width: 14px; height: 3px; border-radius: 2px; background: #77aa97; }
-.jobs-toolbar { border-color: #fff; box-shadow: 0 1px 0 #cdd8d680, 0 6px 18px #344d4606, inset 0 1px #fff; }
-.job-search:focus-within { color: #236d57; }.job-search input { height: 36px; }
-.job-categories button { display: inline-flex; align-items: center; gap: 6px; }
-.job-categories .lucide { width: 14px; height: 14px; }
-.job-categories [data-category="AI / 数据"] .lucide { color: #23735d; }
-.job-categories [data-category="产品 / 设计"] .lucide { color: #a6534f; }
-.job-categories [data-category="技术 / 工程"] .lucide { color: #326b9d; }
-.job-categories [data-category="运营 / 市场"] .lucide { color: #86651f; }
-.job-categories [data-category="AI / 数据"].is-active { background: #e8f4ee; color: #23735d; border-color: #c0dbce; }
-.job-categories [data-category="产品 / 设计"].is-active { background: #fceeea; color: #a6534f; border-color: #edd1c9; }
-.job-categories [data-category="运营 / 市场"].is-active { background: #f7f0dd; color: #86651f; border-color: #e5d9b7; }
-.job-card .category-tag { color: var(--tone-ink); background: var(--tone-soft); }
-.job-open { padding: 18px 20px; }.job-card h2 { margin-top: 12px; }
-.company-mark { box-shadow: inset 0 1px #ffffffad, 0 1px 2px #253a400a; }
-.mark-xiaomi { color: #a64b19; background: #fff0e5; }.mark-bytedance { color: #246e79; background: #e1f4f2; }
-.domestic-label { color: #5d7368; margin-left: auto; font-size: 10px; }
-.job-detail { border-top: 3px solid var(--tone-border); box-shadow: 0 12px 32px #29433b08, 0 1px 2px #29433b0a; }
-.detail-company { color: #404f53; }.detail-topline .job-tag { background: #edf4ef; }
-.detail-social > .lucide { color: #40836d; }.detail-social p { color: #526e61; }.detail-social strong { color: #2b604c; }
-.detail-social button { display: inline-flex; align-items: center; gap: 5px; border-color: #c5dbce; color: #2b604c; box-shadow: 0 2px 3px #33544108; }
-.detail-social button .lucide { width: 14px; height: 14px; }
-.detail-actions { background: #f2f6f4de; border-top-color: #dce6e0; box-shadow: inset 0 1px #fff; }
-.apply-link { background: #255b55; border-color: #1f514c; box-shadow: inset 0 1px #ffffff1f, 0 3px 5px #21443f12; }.apply-link:hover { background: #1c4944; }
-.icon-command:hover { background: #fff; border-color: #9db8ac; color: #255b55; }.icon-command:active { transform: scale(.96); }
-.detail-actions button[aria-pressed="true"] { color: #a15b38; background: #fff1e5; border-color: #e3c1a4; }
-.job-stage[data-stage-tone="interview"] { color: #8b661b; }.job-stage[data-stage-tone="offer"] { color: #23735d; }.job-stage[data-stage-tone="applied"] { color: #326b9d; }
-.tracker-filters button { border-color: #e1e5e3; background: #ffffff7a; }.tracker-filters button.is-active { color: #9a514a; background: #f9ede8; border-color: #e9cdc2; }
-.source-row { align-items: flex-start; }.source-row small { text-align: right; line-height: 1.7; color: #5f6b74; }
-.results-view { padding-top: 36px; }.view-tabs { background: #e3ebe6ad; border: 1px solid #fff; box-shadow: inset 0 1px #fff; backdrop-filter: blur(16px); }
-.view-tab.is-selected { color: #28654f; }.filter-chip.is-active { background: #28654f; border-color: #28654f; }
-.member-table { border: 1px solid #e1e8e3; border-radius: 8px; box-shadow: 0 6px 20px #344d4605; }
-.member-row:hover { background: #f0f7f3; }.member-tags i:nth-child(3n+2),.tag-row span:nth-child(3n+2) { color: #96544c; background: #f9eeea; }.member-tags i:nth-child(3n),.tag-row span:nth-child(3n) { color: #28705a; background: #eaf5ef; }
-.match-card { border: 1px solid #e1e8e3; box-shadow: 0 8px 26px #344d4608, inset 0 1px #fff; }.match-card h2 { letter-spacing: 0; }
-.profile-card { border: 1px solid #e1e8e3; box-shadow: 0 8px 26px #344d4608; }.intro-draft { background: #f8faf9; }
-.profile-card .primary-button { background: #255b55; }.results-intro { gap: 18px; }
 .pinpin-entry { color: #24739a; }.sample-label { color: #59636e; }.member-table-head { color: #66717b; }
 .progress-step small { color: #66717b; }.invite-copy p { color: #345b70; }
 @media (min-width: 721px) { [data-mode="saved"] .detail-scroll { max-height: clamp(220px, calc(100dvh - 510px), 590px); } [data-mode="saved"] .job-list { max-height: clamp(300px, calc(100dvh - 440px), 650px); } }
+.domestic-label { color: #606d78; margin-left: auto; font-size: 10px; }
 @media (max-width: 1000px) { .topbar { width: calc(100% - 40px); }.workspace-nav button { padding: 0 15px; }.jobs-workspace { width: calc(100% - 48px); }.jobs-layout { gap: 20px; grid-template-columns: minmax(270px,.85fr) minmax(0,1.15fr); }.detail-scroll { padding: 24px; }.detail-social { margin-inline: -24px; padding-inline: 24px; }.brand-companion { padding-right: 0; }.source-status { font-size: 10px; }.job-filter-line { flex-wrap: wrap; } }
 @media (max-width: 720px) {
   body { padding-bottom: 0; }.site-shell { height: calc(100dvh - 86px); min-height: 0; overflow-y: auto; padding-bottom: 16px; }.topbar { width: calc(100% - 32px); height: 68px; min-height: 68px; gap: 10px; }.topbar .brand { font-size: 15px; }.top-actions #aboutButton { display: none; }.login-entry { padding: 8px 10px; font-size: 11px; }
