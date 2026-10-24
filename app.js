@@ -13,7 +13,6 @@ const formError = document.querySelector('#formError');
 const profileError = document.querySelector('#profileError');
 const archiveError = document.querySelector('#archiveError');
 const avatarButton = document.querySelector('#avatarButton');
-const pinpinButton = document.querySelector('#pinpinButton');
 const infoSheet = document.querySelector('#infoSheet');
 const sheetBackdrop = document.querySelector('#sheetBackdrop');
 const sheetContent = document.querySelector('#sheetContent');
@@ -26,23 +25,12 @@ const memberSearch = document.querySelector('#memberSearch');
 const matchDeck = document.querySelector('#matchDeck');
 const memberRowsEl = document.querySelector('#memberRows');
 const referralCodeEl = document.querySelector('#referralCode');
-const inviteStrip = document.querySelector('#inviteStrip');
 const matchCarouselIndicator = document.querySelector('#matchCarouselIndicator');
-const quotaBar = document.querySelector('#quotaBar');
 const filterCity = document.querySelector('#filterCity');
 const filterGrade = document.querySelector('#filterGrade');
 const filterMajor = document.querySelector('#filterMajor');
-const proFilters = document.querySelector('#proFilters');
 
 const TAG_OPTIONS = ['AI', '产品', '开发', '增长', '求职交流', 'ToB', 'Agent', 'VLM', '推荐', '安全'];
-const PINPIN_REASONS = {
-  details_quota: '今天的详情已经看完。开通拼拼卡，每天可以打开 100 位同学的档案。',
-  more_matches: '周一或周三 21:00 匹配后，开通拼拼卡可以直接查看更多搭子。',
-  boost: '无经验、求指导时，加急曝光能让你在 24 小时内被更多人看见。',
-  filter: '城市、年级、专业的组合筛选是拼拼卡权益。同城加权本身对所有人免费。',
-  generic: '拼拼卡是唯一付费项。加急曝光是其中一项能力，不是另一张卡。',
-  early_match: '开通拼拼卡后可以马上出结果。核对通过后就可以配，不用等到周一、周三。',
-};
 
 let toastTimer;
 let sheetTrigger;
@@ -135,14 +123,12 @@ function showLogin() {
   hideAllViews();
   loginView.classList.remove('is-hidden');
   avatarButton.classList.add('is-hidden');
-  pinpinButton.classList.add('is-hidden');
 }
 
 function showProfile() {
   hideAllViews();
   profileView.classList.remove('is-hidden');
   avatarButton.classList.remove('is-hidden');
-  pinpinButton.classList.toggle('is-hidden', !isPro() && !pinpinSalesOpen());
   avatarButton.textContent = (me?.user?.name || me?.user?.email || 'U').charAt(0).toUpperCase();
   fillProfileForm();
 }
@@ -151,7 +137,6 @@ function showArchive() {
   hideAllViews();
   archiveView.classList.remove('is-hidden');
   avatarButton.classList.remove('is-hidden');
-  pinpinButton.classList.toggle('is-hidden', !isPro() && !pinpinSalesOpen());
   avatarButton.textContent = (me?.user?.name || me?.user?.email || 'U').charAt(0).toUpperCase();
   fillArchiveForm();
 }
@@ -160,225 +145,8 @@ function showResults() {
   hideAllViews();
   resultsView.classList.remove('is-hidden');
   avatarButton.classList.remove('is-hidden');
-  pinpinButton.classList.toggle('is-hidden', !isPro() && !pinpinSalesOpen());
   avatarButton.textContent = (me?.user?.name || me?.user?.email || 'U').charAt(0).toUpperCase();
-  renderQuota();
   window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-function quota() {
-  return me?.quota || {};
-}
-
-function isPro() {
-  return Boolean(me?.user?.is_pro || quota().is_pro);
-}
-
-function pinpinSalesOpen() {
-  return quota().pinpin_sales_enabled === true;
-}
-
-function renderQuota() {
-  const data = quota();
-  if (!quotaBar) return;
-  const used = data.details_used ?? 0;
-  const limit = data.details_limit ?? 20;
-  const refresh = data.next_refresh_label || pool.next_match_label || '每天 21:00';
-  quotaBar.innerHTML = `
-    <span>今日详情 <strong>${used}/${limit}</strong></span>
-    <span>下次刷新 <strong>${escapeHtml(refresh)}</strong></span>
-    <span>${isPro() ? '既有拼拼卡权益有效' : ''}</span>
-    ${!isPro() && pinpinSalesOpen() ? '<button class="text-button" type="button" id="quotaPinpin">开通拼拼卡</button>' : ''}
-  `;
-  document.querySelector('#quotaPinpin')?.addEventListener('click', () => openPinpinSheet('generic'));
-  pinpinButton.textContent = isPro() ? '拼拼卡权益' : '拼拼卡';
-  pinpinButton.classList.toggle('is-hidden', !isPro() && !pinpinSalesOpen());
-}
-
-function pinpinTableHtml() {
-  return `
-    <table class="pinpin-table">
-      <thead><tr><th>能力</th><th>普通用户</th><th>拼拼卡</th></tr></thead>
-      <tbody>
-        <tr><td>自由探索详情</td><td>每天 20 人</td><td>每天 100 人</td></tr>
-        <tr><td>匹配</td><td>周一、周三 21:00</td><td>可提前优先匹配，并看 5 人</td></tr>
-        <tr><td>第 2、3 位匹配</td><td>邀请好友解锁</td><td>直接查看</td></tr>
-        <tr><td>加急曝光</td><td>无</td><td>每天 1 次，24 小时</td></tr>
-        <tr><td>筛选</td><td>基础标签</td><td>城市、年级、专业</td></tr>
-      </tbody>
-    </table>
-  `;
-}
-
-function bindPinpinBuy() {
-  document.querySelector('#simulatePinpin')?.addEventListener('click', buyPinpin);
-}
-
-async function buyPinpin() {
-  const button = document.querySelector('#simulatePinpin');
-  if (button) button.disabled = true;
-  try {
-    const data = await api('/api/pinpin/simulate', { method: 'POST' });
-    me = data;
-    matches = data.matches || matches;
-    closeSheet();
-    renderQuota();
-    renderMatches();
-    if (explorePanel && !explorePanel.classList.contains('is-hidden')) loadMembers();
-    showToast(data.quota?.already ? '拼拼卡已经开通过' : '测试权益已开通');
-  } catch (error) {
-    showToast(error.message);
-  } finally {
-    if (button) button.disabled = false;
-  }
-}
-
-function manualPaymentHtml(payment, order) {
-  const submitted = order?.status === 'pending';
-  const approved = order?.status === 'approved';
-  if (approved) return '<p class="pinpin-note">这张拼拼卡已经开通。</p>';
-  return `
-    <div class="manual-payment">
-      ${submitted ? `<div class="manual-payment-amount">已提交核验</div>
-        <p class="pinpin-note">核对到账后会开通权益，并发送邮件到 ${escapeHtml(me?.user?.email || '你的登录邮箱')}。</p>` : `<div class="manual-payment-amount">¥10</div>
-        <img class="payment-qr" src="${escapeHtml(payment.qr_url)}" alt="微信收款码">
-        <p class="pinpin-note">扫码付款后，填写付款时显示的微信昵称。系统会用你的登录邮箱和昵称让我们核对，无需加微信或上传截图。</p>`}
-      ${order?.order_code ? `<p class="payment-order-code">订单号 <strong>${escapeHtml(order.order_code)}</strong> <button class="text-button" type="button" id="copyPaymentOrder">复制</button></p>` : ''}
-      <label class="payment-nickname-label" for="paymentNickname">${submitted ? '需要更正时，更新付款微信昵称' : '付款微信昵称'}</label>
-      <input id="paymentNickname" maxlength="64" autocomplete="off" placeholder="例如：小王同学" value="${escapeHtml(order?.payer_nickname || '')}">
-      <button class="primary-button" id="submitManualPayment" type="button"><span>${submitted ? '更新付款昵称' : '我已付款，提交核验'}</span><span class="arrow">→</span></button>
-      ${payment.contact ? `<p class="pinpin-note">核验遇到问题：${escapeHtml(payment.contact)}</p>` : ''}
-    </div>
-  `;
-}
-
-function bindManualPayment(reason, order) {
-  document.querySelector('#copyPaymentOrder')?.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(order.order_code);
-      showToast('订单号已复制');
-    } catch {
-      showToast('请手动复制订单号');
-    }
-  });
-  document.querySelector('#submitManualPayment')?.addEventListener('click', async (event) => {
-    const button = event.currentTarget;
-    const payerNickname = document.querySelector('#paymentNickname').value.trim();
-    if (!payerNickname) {
-      showToast('请填写付款时显示的微信昵称');
-      return;
-    }
-    button.disabled = true;
-    try {
-      await api('/api/pinpin/manual-order', { method: 'POST', body: JSON.stringify({ payer_nickname: payerNickname }) });
-      showToast('已提交核验，开通后会邮件通知你');
-      await openPinpinSheet(reason);
-    } catch (error) {
-      showToast(error.message);
-    } finally {
-      button.disabled = false;
-    }
-  });
-}
-
-async function openPinpinSheet(reason = 'more_matches') {
-  const data = quota();
-  const copy = PINPIN_REASONS[reason] || PINPIN_REASONS.more_matches;
-  const canExploreFree = (data.details_used || 0) < (data.details_limit || 20);
-  let manual = null;
-  try {
-    manual = await api('/api/pinpin/manual-order');
-  } catch (error) {
-    showToast(error.message);
-  }
-  const payment = manual?.payment;
-  const order = manual?.order;
-  if (!pinpinSalesOpen()) {
-    openSheet(`
-      <h2 id="sheetTitle">既有权益与付款记录</h2>
-      <p>新拼拼卡暂停售卖。浏览岗位与工作经历不收费，也不需要邀请好友解锁。</p>
-      ${isPro() ? '<p>你已购买的拼拼卡权益继续有效。</p>' + pinpinTableHtml() : ''}
-      ${order ? manualPaymentHtml(payment || {}, order) : isPro() ? '' : '<p>当前账号没有付款记录。已付款但未提交的，请联系 3456371500@qq.com 核对处理，请勿重复付款。</p>'}
-    `);
-    if (order) bindManualPayment(reason, order);
-    return;
-  }
-  const open = data.pinpin_open !== false;
-  openSheet(`
-    <h2 id="sheetTitle">拼拼卡 · 内测终身版</h2>
-    <p>${escapeHtml(copy)}</p>
-    ${pinpinTableHtml()}
-    <p class="pinpin-note">首批内测用户 ¥10，终身解锁<strong>当前</strong>拼拼卡基础权益。不包含以后可能上线的 AI 匹配、邮件增强等增值服务。</p>
-    <p class="pinpin-note">名额 ${data.pinpin_sold || 0}/${data.pinpin_cap || 500}。</p>
-    ${!isPro() && canExploreFree ? '<button class="text-button free-explore-button" id="freeExploreFromPinpin" type="button">暂不，先免费探索更多资料</button>' : ''}
-    ${isPro() ? '<button class="primary-button" disabled><span>已开通</span></button>' : payment?.enabled
-      ? manualPaymentHtml(payment, order)
-      : open
-      ? '<button class="primary-button" id="simulatePinpin"><span>仅供测试环境开通</span><span class="arrow">→</span></button>'
-      : '<button class="primary-button" disabled><span>真实支付接入中</span></button>'}
-  `);
-  bindPinpinBuy();
-  if (payment?.enabled) bindManualPayment(reason, order);
-  document.querySelector('#freeExploreFromPinpin')?.addEventListener('click', () => {
-    closeSheet();
-    setResultsView('explore');
-    explorePanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  });
-}
-
-function applyUnlock(unlock) {
-  const emailDone = Boolean(unlock?.email_sent);
-  const inviteDone = Boolean(unlock?.referral_complete);
-  document.querySelector('#emailProgress').classList.toggle('is-done', emailDone || isPro());
-  document.querySelector('#emailProgressLine').classList.toggle('is-done', emailDone || isPro());
-  document.querySelector('#inviteProgress').classList.toggle('is-done', inviteDone || isPro());
-  document.querySelector('#inviteProgressLine').classList.toggle('is-done', inviteDone || isPro());
-  const strip = document.querySelector('#inviteStrip');
-  if (!strip) return;
-  if (isPro()) {
-    const data = quota();
-    strip.innerHTML = `
-      <div class="invite-visual" aria-hidden="true"><img src="assets/pingo-mascot.webp" alt=""></div>
-      <div class="invite-copy">
-        <h2>加急曝光</h2>
-        <p>${data.boost_active ? '你正在被优先看见，24 小时有效。' : '每天一次，持续 24 小时。适合「无经验，求大佬」这类需求。'}</p>
-      </div>
-      <div class="invite-action">
-        <button class="primary-button" id="boostButton" ${data.can_boost ? '' : 'disabled'}>
-          <span>${data.boost_active ? '加急曝光进行中' : data.can_boost ? '开启今天的加急曝光' : '今天已经用过'}</span>
-          <span class="arrow" aria-hidden="true">→</span>
-        </button>
-      </div>
-    `;
-    document.querySelector('#boostButton')?.addEventListener('click', activateBoost);
-    return;
-  }
-  if (inviteDone && strip.dataset.complete !== 'true') {
-    strip.dataset.complete = 'true';
-    strip.innerHTML = `
-      <div class="invite-visual" aria-hidden="true"><img src="assets/pingo-mascot.webp" alt=""></div>
-      <div class="invite-copy"><h2>朋友来了，第 3 位搭子已解锁</h2><p>你们都获得了一位新的匹配。可以继续查看和联系。</p></div>
-      <div class="invite-action"><button class="primary-button" id="moreMatchesButton"><span>查看更多匹配</span><span class="arrow">→</span></button></div>
-    `;
-    document.querySelector('#moreMatchesButton')?.addEventListener('click', () => openPinpinSheet('more_matches'));
-  }
-}
-
-async function activateBoost() {
-  try {
-    const data = await api('/api/pinpin/boost', { method: 'POST' });
-    if (data.paywall) {
-      openPinpinSheet('boost');
-      return;
-    }
-    me = data.me || me;
-    if (data.quota) me.quota = data.quota;
-    renderQuota();
-    renderMatches();
-    showToast('加急曝光已开启，24 小时内优先被看见');
-  } catch (error) {
-    showToast(error.message);
-  }
 }
 
 function setResultsView(view) {
@@ -430,7 +198,6 @@ function hintHtml(person) {
   const hints = [];
   if (person.same_city) hints.push('同城');
   if (person.similar_background) hints.push('背景相近');
-  if (person.boost_active) hints.push('加急曝光中');
   return hints.length ? `<div class="hint-row">${hints.map((item) => `<span class="hint-chip">${item}</span>`).join('')}</div>` : '';
 }
 
@@ -510,7 +277,7 @@ function poolWaitCard() {
     `;
   }
   const left = pass ? `这 4 轮还剩 ${pass.rounds_left} 次。` : '';
-  const early = me?.user?.profile_complete && (isPro() || pinpinSalesOpen())
+  const early = me?.user?.profile_complete
     ? '<button class="text-button early-match-button" id="earlyMatch" type="button">现在就要匹配</button>'
     : '';
   return `
@@ -535,12 +302,8 @@ function earlyMatchHint() {
 
 function openEarlyMatchSheet() {
   const hint = earlyMatchHint();
-  const pro = isPro();
-  const payNote = pro
-    ? ''
-    : '<p class="pinpin-note">付费开通拼拼卡后可以马上出结果。核对通过后就可以配。</p>';
-  const nowLabel = pro ? '现在就配' : '开通后马上配';
-  const nowSecondary = pro ? '还是现在配' : '还是想现在配';
+  const nowLabel = '现在就配';
+  const nowSecondary = '还是现在配';
   let actions = '';
   if (hint.level === 'ready') {
     actions = `
@@ -561,7 +324,6 @@ function openEarlyMatchSheet() {
   openSheet(`
     <h2 id="sheetTitle">现在就要匹配</h2>
     <p>${escapeHtml(hint.text)}</p>
-    ${payNote}
     ${actions}
   `);
   document.querySelector('#waitForPool')?.addEventListener('click', closeSheet);
@@ -569,10 +331,6 @@ function openEarlyMatchSheet() {
 }
 
 async function confirmEarlyMatch() {
-  if (!isPro()) {
-    await openPinpinSheet('early_match');
-    return;
-  }
   const button = document.querySelector('#confirmEarlyMatch');
   if (button) button.disabled = true;
   try {
@@ -610,7 +368,6 @@ async function renewPool() {
 function renderMatches() {
   const codeEl = document.querySelector('#referralCode');
   if (codeEl) codeEl.textContent = me?.user?.referral_code || '—';
-  applyUnlock(me?.unlock);
   const dataLabel = document.querySelector('#dataLabel');
   if (dataLabel) dataLabel.textContent = matches.length ? '本轮匹配' : '攒人中';
   const lead = document.querySelector('#resultsLead');
@@ -631,7 +388,7 @@ function renderMatches() {
     const person = item.person;
     const tags = (item.shared_tags || person.tags || []).map((tag) => `<span>${escapeHtml(tag)}</span>`).join('');
     const meta = [person.role, person.city, person.grade].filter(Boolean).join(' · ');
-    if (index === 0 && item.unlocked) {
+    if (index === 0) {
       return `
         <article class="match-card is-active" data-id="${person.id}" data-index="0">
           <div class="match-topline">
@@ -641,7 +398,7 @@ function renderMatches() {
           <div class="person-row">
             <div class="person-avatar tone-${escapeHtml(person.tone)}">${escapeHtml(person.letter)}</div>
             <div>
-              <h2>${escapeHtml(person.name)}${person.boost_active ? '<span class="boost-badge">加急</span>' : ''}</h2>
+              <h2>${escapeHtml(person.name)}</h2>
               <p>${escapeHtml(meta)}</p>
               ${hintHtml(person)}
             </div>
@@ -661,27 +418,14 @@ function renderMatches() {
         </article>
       `;
     }
-    const lockedClass = item.unlocked ? 'is-unlocked' : 'is-locked';
-    const lockTitle = index === 1 ? '发出第一封认识邮件' : '喊一个朋友来拼';
-    const lockCopy = index === 1
-      ? `联系第 1 位搭子后解锁${pinpinSalesOpen() ? '，或开通拼拼卡直接查看' : ''}`
-      : `好友完成注册后解锁${pinpinSalesOpen() ? '，或开通拼拼卡直接查看' : ''}`;
     return `
-      <article class="match-card ${lockedClass}" data-id="${person.id}" data-index="${index}" data-unlocked="${item.unlocked ? '1' : '0'}" tabindex="0" role="button">
+      <article class="match-card is-unlocked" data-id="${person.id}" data-index="${index}" tabindex="0" role="button">
         <div class="locked-preview preview-${escapeHtml(person.tone)}">
           <span>${item.score}%</span>
           <div class="blur-avatar tone-${escapeHtml(person.tone)}">${escapeHtml(person.letter)}</div>
           <h2>${escapeHtml(person.name)}</h2>
           <p>${escapeHtml(person.role)}</p>
         </div>
-        ${item.unlocked ? '' : `
-          <div class="lock-copy">
-            <div class="lock-icon" aria-hidden="true"></div>
-            <h3>${lockTitle}</h3>
-            <p>${lockCopy}</p>
-            ${pinpinSalesOpen() ? '<button class="text-button pinpin-lock-button" type="button">开通拼拼卡直接查看</button>' : ''}
-          </div>
-        `}
       </article>
     `;
   }).join('') || `<div class="empty-members">写下经历后即可生成匹配。</div>`;
@@ -689,18 +433,9 @@ function renderMatches() {
   matchDeck.querySelectorAll('.contact-button').forEach((button) => {
     button.addEventListener('click', () => openContact(Number(button.dataset.id), button.dataset.name));
   });
-  matchDeck.querySelectorAll('.pinpin-lock-button').forEach((button) => {
-    button.addEventListener('click', (event) => {
-      event.stopPropagation();
-      openPinpinSheet('more_matches');
-    });
-  });
   matchDeck.querySelectorAll('.match-card[data-id]').forEach((card) => {
     if (card.classList.contains('is-active')) return;
-    const open = () => {
-      if (card.dataset.unlocked === '1') openPersonDetail(Number(card.dataset.id));
-      else openPinpinSheet('more_matches');
-    };
+    const open = () => openPersonDetail(Number(card.dataset.id));
     card.addEventListener('click', open);
     card.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' || event.key === ' ') {
@@ -719,7 +454,7 @@ function personMeta(row) {
 function renderMembers() {
   memberRowsEl.innerHTML = members.map((row) => `
     <button class="member-row" type="button" data-id="${row.id}">
-      <span class="member-person"><i class="member-avatar tone-${escapeHtml(row.tone)}">${escapeHtml(row.letter)}</i><span><strong>${escapeHtml(row.name)}${row.boost_active ? '<span class="boost-badge">加急</span>' : ''}</strong><small>${escapeHtml(personMeta(row) || '方向待补充')}${row.same_city ? ' · 同城' : ''}</small></span></span>
+      <span class="member-person"><i class="member-avatar tone-${escapeHtml(row.tone)}">${escapeHtml(row.letter)}</i><span><strong>${escapeHtml(row.name)}</strong><small>${escapeHtml(personMeta(row) || '方向待补充')}${row.same_city ? ' · 同城' : ''}</small></span></span>
       <span class="member-skill">${escapeHtml(row.skills)}</span>
       <span class="member-tags">${(row.tags || []).map((tag) => `<i>${escapeHtml(tag)}</i>`).join('')}</span>
     </button>
@@ -737,13 +472,11 @@ function fillSelect(select, values, current, placeholder) {
   )).join('');
 }
 
-function syncProFilters(filters) {
+function syncMemberFilters(filters) {
   filterOptions = filters || filterOptions;
-  const pro = Boolean(filters?.pro || isPro());
   fillSelect(filterCity, filterOptions.cities || [], filterCity.value, '全部城市');
   fillSelect(filterGrade, filterOptions.grades || [], filterGrade.value, '全部年级');
   fillSelect(filterMajor, filterOptions.majors || [], filterMajor.value, '全部专业');
-  proFilters.classList.toggle('is-locked', !pro);
 }
 
 async function loadMe() {
@@ -762,11 +495,6 @@ async function loadMatches() {
     pool = { ...pool, ...data.pool };
     renderPoolRally(data.pool);
   }
-  if (me) {
-    me.unlock = data.unlock;
-    if (data.quota) me.quota = data.quota;
-  }
-  renderQuota();
   renderMatches();
 }
 
@@ -775,19 +503,12 @@ async function loadMembers() {
   const query = new URLSearchParams();
   if (memberSearch.value.trim()) query.set('q', memberSearch.value.trim());
   if (activeFilter && activeFilter !== '全部') query.set('tag', activeFilter);
-  if (isPro()) {
-    if (filterCity.value) query.set('city', filterCity.value);
-    if (filterGrade.value) query.set('grade', filterGrade.value);
-    if (filterMajor.value) query.set('major', filterMajor.value);
-  }
+  if (filterCity.value) query.set('city', filterCity.value);
+  if (filterGrade.value) query.set('grade', filterGrade.value);
+  if (filterMajor.value) query.set('major', filterMajor.value);
   const data = await api(`/api/members?${query.toString()}`);
   members = data.members || [];
-  if (data.quota) {
-    me = me || {};
-    me.quota = data.quota;
-    renderQuota();
-  }
-  syncProFilters(data.filters);
+  syncMemberFilters(data.filters);
   renderMembers();
 }
 
@@ -811,21 +532,6 @@ async function enterApp(payload) {
   showResults();
 }
 
-function showSecondMatchUnlocked(message) {
-  renderMatches();
-  openSheet(`
-    <h2 id="sheetTitle">第 2 位已解锁</h2>
-    <p>${escapeHtml(message)}</p>
-    <button class="primary-button" id="viewSecondMatch" type="button"><span>先看看第 2 位匹配</span><span class="arrow">→</span></button>
-  `);
-  document.querySelector('#viewSecondMatch').addEventListener('click', () => {
-    closeSheet();
-    const card = matchDeck.querySelector('[data-index="1"]');
-    card?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    card?.focus({ preventScroll: true });
-  });
-}
-
 function openContact(id, name) {
   const match = matches.find((item) => item.person.id === id);
   const person = match?.person || {};
@@ -839,20 +545,26 @@ function openContact(id, name) {
     <h2 id="sheetTitle">先发一封不尴尬的邮件</h2>
     <p>已经根据你们的共同点写好开场，你可以直接修改。</p>
     <textarea class="email-draft" id="emailDraft">${escapeHtml(draft)}</textarea>
-    <p class="pinpin-note">发出去后，对方会看到你的登录邮箱 ${escapeHtml(me?.user?.email || '')}，可以直接回信。</p>
-    <button class="primary-button" id="sendEmail"><span>发送并解锁第 2 位</span><span class="arrow">→</span></button>
+    <p class="sheet-note">发出去后，对方会看到你的登录邮箱 ${escapeHtml(me?.user?.email || '')}，可以直接回信。</p>
+    <button class="primary-button" id="sendEmail"><span>发送认识邮件</span><span class="arrow">→</span></button>
   `);
   document.querySelector('#sendEmail').addEventListener('click', async () => {
     const body = document.querySelector('#emailDraft').value;
     try {
       const result = await api(`/api/matches/${id}/contact`, { method: 'POST', body: JSON.stringify({ body }) });
       matches = result.matches || matches;
-      me.unlock = result.unlock;
+      renderMatches();
       if (!result.sent) {
-        await navigator.clipboard.writeText(body).catch(() => {});
-        showSecondMatchUnlocked('邮件内容已复制。你可以稍后发送，先继续看看下一位匹配。');
+        try {
+          await navigator.clipboard.writeText(body);
+          closeSheet();
+          showToast('邮件未发送，草稿已复制');
+        } catch {
+          showToast('邮件未发送，请保留或手动复制草稿');
+        }
       } else {
-        showSecondMatchUnlocked('认识邮件已发出。先继续看看下一位匹配。');
+        closeSheet();
+        showToast('认识邮件已发出');
       }
     } catch (error) {
       showToast(error.message);
@@ -903,7 +615,7 @@ function openReport(id, name) {
 function personSheetHtml(person, extra = '') {
   const meta = [person.role, person.city, person.grade, person.major].filter(Boolean).join(' · ');
   return `
-    <h2 id="sheetTitle">${escapeHtml(person.name)}${person.boost_active ? '<span class="boost-badge">加急</span>' : ''}</h2>
+    <h2 id="sheetTitle">${escapeHtml(person.name)}</h2>
     <p>${escapeHtml(meta)}</p>
     ${hintHtml(person)}
     ${person.experience ? `<p><strong>经历与项目：</strong>${escapeHtml(person.experience)}</p>` : ''}
@@ -917,15 +629,6 @@ function personSheetHtml(person, extra = '') {
 async function openPersonDetail(id) {
   try {
     const data = await api(`/api/members/${id}`);
-    if (data.quota) {
-      me = me || {};
-      me.quota = data.quota;
-      renderQuota();
-    }
-    if (data.paywall) {
-      openPinpinSheet(data.reason || 'details_quota');
-      return;
-    }
     const person = data.person;
     const match = matches.find((item) => item.person.id === id);
     const extra = match
@@ -933,9 +636,6 @@ async function openPersonDetail(id) {
          <button class="primary-button candidate-contact"><span>${contactCta(person, match.contacted)}</span><span class="arrow">→</span></button>`
       : `<button class="primary-button explore-match-button"><span>看看我们是否适合拼</span><span class="arrow">→</span></button>`;
     openSheet(personSheetHtml(person, extra));
-    if (data.quota?.just_hit_limit && !isPro()) {
-      showToast('今天的 20 个详情已看完，明天 21:00 后再看');
-    }
     document.querySelector('.candidate-contact')?.addEventListener('click', () => {
       closeSheet();
       openContact(id, person.name);
@@ -1129,8 +829,6 @@ avatarButton.addEventListener('click', () => {
     <p>${escapeHtml(user.role || '先写下经历，再查看匹配')}。学校只用于后台匹配，不会出现在别人看到的卡片上。</p>
     <div class="code-box"><span>我的邀请码</span><strong id="accountReferralCode">${escapeHtml(user.referral_code || '—')}</strong><button class="text-button" id="copyAccountReferral" type="button">复制</button></div>
     <button class="primary-button" id="editProfileButton"><span>我的档案</span><span class="arrow">→</span></button>
-    <button class="text-button" id="openPinpinFromAccount">既有权益与付款记录</button>
-    ${me?.is_payment_admin ? '<button class="text-button" id="openPaymentReview" style="margin-top:12px;width:100%;">内测核账</button>' : ''}
     ${me?.is_data_admin ? '<button class="text-button" id="openImportConsole" style="margin-top:12px;width:100%;">内容管理</button>' : ''}
     <button class="text-button" id="deleteAccountButton" style="margin-top:12px;width:100%;color:#a33;">注销并删除账户</button>
     <button class="text-button" id="logoutButton" style="margin-top:12px;width:100%;">退出账户</button>
@@ -1143,8 +841,6 @@ avatarButton.addEventListener('click', () => {
     await navigator.clipboard.writeText(user.referral_code || '').catch(() => {});
     showToast('邀请码已复制');
   });
-  document.querySelector('#openPinpinFromAccount')?.addEventListener('click', () => openPinpinSheet('more_matches'));
-  document.querySelector('#openPaymentReview')?.addEventListener('click', () => { window.location.href = '/review'; });
   document.querySelector('#openImportConsole')?.addEventListener('click', () => { window.location.href = '/imports'; });
   document.querySelector('#deleteAccountButton').addEventListener('click', () => {
     openSheet(`
@@ -1215,21 +911,8 @@ document.querySelectorAll('#filterRow .filter-chip').forEach((chip) => {
 });
 
 [filterCity, filterGrade, filterMajor].forEach((select) => {
-  select.addEventListener('mousedown', (event) => {
-    if (isPro()) return;
-    event.preventDefault();
-    openPinpinSheet('filter');
-  });
-  select.addEventListener('change', () => {
-    if (isPro()) loadMembers();
-  });
+  select.addEventListener('change', loadMembers);
 });
-
-proFilters.addEventListener('click', () => {
-  if (!isPro()) openPinpinSheet('filter');
-});
-
-pinpinButton.addEventListener('click', () => openPinpinSheet(isPro() ? 'generic' : 'generic'));
 
 renderTags('#archiveSkillTags', selectedTags, 'tag');
 renderTags('#archiveLearnTags', selectedLearnTags, 'learn');

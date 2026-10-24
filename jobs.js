@@ -322,7 +322,7 @@
       return;
     }
     if (!preserveView) { hideAllViews(); view.classList.remove('is-hidden'); }
-    pinpinButton.classList.add('is-hidden'); updateNav();
+    updateNav();
     if (loaded) render(); else await refresh();
     if (sharedJob && !sharedOpened && next==='discover') {
       const target = [...list.querySelectorAll('[data-job-id]')].find(b=>b.dataset.jobId===sharedJob);

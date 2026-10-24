@@ -159,7 +159,7 @@ body { background: #f4f6f8; }
 .workspace-date, footer, footer a, footer button { color: #606d78; }
 .jobs-endnote button { color: #386d89; }
 .detail-topline .job-tag { color: #246b5a; }
-.pinpin-entry { color: #24739a; }.sample-label { color: #59636e; }.member-table-head { color: #66717b; }
+.sample-label { color: #59636e; }.member-table-head { color: #66717b; }
 .progress-step small { color: #66717b; }.invite-copy p { color: #345b70; }
 @media (min-width: 721px) { [data-mode="saved"] .detail-scroll { max-height: clamp(220px, calc(100dvh - 510px), 590px); } [data-mode="saved"] .job-list { max-height: clamp(300px, calc(100dvh - 440px), 650px); } }
 .domestic-label { color: #606d78; margin-left: auto; font-size: 10px; }

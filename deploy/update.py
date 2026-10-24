@@ -38,9 +38,6 @@ UPLOAD = [
     "server/seed.py",
     "server/main.py",
 ]
-PAYMENT_QR = "assets/pinpin-payment-qr.jpg"
-if (ROOT / PAYMENT_QR).exists():
-    UPLOAD.append(PAYMENT_QR)
 
 ENV_KEYS = (
     "DISABLE_DOCS",
@@ -84,10 +81,10 @@ def main():
     patch = {
         "DISABLE_DOCS": "true",
         "ALLOW_SIMULATED_PAYMENT": "false",
-        "PINPIN_SALES_ENABLED": (prod.get("PINPIN_SALES_ENABLED") or "false").strip(),
-        "MANUAL_PAYMENT_ENABLED": (prod.get("MANUAL_PAYMENT_ENABLED") or "true").strip() or "true",
-        "MANUAL_PAYMENT_QR_URL": (prod.get("MANUAL_PAYMENT_QR_URL") or "/assets/pinpin-payment-qr.jpg").strip(),
-        "MANUAL_PAYMENT_CONTACT": (prod.get("MANUAL_PAYMENT_CONTACT") or "").strip(),
+        "PINPIN_SALES_ENABLED": "false",
+        "MANUAL_PAYMENT_ENABLED": "false",
+        "MANUAL_PAYMENT_QR_URL": "",
+        "MANUAL_PAYMENT_CONTACT": "",
         "PAYMENT_ADMIN_EMAILS": (prod.get("PAYMENT_ADMIN_EMAILS") or "").strip(),
         "DATA_ADMIN_EMAILS": (prod.get("DATA_ADMIN_EMAILS") or "").strip(),
         "APP_RELEASE": release_id(),
@@ -96,12 +93,8 @@ def main():
         "JEV_API_KEY": (prod.get("JEV_API_KEY") or "").strip(),
         "JEV_MODEL": (prod.get("JEV_MODEL") or "jev-latest").strip() or "jev-latest",
     }
-    if not patch["PAYMENT_ADMIN_EMAILS"]:
-        raise SystemExit("missing PAYMENT_ADMIN_EMAILS")
     if not patch["JEV_API_KEY"]:
         raise SystemExit("missing JEV_API_KEY")
-    if patch["MANUAL_PAYMENT_ENABLED"].lower() not in {"1", "true", "yes", "on"}:
-        raise SystemExit("MANUAL_PAYMENT_ENABLED must be true for this deploy")
 
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -180,7 +173,6 @@ def main():
     run(client, "curl -sS -m 8 -o /dev/null -w '%{http_code} %{url_effective}\\n' https://shixi.seu-link.fit/api/health")
     run(client, "curl -sS -m 8 -o /dev/null -w '%{http_code} %{url_effective}\\n' https://shixi.seu-link.fit/")
     run(client, "curl -sS -m 8 -o /dev/null -w 'docs %{http_code}\\n' https://shixi.seu-link.fit/docs")
-    run(client, "curl -sS -m 8 -o /dev/null -w 'qr %{http_code}\\n' https://shixi.seu-link.fit/assets/pinpin-payment-qr.jpg")
     run(client, "curl -sS -m 8 -o /dev/null -w 'review %{http_code}\\n' https://shixi.seu-link.fit/review")
     run(
         client,

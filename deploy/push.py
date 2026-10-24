@@ -40,9 +40,6 @@ UPLOAD = [
     "server/seed.py",
     "server/main.py",
 ]
-PAYMENT_QR = "assets/pinpin-payment-qr.jpg"
-if (ROOT / PAYMENT_QR).exists():
-    UPLOAD.append(PAYMENT_QR)
 NGINX = """
 server {
     listen 80;
@@ -109,10 +106,10 @@ def main():
             f"SECRET_KEY={secret}",
             "DISABLE_DOCS=true",
             "ALLOW_SIMULATED_PAYMENT=false",
-            f"PINPIN_SALES_ENABLED={prod.get('PINPIN_SALES_ENABLED', 'false').strip()}",
-            f"MANUAL_PAYMENT_ENABLED={prod.get('MANUAL_PAYMENT_ENABLED', '').strip()}",
-            f"MANUAL_PAYMENT_QR_URL={prod.get('MANUAL_PAYMENT_QR_URL', '').strip()}",
-            f"MANUAL_PAYMENT_CONTACT={prod.get('MANUAL_PAYMENT_CONTACT', '').strip()}",
+            "PINPIN_SALES_ENABLED=false",
+            "MANUAL_PAYMENT_ENABLED=false",
+            "MANUAL_PAYMENT_QR_URL=",
+            "MANUAL_PAYMENT_CONTACT=",
             f"PAYMENT_ADMIN_EMAILS={prod.get('PAYMENT_ADMIN_EMAILS', '').strip()}",
             f"DATA_ADMIN_EMAILS={prod.get('DATA_ADMIN_EMAILS', '').strip()}",
             "SMTP_HOST=smtpdm.aliyun.com",

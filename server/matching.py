@@ -64,9 +64,8 @@ def score_pair(user: dict, candidate: dict, preferred_id: Optional[int] = None) 
     family_score = 14 * (len(families & cand_families) / max(len(families | cand_families), 1))
     city_score = 8 if user.get("prefer_same_city", True) and user.get("city") and user.get("city") == candidate.get("city") else 0
     prefer_score = 10 if preferred_id and preferred_id == candidate["id"] else 0
-    boost_score = 2 if candidate.get("boost_active") else 0
 
-    raw = 58 + tag_score + comp_score + family_score + city_score + prefer_score + boost_score
+    raw = 58 + tag_score + comp_score + family_score + city_score + prefer_score
     score = int(max(72, min(96, round(raw))))
 
     pronoun = "对方"
@@ -199,8 +198,6 @@ def _jev_rerank(user: dict, shortlist: list[dict], people: dict[int, dict], pref
         value = 0.42 * fit + 0.40 * exchange + 0.10 * (1.0 - clone)
         if preferred_id and preferred_id == person["id"]:
             value += 0.08
-        if person.get("boost_active"):
-            value += 0.03
         if best == key:
             value += 0.12
         if best == "none":

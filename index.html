@@ -21,8 +21,8 @@
     <meta name="twitter:image" content="https://shixi.seu-link.fit/assets/pingo-mascot.webp" />
     <title>拼个实习｜发现实习机会，找到一起准备的人</title>
     <link rel="icon" href="assets/pingo-mascot.webp" />
-    <link rel="stylesheet" href="styles.css?v=20261004.seo1" />
-    <link rel="stylesheet" href="jobs.css?v=20261024.5" />
+    <link rel="stylesheet" href="styles.css?v=20261024.6" />
+    <link rel="stylesheet" href="jobs.css?v=20261024.6" />
   </head>
   <body>
     <div class="site-shell">
@@ -39,7 +39,6 @@
         <div class="top-actions">
           <button class="text-button" id="aboutButton" aria-label="了解搭子匹配" title="了解搭子匹配"><i data-lucide="circle-help"></i></button>
           <button type="button" class="login-entry" id="jobLogin">登录 / 注册</button>
-          <button class="text-button pinpin-entry is-hidden" id="pinpinButton">拼拼卡</button>
           <button class="avatar-button is-hidden" id="avatarButton" aria-label="账户菜单" title="账户菜单">U</button>
         </div>
       </header>
@@ -154,7 +153,7 @@
           <div class="profile-intro">
             <div>
               <h1 id="archiveTitle">我的档案</h1>
-              <p>学校只作为匹配信号，不会公开展示。同城会进入默认匹配，不必付费。</p>
+              <p>学校只作为匹配信号，不会公开展示。同城会进入默认匹配。</p>
             </div>
           </div>
           <form class="profile-card" id="archiveForm">
@@ -210,22 +209,12 @@
             <span class="sample-label" id="dataLabel">攒人中</span>
           </div>
 
-          <div class="quota-bar" id="quotaBar" role="group" aria-label="今日额度"></div>
-
           <div class="view-tabs" role="tablist" aria-label="结果视图">
             <button class="view-tab is-selected" id="matchesTab" role="tab" aria-selected="true" aria-controls="matchesPanel">为你匹配</button>
             <button class="view-tab" id="exploreTab" role="tab" aria-selected="false" aria-controls="explorePanel">自由探索</button>
           </div>
 
           <section id="matchesPanel" role="tabpanel" aria-labelledby="matchesTab">
-            <div class="unlock-progress" role="group" aria-label="解锁进度">
-              <div class="progress-step is-done"><span>1</span><p><strong>已进匹配池</strong><small>等下次 21:00</small></p></div>
-              <div class="progress-line" id="emailProgressLine"></div>
-              <div class="progress-step" id="emailProgress"><span>2</span><p><strong>联系第 1 位</strong><small>解锁第 2 位</small></p></div>
-              <div class="progress-line" id="inviteProgressLine"></div>
-              <div class="progress-step" id="inviteProgress"><span>3</span><p><strong>邀请好友注册</strong><small>解锁第 3 位</small></p></div>
-            </div>
-
             <div class="match-deck" id="matchDeck"></div>
             <div class="match-carousel-indicator is-hidden" id="matchCarouselIndicator" aria-label="匹配卡片进度"></div>
 
@@ -267,7 +256,7 @@
               <button class="filter-chip" type="button" data-filter="增长">增长</button>
               <button class="filter-chip" type="button" data-filter="求职">求职交流</button>
             </div>
-            <div class="pro-filters" id="proFilters">
+            <div class="member-filters" id="memberFilters">
               <label>
                 城市
                 <select id="filterCity"><option value="">全部城市</option></select>
@@ -310,7 +299,7 @@
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="assets/lucide.min.js"></script>
-    <script src="app.js?v=20261024.5"></script>
-    <script src="jobs.js?v=20261024.5"></script>
+    <script src="app.js?v=20261024.6"></script>
+    <script src="jobs.js?v=20261024.6"></script>
   </body>
 </html>

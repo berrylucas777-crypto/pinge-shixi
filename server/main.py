@@ -42,7 +42,6 @@ CODE_TTL = 10 * 60
 SESSION_SHORT = 12 * 60 * 60
 SESSION_LONG = 30 * 24 * 60 * 60
 COOKIE_NAME = "pingo_session"
-PINPIN_CAP = 500
 EARLY_ACCESS_INVITE_CODE = (os.getenv("EARLY_ACCESS_INVITE_CODE") or "PINGO-START").strip().upper()
 _auth_attempts: dict[str, deque[float]] = defaultdict(deque)
 
@@ -80,10 +79,6 @@ def _app_release() -> str:
     return (os.getenv("APP_RELEASE") or "dev").strip()
 
 
-def _manual_payment_enabled() -> bool:
-    return _bool_env("MANUAL_PAYMENT_ENABLED", False) and bool(os.getenv("MANUAL_PAYMENT_QR_URL", "").strip())
-
-
 def _payment_admin_emails() -> set[str]:
     return {item.strip().lower() for item in os.getenv("PAYMENT_ADMIN_EMAILS", "").split(",") if "@" in item}
 
@@ -102,13 +97,8 @@ def _is_data_admin(user: dict) -> bool:
 
 
 def _manual_payment_config() -> dict:
-    return {
-        "enabled": _manual_payment_enabled(),
-        "accepting_new_orders": _bool_env("PINPIN_SALES_ENABLED", False),
-        "amount_cents": 1000,
-        "qr_url": os.getenv("MANUAL_PAYMENT_QR_URL", "").strip() if _bool_env("PINPIN_SALES_ENABLED", False) else "",
-        "contact": os.getenv("MANUAL_PAYMENT_CONTACT", "").strip(),
-    }
+    # Keep old clients inert even if obsolete deployment flags are still set.
+    return {"enabled": False, "accepting_new_orders": False, "qr_url": ""}
 
 
 def _origins() -> list[str]:
@@ -232,10 +222,6 @@ class ReportBody(BaseModel):
     target_user_id: Optional[int] = None
     reason: str = Field(min_length=2, max_length=80)
     detail: str = Field(default="", max_length=1000)
-
-
-class PinpinPaymentRequestBody(BaseModel):
-    payer_nickname: str = Field(min_length=1, max_length=64)
 
 
 class ImportPreviewBody(BaseModel):
@@ -400,7 +386,6 @@ def _user_dict(row) -> Optional[dict]:
     data["is_seed"] = bool(data.get("is_seed"))
     data["is_pro"] = bool(data.get("is_pro"))
     data["prefer_same_city"] = bool(data.get("prefer_same_city"))
-    data["boost_active"] = float(data.get("boost_until") or 0) > time.time()
     return data
 
 
@@ -597,22 +582,17 @@ def pool_state() -> dict:
 
 
 def quota_state(user: dict) -> dict:
-    period = _period()
     with connect() as conn:
-        used = conn.execute("SELECT COUNT(*) n FROM member_views WHERE user_id=? AND period=?", (user["id"], period)).fetchone()["n"]
-        sold = conn.execute("SELECT COUNT(*) n FROM users WHERE is_pro=1").fetchone()["n"]
-    limit = 100 if user.get("is_pro") else 20
+        used = conn.execute(
+            "SELECT COUNT(*) n FROM member_views WHERE user_id=? AND period=?",
+            (user["id"], _period()),
+        ).fetchone()["n"]
     return {
         "details_used": used,
-        "details_limit": limit,
-        "next_refresh_label": _next_refresh_label(),
-        "is_pro": bool(user.get("is_pro")),
-        "pinpin_sold": sold,
-        "pinpin_cap": PINPIN_CAP,
-        "pinpin_sales_enabled": _bool_env("PINPIN_SALES_ENABLED", False),
-        "pinpin_open": _bool_env("PINPIN_SALES_ENABLED", False) and (_bool_env("ALLOW_SIMULATED_PAYMENT", False) or _manual_payment_enabled()) and sold < PINPIN_CAP,
-        "can_boost": bool(user.get("is_pro")) and user.get("boost_period") != period,
-        "boost_active": bool(user.get("boost_active")),
+        "details_limit": None,
+        "pinpin_sales_enabled": False,
+        "pinpin_open": False,
+        "can_boost": False,
     }
 
 
@@ -822,23 +802,22 @@ def recompute_matches(user: dict, force: bool = False) -> list[dict]:
         if fresh.get("pool_status") == "paused":
             return [dict(row) for row in existing]
         return _store_matches(fresh, period)
-    if fresh.get("is_pro"):
-        with connect() as conn:
-            early = conn.execute(
-                "SELECT * FROM matches WHERE user_id=? AND period LIKE 'early-%' ORDER BY rank",
-                (fresh["id"],),
-            ).fetchall()
-        if early:
-            return [dict(row) for row in early]
+    with connect() as conn:
+        early = conn.execute(
+            "SELECT * FROM matches WHERE user_id=? AND period LIKE 'early-%' ORDER BY rank",
+            (fresh["id"],),
+        ).fetchall()
+    if early:
+        return [dict(row) for row in early]
     return []
 
 
-def _public_person(user: dict, viewer: dict, unlocked: bool = True) -> dict:
+def _public_person(user: dict, viewer: dict) -> dict:
     name = user.get("name") or "搭子"
     return {
         "id": user["id"],
-        "name": name if unlocked else name[:1] + " ·",
-        "full_name": name if unlocked else None,
+        "name": name,
+        "full_name": name,
         "role": user.get("role") or "",
         "city": user.get("city") or "",
         "grade": user.get("grade") or "",
@@ -851,7 +830,6 @@ def _public_person(user: dict, viewer: dict, unlocked: bool = True) -> dict:
         "tone": user.get("tone") or "blue",
         "same_city": bool(viewer.get("city") and viewer.get("city") == user.get("city")),
         "similar_background": bool(viewer.get("major") and viewer.get("major") == user.get("major")),
-        "boost_active": bool(user.get("boost_active")),
     }
 
 
@@ -860,7 +838,7 @@ def serialize_me(user: dict) -> dict:
         "user": {key: user.get(key) for key in (
             "id", "email", "name", "school", "grade", "city", "major", "role", "skills", "wants",
             "tags", "learn_tags", "intro", "experience", "looking_for", "prefer_same_city", "referral_code",
-            "profile_complete", "is_pro",
+            "profile_complete",
         )},
         "is_payment_admin": _is_payment_admin(user),
         "is_data_admin": _is_data_admin(user),
@@ -875,20 +853,18 @@ def serialize_me(user: dict) -> dict:
 
 def serialize_matches(user: dict) -> list[dict]:
     rows = recompute_matches(user)
-    state = unlock_state(user["id"])
     with connect() as conn:
         contacted = {row["to_user_id"] for row in conn.execute("SELECT to_user_id FROM contacts WHERE from_user_id=?", (user["id"],))}
     results = []
-    for row in rows[: 5 if user.get("is_pro") else 3]:
-        unlocked = bool(user.get("is_pro") or row["rank"] == 1 or (row["rank"] == 2 and state["email_sent"]) or (row["rank"] == 3 and state["referral_complete"]))
+    for row in rows[:5]:
         candidate = get_user(row["candidate_id"])
         if not candidate:
             continue
         results.append({
-            "rank": row["rank"], "unlocked": unlocked, "score": row["score"], "reason": row["reason"],
+            "rank": row["rank"], "unlocked": True, "score": row["score"], "reason": row["reason"],
             "can_share": row["can_share"], "wants": row["wants"],
             "shared_tags": json.loads(row["shared_tags"] or "[]"), "contacted": candidate["id"] in contacted,
-            "person": _public_person(candidate, user, unlocked),
+            "person": _public_person(candidate, user),
         })
     return results
 
@@ -909,7 +885,7 @@ def config():
     return {
         "email_configured": email_configured(),
         "app_url": _app_url(),
-        "simulated_payment": _bool_env("ALLOW_SIMULATED_PAYMENT", False),
+        "simulated_payment": False,
         "manual_payment": _manual_payment_config(),
         "pool": pool_state(),
     }
@@ -1107,8 +1083,6 @@ def matches(user: dict = Depends(current_user)):
 @app.post("/api/matches/early")
 def early_match(user: dict = Depends(current_user)):
     fresh = get_user(user["id"]) or user
-    if not fresh.get("is_pro"):
-        raise HTTPException(403, "开通拼拼卡后可以马上匹配")
     if not fresh.get("profile_complete"):
         raise HTTPException(400, "先写一句经历，再匹配")
     if fresh.get("pool_status") == "paused":
@@ -1118,6 +1092,7 @@ def early_match(user: dict = Depends(current_user)):
         return {"matches": serialize_matches(fresh), "pool": pool_state(), "already": True}
     if live_pool_count() < _pool_min():
         raise HTTPException(409, "池里还不到 2 人，先等等")
+    _rate_limit(f"early-match:{user['id']}", 10, 3600)
     _store_matches(fresh, "early-" + _now().strftime("%Y-%m-%d-%H%M"))
     refreshed = get_user(user["id"])
     return {"matches": serialize_matches(refreshed), "pool": pool_state()}
@@ -1153,9 +1128,9 @@ def _contact_messages(draft: str, sender: dict, candidate: dict) -> tuple[str, s
 
 @app.post("/api/matches/{candidate_id}/contact")
 def contact(candidate_id: int, body: ContactBody, user: dict = Depends(current_user)):
-    allowed = next((item for item in serialize_matches(user) if item["person"]["id"] == candidate_id and item["unlocked"]), None)
+    allowed = next((item for item in serialize_matches(user) if item["person"]["id"] == candidate_id), None)
     if not allowed:
-        raise HTTPException(403, "这位搭子尚未解锁")
+        raise HTTPException(403, "这位成员不在当前推荐中")
     candidate = get_user(candidate_id)
     draft = body.body.strip() or f"Hi {candidate['name']}，我在「拼个实习」看到我们很匹配，想约 20 分钟交换项目工作流和求职经验。"
     to_candidate, to_sender = _contact_messages(draft, user, candidate)
@@ -1179,14 +1154,12 @@ def contact(candidate_id: int, body: ContactBody, user: dict = Depends(current_u
 
 
 def _member_payload(candidate: dict, user: dict) -> dict:
-    return _public_person(candidate, user, True)
+    return _public_person(candidate, user)
 
 
 @app.get("/api/members")
 def members(q: str = "", tag: str = "", city: str = "", grade: str = "", major: str = "", user: dict = Depends(current_user)):
     query = q.strip().lower()
-    if (city or grade or major) and not user.get("is_pro"):
-        raise HTTPException(403, "精确筛选需要拼拼卡")
     candidates = list_candidates(user["id"])
     filtered = []
     for candidate in candidates:
@@ -1202,12 +1175,11 @@ def members(q: str = "", tag: str = "", city: str = "", grade: str = "", major: 
         if major and candidate.get("major") != major:
             continue
         filtered.append(candidate)
-    filtered.sort(key=lambda item: (not item.get("boost_active"), item.get("name", "")))
+    filtered.sort(key=lambda item: (item.get("name", ""), item["id"]))
     options = {
         "cities": sorted({item["city"] for item in candidates if item.get("city")}),
         "grades": sorted({item["grade"] for item in candidates if item.get("grade")}),
         "majors": sorted({item["major"] for item in candidates if item.get("major")}),
-        "pro": bool(user.get("is_pro")),
     }
     return {"members": [_member_payload(item, user) for item in filtered], "filters": options, "quota": quota_state(user)}
 
@@ -1223,15 +1195,11 @@ def member_detail(candidate_id: int, user: dict = Depends(current_user)):
     ):
         raise HTTPException(404, "没有找到这位成员")
     period = _period()
-    state = quota_state(user)
     with connect() as conn:
         viewed = conn.execute("SELECT 1 FROM member_views WHERE user_id=? AND candidate_id=? AND period=?", (user["id"], candidate_id, period)).fetchone()
-        if not viewed and state["details_used"] >= state["details_limit"]:
-            return {"paywall": True, "reason": "details_quota", "quota": state}
         if not viewed:
             conn.execute("INSERT INTO member_views(user_id,candidate_id,period) VALUES(?,?,?)", (user["id"], candidate_id, period))
     updated = quota_state(user)
-    updated["just_hit_limit"] = updated["details_used"] == updated["details_limit"]
     return {"person": _member_payload(candidate, user), "quota": updated}
 
 
@@ -1330,16 +1298,11 @@ def import_batches(admin: dict = Depends(data_admin)):
     return {"batches": [dict(row) for row in rows]}
 
 
-@app.post("/api/pinpin/simulate")
-def simulate_pinpin(user: dict = Depends(current_user)):
-    if not _bool_env("ALLOW_SIMULATED_PAYMENT", False) or not _bool_env("PINPIN_SALES_ENABLED", False):
-        raise HTTPException(503, "真实支付尚未开放，当前不会产生扣款")
-    with connect() as conn:
-        conn.execute("UPDATE users SET is_pro=1,pro_purchased_at=datetime('now') WHERE id=?", (user["id"],))
-    updated = get_user(user["id"])
-    data = serialize_me(updated)
-    data["matches"] = serialize_matches(updated)
-    return data
+@app.post("/api/pinpin/simulate", include_in_schema=False)
+@app.post("/api/pinpin/manual-order", include_in_schema=False)
+@app.post("/api/pinpin/boost", include_in_schema=False)
+def retired_payment_action(user: dict = Depends(current_user)):
+    raise HTTPException(410, "付费功能已下线，现有功能无需购买即可使用")
 
 
 def _payment_request_payload(row) -> dict:
@@ -1355,44 +1318,11 @@ def _payment_request_payload(row) -> dict:
     }
 
 
-def _next_payment_order_code(conn) -> str:
-    while True:
-        code = "PP-" + secrets.token_hex(4).upper()
-        if not conn.execute("SELECT 1 FROM pinpin_payment_requests WHERE order_code=?", (code,)).fetchone():
-            return code
-
-
 @app.get("/api/pinpin/manual-order")
 def manual_payment_order(user: dict = Depends(current_user)):
     with connect() as conn:
         row = conn.execute("SELECT * FROM pinpin_payment_requests WHERE user_id=?", (user["id"],)).fetchone()
     return {"payment": _manual_payment_config(), "order": _payment_request_payload(row) if row else None}
-
-
-@app.post("/api/pinpin/manual-order")
-def submit_manual_payment_order(body: PinpinPaymentRequestBody, user: dict = Depends(current_user)):
-    if not _manual_payment_enabled():
-        raise HTTPException(503, "内测收款暂未开放")
-    _rate_limit(f"manual-payment:{user['id']}", 8, 3600)
-    nickname = body.payer_nickname.strip()
-    if not nickname:
-        raise HTTPException(400, "请填写付款时显示的微信昵称")
-    with connect() as conn:
-        row = conn.execute("SELECT * FROM pinpin_payment_requests WHERE user_id=?", (user["id"],)).fetchone()
-        if not row and not _bool_env("PINPIN_SALES_ENABLED", False):
-            raise HTTPException(503, "新拼拼卡暂停售卖，已有订单仍可核验")
-        if row:
-            conn.execute(
-                "UPDATE pinpin_payment_requests SET payer_nickname=?,status=CASE WHEN status='approved' THEN status ELSE 'pending' END,updated_at=datetime('now') WHERE id=?",
-                (nickname, row["id"]),
-            )
-        else:
-            conn.execute(
-                "INSERT INTO pinpin_payment_requests(user_id,order_code,payer_nickname) VALUES(?,?,?)",
-                (user["id"], _next_payment_order_code(conn), nickname),
-            )
-        row = conn.execute("SELECT * FROM pinpin_payment_requests WHERE user_id=?", (user["id"],)).fetchone()
-    return {"ok": True, "order": _payment_request_payload(row)}
 
 
 def payment_admin(user: dict = Depends(current_user)) -> dict:
@@ -1403,16 +1333,16 @@ def payment_admin(user: dict = Depends(current_user)) -> dict:
 
 @app.get("/api/admin/pinpin-orders")
 def admin_pinpin_orders(status: str = "pending", admin: dict = Depends(payment_admin)):
-    if status not in {"pending", "approved"}:
+    if status not in {"pending", "approved", "all"}:
         raise HTTPException(400, "不支持的订单状态")
     with connect() as conn:
         rows = conn.execute(
             """
             SELECT p.*,u.email,u.name FROM pinpin_payment_requests p
             JOIN users u ON u.id=p.user_id
-            WHERE p.status=? ORDER BY p.updated_at DESC
+            WHERE (?='all' OR p.status=?) ORDER BY p.updated_at DESC
             """,
-            (status,),
+            (status, status),
         ).fetchall()
     return {
         "orders": [
@@ -1422,41 +1352,9 @@ def admin_pinpin_orders(status: str = "pending", admin: dict = Depends(payment_a
     }
 
 
-@app.post("/api/admin/pinpin-orders/{order_id}/approve")
+@app.post("/api/admin/pinpin-orders/{order_id}/approve", include_in_schema=False)
 def approve_pinpin_order(order_id: int, admin: dict = Depends(payment_admin)):
-    with connect() as conn:
-        row = conn.execute("SELECT * FROM pinpin_payment_requests WHERE id=?", (order_id,)).fetchone()
-        if not row:
-            raise HTTPException(404, "订单不存在")
-        if row["status"] == "approved":
-            return {"ok": True, "already_approved": True}
-        if row["status"] != "pending":
-            raise HTTPException(409, "订单当前不能开通")
-        conn.execute(
-            "UPDATE pinpin_payment_requests SET status='approved',reviewed_by=?,reviewed_at=datetime('now'),updated_at=datetime('now') WHERE id=?",
-            (admin["email"], order_id),
-        )
-        conn.execute("UPDATE users SET is_pro=1,pro_purchased_at=datetime('now') WHERE id=?", (row["user_id"],))
-    user = get_user(row["user_id"])
-    email_sent = send_mail(
-        user["email"],
-        "你的拼拼卡已开通",
-        f"你好，\n\n你的 ¥10 拼拼卡内测终身版已开通。现在可以直接查看更多匹配、使用组合筛选与每日加急曝光。\n\n进入拼个实习：{_app_url()}\n\n拼个实习",
-    )
-    return {"ok": True, "email_sent": email_sent}
-
-
-@app.post("/api/pinpin/boost")
-def boost(user: dict = Depends(current_user)):
-    if not user.get("is_pro"):
-        return {"paywall": True, "reason": "boost", "quota": quota_state(user)}
-    period = _period()
-    if user.get("boost_period") == period:
-        raise HTTPException(409, "今天的加急曝光已经使用")
-    with connect() as conn:
-        conn.execute("UPDATE users SET boost_until=?,boost_period=? WHERE id=?", (time.time() + 24 * 60 * 60, period, user["id"]))
-    updated = get_user(user["id"])
-    return {"ok": True, "me": serialize_me(updated), "quota": quota_state(updated)}
+    raise HTTPException(410, "历史订单仅供查阅，不再开通付费权益")
 
 
 @app.get("/")

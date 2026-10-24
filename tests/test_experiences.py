@@ -79,30 +79,3 @@ def test_experience_limits_and_account_deletion(tmp_path, monkeypatch):
         assert client.delete('/api/me').status_code == 200
         with db.connect() as conn:
             assert conn.execute('SELECT COUNT(*) FROM job_experiences').fetchone()[0] == 0
-
-
-def test_pausing_new_sales_keeps_existing_orders_and_entitlements(tmp_path, monkeypatch):
-    monkeypatch.setenv('MANUAL_PAYMENT_ENABLED', 'true')
-    monkeypatch.setenv('MANUAL_PAYMENT_QR_URL', '/assets/test.png')
-    monkeypatch.setenv('PAYMENT_ADMIN_EMAILS', 'buyer@example.com')
-    monkeypatch.setenv('PINPIN_SALES_ENABLED', 'true')
-    client, _ = make_client(tmp_path, monkeypatch)
-    with client:
-        login(client, 'buyer@example.com')
-        order = client.post('/api/pinpin/manual-order', json={'payer_nickname':'买家'}).json()['order']
-        monkeypatch.setenv('PINPIN_SALES_ENABLED', 'false')
-        payment = client.get('/api/pinpin/manual-order').json()
-        assert payment['order']['id'] == order['id']
-        assert not payment['payment']['qr_url']
-        assert not payment['payment']['accepting_new_orders']
-        assert client.post('/api/pinpin/manual-order', json={'payer_nickname':'更正昵称'}).status_code == 200
-        assert client.post(f"/api/admin/pinpin-orders/{order['id']}/approve").status_code == 200
-        me = client.get('/api/me').json()
-        assert me['user']['is_pro'] is True
-        assert me['quota']['details_limit'] == 100
-        assert me['quota']['pinpin_open'] is False
-        client.post('/api/auth/logout')
-        login(client, 'new@example.com')
-        assert client.post('/api/pinpin/manual-order', json={'payer_nickname':'新人'}).status_code == 503
-        monkeypatch.setenv('ALLOW_SIMULATED_PAYMENT', 'true')
-        assert client.post('/api/pinpin/simulate').status_code == 503

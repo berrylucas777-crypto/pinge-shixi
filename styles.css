@@ -155,61 +155,18 @@ input:focus { border-color: var(--blue-strong); box-shadow: 0 0 0 4px rgba(21, 1
 .primary-button:disabled { opacity: .55; cursor: default; transform: none; }
 .chip-label { margin: 18px 0 10px; color: #444951; font-size: 13px; font-weight: 600; }
 .chip-label span { color: var(--faint); font-weight: 400; }
-.quota-bar {
-  margin: 0 0 18px;
-  padding: 12px 16px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 18px;
-  align-items: center;
-  border-radius: 12px;
-  background: white;
-  box-shadow: 0 10px 28px rgba(39, 53, 69, .05);
-  color: var(--muted);
-  font-size: 13px;
-}
-.quota-bar strong { color: var(--ink); }
-.quota-bar button { margin-left: auto; }
-.pinpin-entry { font-weight: 650; color: var(--blue-strong); }
 .hint-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 0; }
 .hint-chip { padding: 4px 8px; border-radius: 999px; background: #eef7fc; color: #26739c; font-size: 11px; font-weight: 650; }
-.boost-badge { margin-left: 6px; padding: 2px 7px; border-radius: 999px; background: #fff1e8; color: #c45a12; font-size: 10px; font-weight: 750; }
 .match-deck.has-five { grid-template-columns: 1.35fr 1fr 1fr; }
 .match-deck.has-five .match-card.is-active { grid-row: span 2; }
-.pro-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0 0 14px; }
-.pro-filters label { display: grid; gap: 6px; color: #5f6570; font-size: 11px; font-weight: 650; }
-.pro-filters select { height: 40px; border: 1px solid #dfe4e9; border-radius: 10px; background: white; padding: 0 10px; color: var(--ink); }
-.pro-filters.is-locked { position: relative; }
-.pro-filters.is-locked::after {
-  content: "拼拼卡可组合筛选城市、年级、专业";
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  background: rgba(246, 248, 251, .72);
-  color: #3e667c;
-  font-size: 12px;
-  font-weight: 650;
-  cursor: pointer;
-}
+.member-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0 0 14px; }
+.member-filters label { display: grid; gap: 6px; color: #5f6570; font-size: 11px; font-weight: 650; }
+.member-filters select { height: 40px; border: 1px solid #dfe4e9; border-radius: 10px; background: white; padding: 0 10px; color: var(--ink); }
 .same-city-row { display: flex; align-items: center; gap: 8px; margin: 16px 0 8px; color: #444951; font-size: 13px; font-weight: 600; }
 .same-city-row input { width: 16px; height: 16px; }
 .remember-row { display: flex; align-items: center; gap: 8px; margin: 14px 0 4px; color: #444951; font-size: 13px; font-weight: 600; }
 .remember-row input { width: 16px; height: 16px; }
-.pinpin-table { width: 100%; margin: 16px 0; border-collapse: collapse; font-size: 13px; }
-.pinpin-table th, .pinpin-table td { padding: 10px 8px; border-bottom: 1px solid var(--line); text-align: left; }
-.pinpin-table th { color: var(--faint); font-size: 11px; font-weight: 650; }
-.pinpin-note { font-size: 12px !important; }
-.manual-payment { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); text-align: center; }
-.manual-payment-amount { margin-bottom: 10px; color: var(--ink); font-size: 28px; font-weight: 750; }
-.payment-qr { display: block; width: 180px; height: 180px; margin: 0 auto 12px; object-fit: contain; border: 1px solid var(--line); border-radius: 8px; background: white; }
-.payment-order-code { margin: 12px 0; color: var(--muted); font-size: 12px; }
-.payment-order-code strong { color: var(--ink); }
-.payment-nickname-label { display: block; margin: 14px 0 7px; text-align: left; color: #444951; font-size: 12px; font-weight: 650; }
-.manual-payment input { width: 100%; height: 44px; box-sizing: border-box; border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; color: var(--ink); font: inherit; }
-.manual-payment .primary-button { width: 100%; margin-top: 10px; }
-.free-explore-button { width: 100%; margin: 2px 0 6px; color: var(--blue-strong); }
+.sheet-note { font-size: 12px !important; }
 .review-view { width: min(840px, calc(100% - 48px)); margin: 0 auto; padding: 72px 0 96px; }
 .review-heading { display: flex; align-items: start; justify-content: space-between; gap: 24px; margin-bottom: 28px; }
 .review-heading h1 { margin: 3px 0 8px; font-size: 34px; }
@@ -428,7 +385,7 @@ footer button { padding: 0; color: var(--faint); font-size: 11px; }
   .login-stage { width: min(640px, 100%); margin: auto; }
   .match-deck.has-five { grid-template-columns: 1fr 1fr; }
   .match-deck.has-five .match-card.is-active { grid-row: auto; grid-column: 1 / -1; }
-  .pro-filters { grid-template-columns: 1fr; }
+  .member-filters { grid-template-columns: 1fr; }
   .match-card.is-active { grid-column: 1 / -1; }
   .invite-strip { grid-template-columns: 110px 1fr; padding-right: 22px; }
   .invite-action { width: auto; grid-column: 2; padding-bottom: 22px; }

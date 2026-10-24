@@ -70,7 +70,7 @@ def test_end_to_end_matching_and_account_deletion(tmp_path, monkeypatch):
         matches = payload["matches"]
         assert len(matches) >= 2
         assert matches[0]["unlocked"] is True
-        assert matches[1]["unlocked"] is False
+        assert matches[1]["unlocked"] is True
         first_id = matches[0]["person"]["id"]
 
         contact = client.post(f"/api/matches/{first_id}/contact", json={"body": "想和你交换 Agent 项目经验与面试复盘。"})
@@ -132,7 +132,7 @@ def test_simulated_payment_is_disabled_by_default(tmp_path, monkeypatch):
     with client:
         register_and_onboard(client, "payment@example.com")
         response = client.post("/api/pinpin/simulate")
-        assert response.status_code == 503
+        assert response.status_code == 410
 
 
 def test_contact_mail_includes_matched_email(tmp_path, monkeypatch):
@@ -327,28 +327,6 @@ def test_jev_rerank_puts_choice_winner_first(monkeypatch):
     assert "互补" in ranked[0]["reason"]
 
 
-def test_manual_payment_can_be_reviewed_and_approved(tmp_path, monkeypatch):
-    monkeypatch.setenv("PINPIN_SALES_ENABLED", "true")
-    monkeypatch.setenv("MANUAL_PAYMENT_ENABLED", "true")
-    monkeypatch.setenv("MANUAL_PAYMENT_QR_URL", "/assets/pinpin-payment-qr.png")
-    monkeypatch.setenv("PAYMENT_ADMIN_EMAILS", "payment@example.com")
-    client, _ = make_client(tmp_path, monkeypatch)
-    with client:
-        register_and_onboard(client, "payment@example.com")
-        created = client.post("/api/pinpin/manual-order", json={"payer_nickname": "测试同学"})
-        assert created.status_code == 200, created.text
-        assert created.json()["order"]["status"] == "pending"
-
-        orders = client.get("/api/admin/pinpin-orders")
-        assert orders.status_code == 200, orders.text
-        order = orders.json()["orders"][0]
-        assert order["payer_nickname"] == "测试同学"
-
-        approved = client.post(f"/api/admin/pinpin-orders/{order['id']}/approve")
-        assert approved.status_code == 200, approved.text
-        assert client.get("/api/me").json()["user"]["is_pro"] is True
-
-
 def test_existing_database_receives_compatible_columns(tmp_path, monkeypatch):
     _, db = make_client(tmp_path, monkeypatch)
     legacy = db.DB_PATH
@@ -393,13 +371,13 @@ def test_early_match_hint_follows_pool_size(tmp_path, monkeypatch):
     assert ready == {"level": "ready", "count": 26, "text": "现在匹配人数充足，可以提前优先匹配。"}
 
 
-def test_pro_can_match_before_the_scheduled_round(tmp_path, monkeypatch):
+def test_any_user_can_match_before_the_scheduled_round(tmp_path, monkeypatch):
     client, db = make_client(tmp_path, monkeypatch)
     freeze_clock(monkeypatch, 10, 0)
     with client:
         register_and_onboard(client, "now@example.com")
         denied = client.post("/api/matches/early")
-        assert denied.status_code == 403
+        assert denied.status_code == 409
         peer = extra_client()
         with peer:
             register_and_onboard(peer, "peer-now@example.com")
@@ -407,8 +385,6 @@ def test_pro_can_match_before_the_scheduled_round(tmp_path, monkeypatch):
         assert hint["level"] == "wait"
         assert hint["count"] >= 2
         assert "只有" in hint["text"]
-        with db.connect() as conn:
-            conn.execute("UPDATE users SET is_pro=1 WHERE email=?", ("now@example.com",))
         early = client.post("/api/matches/early")
         assert early.status_code == 200, early.text
         assert len(early.json()["matches"]) >= 1

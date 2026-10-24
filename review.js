@@ -20,9 +20,9 @@ async function request(path, options = {}) {
 }
 
 function renderOrders(orders) {
-  orderCount.textContent = `待核对 ${orders.length} 笔`;
+  orderCount.textContent = `历史记录 ${orders.length} 笔`;
   if (!orders.length) {
-    orderRows.innerHTML = '<p class="review-empty">现在没有待核对的订单。</p>';
+    orderRows.innerHTML = '<p class="review-empty">没有历史订单记录。</p>';
     return;
   }
   orderRows.innerHTML = orders.map((order) => `
@@ -35,29 +35,15 @@ function renderOrders(orders) {
         <span>${escapeHtml(order.name || '未完善资料')} · ${escapeHtml(order.email)}</span>
         <span>${escapeHtml(order.updated_at)} UTC</span>
       </div>
-      <button class="primary-button review-approve" data-order-id="${order.id}" type="button"><span>核对无误，开通</span><span class="arrow">→</span></button>
+      <span>${order.status === 'approved' ? '已核验（历史记录）' : '待人工处理'}</span>
     </article>
   `).join('');
-  document.querySelectorAll('.review-approve').forEach((button) => {
-    button.addEventListener('click', async () => {
-      button.disabled = true;
-      reviewError.textContent = '';
-      try {
-        const result = await request(`/api/admin/pinpin-orders/${button.dataset.orderId}/approve`, { method: 'POST' });
-        await loadOrders();
-        if (!result.email_sent) reviewError.textContent = '权益已开通，但通知邮件未发送；请检查邮件配置。';
-      } catch (error) {
-        reviewError.textContent = error.message;
-        button.disabled = false;
-      }
-    });
-  });
 }
 
 async function loadOrders() {
   reviewError.textContent = '';
   try {
-    const data = await request('/api/admin/pinpin-orders');
+    const data = await request('/api/admin/pinpin-orders?status=all');
     renderOrders(data.orders || []);
   } catch (error) {
     orderCount.textContent = '无法加载';
