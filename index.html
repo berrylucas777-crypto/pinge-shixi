@@ -22,7 +22,7 @@
     <title>拼个实习｜发现实习机会，找到一起准备的人</title>
     <link rel="icon" href="assets/pingo-mascot.webp" />
     <link rel="stylesheet" href="styles.css?v=20261004.seo1" />
-    <link rel="stylesheet" href="jobs.css?v=20261024.1" />
+    <link rel="stylesheet" href="jobs.css?v=20261024.2" />
   </head>
   <body>
     <div class="site-shell">
@@ -32,9 +32,9 @@
           <span>拼个实习</span>
         </button>
         <nav class="workspace-nav" aria-label="主要导航">
+          <button type="button" data-destination="community"><i data-lucide="users"></i><span>找搭子</span></button>
           <button type="button" data-destination="discover" class="is-active" aria-current="page"><i data-lucide="compass"></i><span>发现实习</span></button>
           <button type="button" data-destination="saved"><i data-lucide="bookmark"></i><span>我的机会</span><span id="savedCount" class="nav-count is-hidden">0</span></button>
-          <button type="button" data-destination="community"><i data-lucide="users"></i><span>找搭子</span></button>
         </nav>
         <div class="top-actions">
           <button class="text-button" id="aboutButton" aria-label="了解搭子匹配" title="了解搭子匹配"><i data-lucide="circle-help"></i></button>
@@ -51,13 +51,13 @@
             <div class="brand-companion"><img src="assets/pingo-mascot.webp" width="100" height="100" alt="拼个实习吉祥物" /><span>机会在前面<br /><strong>我们一起找</strong></span></div>
           </div>
           <div class="jobs-toolbar">
-            <label class="job-search"><i data-lucide="search"></i><input id="jobSearch" type="search" placeholder="搜索岗位、公司或城市" aria-label="搜索岗位、公司或城市" autocomplete="off" /><span id="searchShortcut" aria-hidden="true">⌕</span></label>
+            <label class="job-search"><i data-lucide="search"></i><input id="jobSearch" type="search" placeholder="搜索岗位、公司或城市" aria-label="搜索岗位、公司或城市" autocomplete="off" /></label>
             <label class="job-select"><i data-lucide="map-pin"></i><select id="jobLocation" aria-label="地区"><option value="">全部地区</option><option value="china">中国大陆</option><option value="asia">亚洲其他地区</option><option value="europe">欧洲</option><option value="americas">美洲</option><option value="other">其他地区</option></select></label>
             <label class="remote-toggle"><input id="remoteOnly" type="checkbox" role="switch" /><span class="toggle-track"></span>仅远程</label>
           </div>
           <div class="job-filter-line">
             <div class="job-categories" role="group" aria-label="岗位方向">
-              <button class="is-active" data-category="" aria-pressed="true">全部机会</button><button data-category="技术 / 工程" aria-pressed="false">技术 / 工程</button><button data-category="AI / 数据" aria-pressed="false">AI / 数据</button><button data-category="产品 / 设计" aria-pressed="false">产品 / 设计</button><button data-category="运营 / 市场" aria-pressed="false">运营 / 市场</button>
+              <button class="is-active" data-category="" aria-pressed="true"><i data-lucide="layout-grid"></i>全部</button><button data-category="AI / 数据" aria-pressed="false"><i data-lucide="sparkles"></i>AI / 数据</button><button data-category="产品 / 设计" aria-pressed="false"><i data-lucide="layers"></i>产品 / 设计</button><button data-category="技术 / 工程" aria-pressed="false"><i data-lucide="code-2"></i>开发 / 工程</button><button data-category="运营 / 市场" aria-pressed="false"><i data-lucide="megaphone"></i>运营 / 市场</button>
             </div>
             <button class="source-status" id="jobSources"><span class="status-dot"></span><span id="sourceStatus">正在读取岗位</span><i data-lucide="chevron-down"></i></button>
           </div>
@@ -66,7 +66,7 @@
           </div>
           <div class="jobs-layout">
             <section class="jobs-list-pane" aria-label="岗位列表">
-              <div class="jobs-list-heading"><span id="jobResultCount" role="status" aria-live="polite">正在加载…</span><label><select id="jobSort" aria-label="排序"><option value="recent">最近更新</option><option value="company">公司名称</option></select></label></div>
+              <div class="jobs-list-heading"><span id="jobResultCount" role="status" aria-live="polite">正在加载…</span><label><select id="jobSort" aria-label="排序"><option value="domestic">国内优先</option><option value="recent">最近发布</option><option value="company">公司名称</option></select></label></div>
               <div id="jobList" class="job-list" aria-busy="true"><div class="jobs-empty">正在读取企业公开岗位…</div></div>
             </section>
             <section id="jobDetail" class="job-detail" aria-label="岗位详情"><div class="detail-placeholder"><i data-lucide="briefcase-business"></i><h2>新的机会，正在路上</h2><p>岗位同步后会显示在这里。</p></div></section>
@@ -209,7 +209,7 @@
             <span class="sample-label" id="dataLabel">攒人中</span>
           </div>
 
-          <div class="quota-bar" id="quotaBar" aria-label="今日额度"></div>
+          <div class="quota-bar" id="quotaBar" role="group" aria-label="今日额度"></div>
 
           <div class="view-tabs" role="tablist" aria-label="结果视图">
             <button class="view-tab is-selected" id="matchesTab" role="tab" aria-selected="true" aria-controls="matchesPanel">为你匹配</button>
@@ -217,7 +217,7 @@
           </div>
 
           <section id="matchesPanel" role="tabpanel" aria-labelledby="matchesTab">
-            <div class="unlock-progress" aria-label="解锁进度">
+            <div class="unlock-progress" role="group" aria-label="解锁进度">
               <div class="progress-step is-done"><span>1</span><p><strong>已进匹配池</strong><small>等下次 21:00</small></p></div>
               <div class="progress-line" id="emailProgressLine"></div>
               <div class="progress-step" id="emailProgress"><span>2</span><p><strong>联系第 1 位</strong><small>解锁第 2 位</small></p></div>
@@ -258,7 +258,7 @@
               </label>
             </div>
 
-            <div class="filter-row" id="filterRow" aria-label="成员筛选">
+            <div class="filter-row" id="filterRow" role="group" aria-label="成员筛选">
               <button class="filter-chip is-active" type="button" data-filter="全部">全部</button>
               <button class="filter-chip" type="button" data-filter="AI">AI / 算法</button>
               <button class="filter-chip" type="button" data-filter="产品">产品</button>
@@ -310,6 +310,6 @@
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
     <script src="assets/lucide.min.js"></script>
     <script src="app.js?v=20261024.1"></script>
-    <script src="jobs.js?v=20261024.1"></script>
+    <script src="jobs.js?v=20261024.2"></script>
   </body>
 </html>

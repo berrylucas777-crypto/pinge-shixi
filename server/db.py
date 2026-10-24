@@ -186,6 +186,7 @@ CREATE INDEX IF NOT EXISTS idx_jobs_active ON jobs(active, updated_at);
 """
 
 MIGRATIONS = {
+    "job_sync_runs": {"complete": "INTEGER NOT NULL DEFAULT 1"},
     "users": {
         "major": "TEXT NOT NULL DEFAULT ''",
         "learn_tags": "TEXT NOT NULL DEFAULT '[]'",

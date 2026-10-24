@@ -69,15 +69,24 @@ PAYMENT_ADMIN_EMAILS=你的登录邮箱@example.com
 
 ## 岗位发现工作台（本地版本）
 
-首页改为公开岗位流，顶部导航为“发现实习 / 我的机会 / 找搭子”。沿用原有 Logo、吉祥物、冷灰与浅蓝色，导航和操作栏采用半透明材质。桌面双栏联动，手机使用全屏岗位详情与底部导航，支持键盘焦点和减少动态效果设置。
+首页为无需登录的公开岗位流，顶部导航顺序为“找搭子 / 发现实习 / 我的机会”。沿用原有 Logo、吉祥物和浅蓝色，用青绿、珊瑚、蓝色区分岗位方向，导航和操作栏采用半透明材质。桌面双栏联动，手机使用全屏岗位详情与底部导航，支持键盘焦点和减少动态效果设置。
 
 - 无需登录即可搜索公司、岗位和城市，筛选方向、地区及远程。
 - 收藏时按需登录，成功后恢复收藏动作；不强制填写搭子档案。收藏和投递阶段写入 SQLite，账号之间隔离。
 - 点击原站链接只打开招聘页；“已投递 / 面试中 / 已获 Offer / 已结束”由用户手动更新。
 - 岗位详情的交流入口按岗位方向筛选同学，联系邮件草稿带入岗位名称和链接。首次参加搭子交流仍需补充一句介绍。
+- 默认国内优先，并优先 AI、产品、开发方向；分享链接 `/?job=来源:ID` 回到站内对应岗位。没有虚构参与人数，也不要求凑人才能申请。
 - 浏览岗位、收藏与记录进展免费；现有拼拼卡逻辑仍用于搭子功能。
 
-同步一次企业公开岗位：
+国内同步依赖独立的浏览器采集进程，先安装（Web 服务本身不需要浏览器）：
+
+```bash
+.venv/bin/pip install -r requirements-jobs.txt
+.venv/bin/python -m playwright install chromium
+# Linux 服务器缺系统库时使用：python -m playwright install --with-deps chromium
+```
+
+同步一次企业公开岗位（国内每个来源默认最多 5 页）：
 
 ```bash
 .venv/bin/python -m server.sync_jobs
@@ -89,9 +98,13 @@ PAYMENT_ADMIN_EMAILS=你的登录邮箱@example.com
 .venv/bin/python -m server.sync_jobs --interval 21600
 ```
 
-当前适配 Greenhouse 公开接口的 Figma、Cloudflare、Stripe、Databricks，主要是海外实习，保留原文；尚未接入中国招聘平台。企业列表在 `server/sync_jobs.py` 中显式配置。岗位以来源和 ID 去重；成功完整同步后将消失的岗位标记下架，保留用户收藏与投递记录；请求失败或响应结构异常不会清空岗位。每次请求有 25 秒超时，重复同步间隔至少一小时。地区由原始地点文本做基础归类，最终要求以原站为准。
+已接入：小米实习生官网、字节跳动校园招聘官网，以及 Greenhouse 公开接口的 Figma、Cloudflare、Stripe、Databricks。国内适配器正常打开公开页面、翻页并读取页面收到的职位 JSON，不登录、不复用 Cookie、不生成签名、不绕过验证码。仅保留明确标注为实习的岗位，同时保存职责、要求、城市、来源时间和原站地址。公开页面可访问不代表获得企业合作或再分发授权，扩大规模前应确认来源条款与授权。
 
-`jobs.js` / `jobs.css` 是岗位界面；`server/jobs.py` 提供公开岗位与私有进展接口；`server/sync_jobs.py` 独立执行同步。API 目前返回最多 500 条活动岗位，增长到该规模前需补服务端分页。数据库与用户数据不提交 Git；其他开发环境需先同步一次。部署文件清单已更新，但本次仅在本地运行。
+仅同步国内：`.venv/bin/python -m server.sync_jobs --source xiaomi --source bytedance`。`--max-pages` 可设 1–100，默认 5，页面间隔 1.5 秒。本机可用环境变量 `JOB_BROWSER_EXECUTABLE` 指定已安装 Chrome 的绝对路径，否则使用 Playwright Chromium。不要将本机 Chrome 路径直接搬到 Linux 服务器。
+
+岗位以来源和 ID 去重。只有成功读取完整列表才将缺失岗位标记下架；限量同步只更新读到的记录，来源面板标注“部分列表”。失败或响应结构异常不会清空岗位。不承诺全量或实时有效，以原站为准；较旧记录仍可见读取时间。浏览器超时 45–60 秒，HTTP 超时 25 秒，重复同步间隔至少一小时。地区优先使用官网国家与城市，缺失时做文本归类。
+
+`jobs.js` / `jobs.css` 是岗位界面；`server/jobs.py` 提供公开岗位与私有进展接口；`server/sync_jobs.py` 独立执行同步，`server/job_sources.py` 是国内官网适配器。API 返回最多 1000 条活动岗位，增长到该规模前需补服务端分页。数据库与用户数据不提交 Git；其他开发环境需先同步一次。部署文件清单已更新，但本次仅在本地运行。
 
 图标使用本地固定版本 Lucide 0.468.0，许可位于 `assets/lucide-LICENSE.txt`。测试：`.venv/bin/python -m pytest -q`。
 

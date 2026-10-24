@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from .db import connect
+from .job_sources import DOMESTIC
 
 
 class JobAction(BaseModel):
@@ -18,9 +19,9 @@ def create_router(current_user):
     @router.get('/api/jobs')
     def list_jobs():
         with connect() as conn:
-            rows = conn.execute('SELECT * FROM jobs WHERE active=1 ORDER BY updated_at DESC, id LIMIT 500').fetchall()
-            sources = conn.execute('SELECT source, checked_at, count, error FROM job_sync_runs ORDER BY source').fetchall()
-        return {'jobs': [dict(row) for row in rows], 'sources': [dict(row) for row in sources]}
+            rows = conn.execute('SELECT * FROM jobs WHERE active=1 ORDER BY updated_at DESC, id LIMIT 1000').fetchall()
+            sources = conn.execute('SELECT source, checked_at, count, error, complete FROM job_sync_runs ORDER BY source').fetchall()
+        return {'jobs': [dict(row) for row in rows], 'sources': [dict(row, name=DOMESTIC[row['source']][0] if row['source'] in DOMESTIC else row['source'].title()) for row in sources]}
 
     @router.get('/api/jobs/mine')
     def my_jobs(user=Depends(current_user)):

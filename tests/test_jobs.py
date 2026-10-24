@@ -3,7 +3,8 @@ from unittest.mock import patch
 import pytest
 
 from test_api import make_client
-from server.sync_jobs import clean_text, normalize, store_board, sync
+from server.sync_jobs import clean_text, normalize, store_board, sync, domestic_item, category
+from server.job_sources import parse_page
 
 
 def job(id=1, title='Software Engineer Intern', url='https://example.com/job/1'):
@@ -58,3 +59,65 @@ def test_tracking_is_private_persistent_and_survives_job_expiry(tmp_path, monkey
         client.post('/api/auth/logout')
         client.post('/api/auth/enter', json={'email':'jobs-two@example.com','accept_terms':True})
         assert client.get('/api/jobs/mine').json()['jobs'] == []
+
+
+def domestic_job(id='123'):
+    return {'id': id, 'title': 'Agent评测产品经理-2027届', 'recruit_type': {'name': '实习'},
+            'city_list': [{'name': '武汉'}], 'publish_time': 1792745650028,
+            'description': '研究用户需求。', 'requirement': '在校生。',
+            'job_post_info': {'address_list': [{'country': {'name': '中国大陆'}}]}}
+
+
+def test_domestic_requires_internship_type_and_preserves_requirements():
+    item = domestic_job()
+    result = domestic_item('xiaomi', item)
+    row = normalize('xiaomi', result, 'now')
+    assert row[2] == '小米'
+    assert row[4] == '中国大陆 · 武汉'
+    assert row[5] == '产品 / 设计'
+    assert row[7] == 'https://xiaomi.jobs.f.mioffice.cn/internship/position/123/detail'
+    assert '任职要求' in row[8] and '在校生' in row[8]
+    item['recruit_type'] = {'name': '正式'}
+    assert domestic_item('xiaomi', item) is None
+    assert category('AI 产品实习生') == '产品 / 设计'
+    assert category('大模型算法实习生') == 'AI / 数据'
+    assert category('后端开发实习生') == '技术 / 工程'
+    assert category('HRBP实习生') == '运营 / 市场'
+    assert category('法务实习生') == '其他方向'
+
+
+@pytest.mark.parametrize('payload', [None, [], {}, {'code': 403}, {'code': 0, 'data': {}},
+    {'code': 0, 'data': {'job_post_list': [{}], 'count': 1}}])
+def test_invalid_domestic_response_is_not_empty_snapshot(payload):
+    with pytest.raises(ValueError):
+        parse_page(payload)
+
+
+def test_domestic_partial_sync_never_expires_unseen_jobs(tmp_path, monkeypatch):
+    client, db = make_client(tmp_path, monkeypatch)
+    with client:
+        with patch('server.sync_jobs.fetch_domestic', return_value=([domestic_job('1'), domestic_job('2')], False)):
+            assert sync(['xiaomi'])[0]['count'] == 2
+        with patch('server.sync_jobs.fetch_domestic', return_value=([domestic_job('2')], False)):
+            sync(['xiaomi'])
+        response = client.get('/api/jobs').json()
+        assert len(response['jobs']) == 2
+        assert response['sources'][0]['complete'] == 0
+        assert response['sources'][0]['name'] == '小米'
+        with patch('server.sync_jobs.fetch_domestic', side_effect=TimeoutError):
+            assert sync(['xiaomi'])[0]['error'] == 'TimeoutError'
+        assert len(client.get('/api/jobs').json()['jobs']) == 2
+        with patch('server.sync_jobs.fetch_domestic', return_value=([domestic_job('2')], True)):
+            sync(['xiaomi'])
+        assert [j['id'] for j in client.get('/api/jobs').json()['jobs']] == ['xiaomi:2']
+
+
+def test_page_validation_and_atomic_write(tmp_path, monkeypatch):
+    items, total = parse_page({'code': 0, 'data': {'job_post_list': [domestic_job()], 'count': 5}})
+    assert total == 5 and len(items) == 1
+    client, db = make_client(tmp_path, monkeypatch)
+    with client:
+        store_board('figma', {'jobs': [job()]}, '2026-10-24')
+        with pytest.raises(AttributeError):
+            store_board('figma', {'jobs': [None]}, '2026-10-25')
+        assert len(client.get('/api/jobs').json()['jobs']) == 1

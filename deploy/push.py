@@ -23,6 +23,8 @@ UPLOAD = [
     "assets/lucide-LICENSE.txt",
     "server/jobs.py",
     "server/sync_jobs.py",
+    "server/job_sources.py",
+    "requirements-jobs.txt",
     "review.html",
     "review.js",
     "imports.html",
