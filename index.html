@@ -4,24 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f6f8fb" />
-    <meta name="description" content="拼个实习，用真实项目经历寻找能互相交换经验的实习搭子。写下做过什么、想学什么，先入池，每周一、周三晚 21:00 等待匹配。" />
+    <meta name="description" content="拼个实习，发现实习机会，也找到一起准备的人。浏览企业公开岗位，收藏机会、记录投递，再和同方向的实习搭子交换经验。" />
     <meta name="robots" content="index,follow,max-image-preview:large" />
     <link rel="canonical" href="https://shixi.seu-link.fit/" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="zh_CN" />
     <meta property="og:site_name" content="拼个实习" />
-    <meta property="og:title" content="拼个实习｜找能互相交换项目经验的实习搭子" />
-    <meta property="og:description" content="不用完整简历。写下做过什么、想学什么，先入池，每周一、周三 21:00 等待匹配。" />
+    <meta property="og:title" content="拼个实习｜发现实习机会，找到一起准备的人" />
+    <meta property="og:description" content="浏览企业公开实习岗位，收藏机会、记录投递，再和同方向的人交换项目经验。" />
     <meta property="og:url" content="https://shixi.seu-link.fit/" />
     <meta property="og:image" content="https://shixi.seu-link.fit/assets/pingo-mascot.webp" />
     <meta property="og:image:alt" content="拼个实习的吉祥物" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="拼个实习｜找能互相交换项目经验的实习搭子" />
-    <meta name="twitter:description" content="用真实经历寻找能互相补经验的人，每周一、周三晚 21:00 匹配。" />
+    <meta name="twitter:title" content="拼个实习｜发现实习机会，找到一起准备的人" />
+    <meta name="twitter:description" content="发现实习岗位、保存投递进展，和同方向的人一起准备。" />
     <meta name="twitter:image" content="https://shixi.seu-link.fit/assets/pingo-mascot.webp" />
-    <title>拼个实习｜找能互相交换项目经验的实习搭子</title>
+    <title>拼个实习｜发现实习机会，找到一起准备的人</title>
     <link rel="icon" href="assets/pingo-mascot.webp" />
     <link rel="stylesheet" href="styles.css?v=20261004.seo1" />
+    <link rel="stylesheet" href="jobs.css?v=20261024.1" />
   </head>
   <body>
     <div class="site-shell">
@@ -30,22 +31,56 @@
           <span class="brand-mark" aria-hidden="true"><span></span><span></span></span>
           <span>拼个实习</span>
         </button>
+        <nav class="workspace-nav" aria-label="主要导航">
+          <button type="button" data-destination="discover" class="is-active" aria-current="page"><i data-lucide="compass"></i><span>发现实习</span></button>
+          <button type="button" data-destination="saved"><i data-lucide="bookmark"></i><span>我的机会</span><span id="savedCount" class="nav-count is-hidden">0</span></button>
+          <button type="button" data-destination="community"><i data-lucide="users"></i><span>找搭子</span></button>
+        </nav>
         <div class="top-actions">
-          <button class="text-button" id="aboutButton">怎么匹配</button>
+          <button class="text-button" id="aboutButton" aria-label="了解搭子匹配" title="了解搭子匹配"><i data-lucide="circle-help"></i></button>
+          <button type="button" class="login-entry" id="jobLogin">登录 / 注册</button>
           <button class="text-button pinpin-entry is-hidden" id="pinpinButton">拼拼卡</button>
           <button class="avatar-button is-hidden" id="avatarButton" aria-label="账户菜单" title="账户菜单">U</button>
         </div>
       </header>
 
       <main>
-        <section class="login-view" id="loginView" aria-labelledby="loginTitle">
+        <section id="jobsView" class="jobs-workspace" aria-labelledby="jobsTitle">
+          <div class="jobs-intro">
+            <div><p class="workspace-date">一点新机会，一起向前。</p><h1 id="jobsTitle">下一站，实习。</h1><p id="jobsSubtitle">发现值得投递的机会，也找到一起准备的人。</p></div>
+            <div class="brand-companion"><img src="assets/pingo-mascot.webp" width="100" height="100" alt="拼个实习吉祥物" /><span>机会在前面<br /><strong>我们一起找</strong></span></div>
+          </div>
+          <div class="jobs-toolbar">
+            <label class="job-search"><i data-lucide="search"></i><input id="jobSearch" type="search" placeholder="搜索岗位、公司或城市" aria-label="搜索岗位、公司或城市" autocomplete="off" /><span id="searchShortcut" aria-hidden="true">⌕</span></label>
+            <label class="job-select"><i data-lucide="map-pin"></i><select id="jobLocation" aria-label="地区"><option value="">全部地区</option><option value="china">中国大陆</option><option value="asia">亚洲其他地区</option><option value="europe">欧洲</option><option value="americas">美洲</option><option value="other">其他地区</option></select></label>
+            <label class="remote-toggle"><input id="remoteOnly" type="checkbox" role="switch" /><span class="toggle-track"></span>仅远程</label>
+          </div>
+          <div class="job-filter-line">
+            <div class="job-categories" role="group" aria-label="岗位方向">
+              <button class="is-active" data-category="" aria-pressed="true">全部机会</button><button data-category="技术 / 工程" aria-pressed="false">技术 / 工程</button><button data-category="AI / 数据" aria-pressed="false">AI / 数据</button><button data-category="产品 / 设计" aria-pressed="false">产品 / 设计</button><button data-category="运营 / 市场" aria-pressed="false">运营 / 市场</button>
+            </div>
+            <button class="source-status" id="jobSources"><span class="status-dot"></span><span id="sourceStatus">正在读取岗位</span><i data-lucide="chevron-down"></i></button>
+          </div>
+          <div class="tracker-filters is-hidden" id="trackerFilters" role="group" aria-label="投递进展">
+            <button data-stage="all" class="is-active">全部</button><button data-stage="saved">已收藏</button><button data-stage="applied">已投递</button><button data-stage="interview">面试中</button><button data-stage="offer">已获 Offer</button><button data-stage="rejected">已结束</button>
+          </div>
+          <div class="jobs-layout">
+            <section class="jobs-list-pane" aria-label="岗位列表">
+              <div class="jobs-list-heading"><span id="jobResultCount" role="status" aria-live="polite">正在加载…</span><label><select id="jobSort" aria-label="排序"><option value="recent">最近更新</option><option value="company">公司名称</option></select></label></div>
+              <div id="jobList" class="job-list" aria-busy="true"><div class="jobs-empty">正在读取企业公开岗位…</div></div>
+            </section>
+            <section id="jobDetail" class="job-detail" aria-label="岗位详情"><div class="detail-placeholder"><i data-lucide="briefcase-business"></i><h2>新的机会，正在路上</h2><p>岗位同步后会显示在这里。</p></div></section>
+          </div>
+          <div class="jobs-endnote"><span>岗位来自企业公开招聘页 · 申请以原站为准</span><button type="button" id="bottomCommunity">和同方向的人聊聊<i data-lucide="arrow-up-right"></i></button></div>
+        </section>
+        <section class="login-view is-hidden" id="loginView" aria-labelledby="loginTitle">
           <div class="login-copy">
-            <h1 id="loginTitle">先入池，<br />周一、周三再配。</h1>
-            <p>岗位名像没用。你能教的，正好是对方想补的，才配。</p>
+            <h1 id="loginTitle">机会留住，<br />下一步一起走。</h1>
+            <p>收藏心动的实习，记录投递进展。想交流时，再找一个同方向的搭子。</p>
             <ol class="match-logic" aria-label="怎么配对">
-              <li><strong>先写清楚</strong>你做过什么、想学什么</li>
-              <li><strong>一周两次</strong>周一、周三晚上 9 点</li>
-              <li><strong>连着 4 轮</strong>用完去邮箱点确认，才能再进</li>
+              <li><strong>留住机会</strong>收藏与投递进展随账号保存</li>
+              <li><strong>按需交流</strong>补充一句经历，再加入搭子池</li>
+              <li><strong>一起准备</strong>交换项目经验与求职思路</li>
             </ol>
             <p class="pool-countdown" id="poolCountdown">下次匹配还在算</p>
             <p class="pool-rally" id="poolRally">现在进池，就差你了。</p>
@@ -59,8 +94,8 @@
             </div>
             <form class="login-panel" id="loginForm" novalidate>
               <div class="login-heading">
-                <h2>加入今日匹配池</h2>
-                <p id="loginHint">用约 1 分钟写下经历，进池等下次匹配</p>
+                <h2>欢迎来拼个实习</h2>
+                <p id="loginHint">用邮箱继续，保存你的下一步。</p>
               </div>
               <label for="email">邮箱</label>
               <div class="input-wrap">
@@ -83,10 +118,10 @@
             </label>
             <p class="form-error" id="formError" role="alert"></p>
               <button class="primary-button" type="submit" id="loginSubmit">
-                <span id="loginSubmitLabel">加入今日匹配池</span>
+                <span id="loginSubmitLabel">继续</span>
                 <span class="arrow" aria-hidden="true">→</span>
               </button>
-              <p class="privacy-note">继续即表示你同意仅将资料用于本次匹配</p>
+              <button type="button" class="text-button" data-destination="discover">先逛逛岗位</button>
             </form>
           </div>
         </section>
@@ -256,7 +291,7 @@
       </main>
 
       <footer>
-        <span>拼个实习 · 先认真交换，再一起上岸</span>
+        <span>拼个实习 · 发现机会，一起向前</span>
         <span class="footer-links">
           <a href="/about">关于拼个实习</a>
           <a href="https://beian.miit.gov.cn/" target="_blank" rel="noreferrer">滇ICP备2026016263号-1</a>
@@ -266,13 +301,15 @@
     </div>
 
     <div class="sheet-backdrop is-hidden" id="sheetBackdrop"></div>
-    <aside class="bottom-sheet is-hidden" id="infoSheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="bottom-sheet is-hidden" id="infoSheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
       <div class="sheet-handle" aria-hidden="true"></div>
       <button class="close-button" id="closeSheet" aria-label="关闭" title="关闭">×</button>
       <div id="sheetContent"></div>
-    </aside>
+    </div>
 
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="app.js?v=20261003.8"></script>
+    <script src="assets/lucide.min.js"></script>
+    <script src="app.js?v=20261024.1"></script>
+    <script src="jobs.js?v=20261024.1"></script>
   </body>
 </html>

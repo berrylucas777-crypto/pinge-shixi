@@ -30,6 +30,7 @@ from .db import connect, init_db
 from .jev import configured as jev_configured
 from .mailer import email_configured, send_mail
 from .matching import rank_matches
+from .jobs import create_router as jobs_router
 
 load_dotenv()
 
@@ -1483,6 +1484,16 @@ def styles():
     return FileResponse(ROOT / "styles.css")
 
 
+@app.get('/jobs.css')
+def jobs_styles():
+    return FileResponse(ROOT / 'jobs.css')
+
+
+@app.get('/jobs.js')
+def jobs_script():
+    return FileResponse(ROOT / 'jobs.js')
+
+
 @app.get("/app.js")
 def script():
     return FileResponse(ROOT / "app.js")
@@ -1508,4 +1519,5 @@ def imports_script():
     return FileResponse(ROOT / "imports.js")
 
 
+app.include_router(jobs_router(current_user))
 app.mount("/assets", StaticFiles(directory=ROOT / "assets"), name="assets")

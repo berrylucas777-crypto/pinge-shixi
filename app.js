@@ -124,6 +124,7 @@ function setAuth(nextToken) {
 }
 
 function hideAllViews() {
+  window.PingoJobs?.hide();
   loginView.classList.add('is-hidden');
   profileView.classList.add('is-hidden');
   archiveView.classList.add('is-hidden');
@@ -375,7 +376,7 @@ function setResultsView(view) {
   exploreTab.classList.toggle('is-selected', !showMatches);
   matchesTab.setAttribute('aria-selected', String(showMatches));
   exploreTab.setAttribute('aria-selected', String(!showMatches));
-  if (!showMatches) loadMembers();
+  if (!showMatches) loadMembers().catch(error => showToast(error.message));
 }
 
 function renderTags(containerId, selected, attr) {
@@ -785,6 +786,10 @@ async function enterApp(payload) {
   }
   clearLocalAuth();
   avatarButton.classList.remove('is-hidden');
+  if (window.PingoJobs) {
+    await window.PingoJobs.authChanged();
+    return;
+  }
   if (!me.user.profile_complete) {
     showProfile();
     return;
@@ -813,7 +818,10 @@ function openContact(id, name) {
   const person = match?.person || {};
   const personName = name || person.name || '搭子';
   const overlap = (match?.shared_tags || []).slice(0, 2).join('、') || '实习方向';
-  const draft = `Hi ${personName}，\n\n我在「拼个实习」看到我们在${overlap}上很匹配。我目前在做 ${me.user.role || '实习项目'}，很想和你交换一下工作流、项目细节和面试准备经验。\n\n如果你愿意，我们可以先约 20 分钟线上聊聊。`;
+  const context = window.pingoJobContext;
+  const draft = context
+    ? `Hi ${personName}，\n\n我正在了解 ${context.company} 的 ${context.title}，想找同方向的人一起交流项目和面试准备。\n岗位链接：${context.url}\n\n你有兴趣一起聊聊吗？`
+    : `Hi ${personName}，\n\n我在「拼个实习」看到我们在${overlap}上很匹配。我目前在做 ${me.user.role || '实习项目'}，很想和你交换一下工作流、项目细节和面试准备经验。\n\n如果你愿意，我们可以先约 20 分钟线上聊聊。`;
   openSheet(`
     <h2 id="sheetTitle">先发一封不尴尬的邮件</h2>
     <p>已经根据你们的共同点写好开场，你可以直接修改。</p>
@@ -980,7 +988,7 @@ loginForm.addEventListener('submit', async (event) => {
       awaitingCode = true;
       document.querySelector('#codeField').classList.remove('is-hidden');
       document.querySelector('#loginHint').textContent = '验证码已发到邮箱，10 分钟内有效';
-      document.querySelector('#loginSubmitLabel').textContent = '验证并加入匹配池';
+      document.querySelector('#loginSubmitLabel').textContent = '验证并继续';
       otpInput.focus();
       showToast('验证码已发送');
       return;
@@ -1012,8 +1020,8 @@ profileForm.addEventListener('submit', async (event) => {
         content_confirmed: document.querySelector('#profileContentConsent')?.checked === true,
       }),
     });
-    await loadMatches();
-    showResults();
+    if (window.PingoJobs) await window.PingoJobs.navigate('community');
+    else { await loadMatches(); showResults(); }
   } catch (error) {
     profileError.textContent = error.message;
   }
@@ -1076,7 +1084,7 @@ document.querySelector('#archiveLearnTags').addEventListener('click', (event) =>
   renderTags('#archiveLearnTags', selectedLearnTags, 'learn');
 });
 
-document.querySelector('#brandButton').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+document.querySelector('#brandButton').addEventListener('click', () => window.PingoJobs?.navigate('discover'));
 matchesTab.addEventListener('click', () => setResultsView('matches'));
 exploreTab.addEventListener('click', () => setResultsView('explore'));
 
@@ -1138,7 +1146,7 @@ avatarButton.addEventListener('click', () => {
         me = null;
         matches = [];
         closeSheet();
-        showLogin();
+        window.PingoJobs?.signedOut();
         showToast('账户与平台数据已删除');
       } catch (error) {
         showToast(error.message);
@@ -1156,7 +1164,7 @@ avatarButton.addEventListener('click', () => {
     matches = [];
     awaitingCode = false;
     closeSheet();
-    showLogin();
+    window.PingoJobs?.signedOut();
   });
 });
 
@@ -1248,6 +1256,6 @@ document.addEventListener('keydown', (event) => {
     await loadMe();
     await enterApp(me);
   } catch {
-    showLogin();
+    window.PingoJobs?.navigate('discover');
   }
 })();

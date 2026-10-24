@@ -153,6 +153,36 @@ CREATE TABLE IF NOT EXISTS match_slots (
   participant_count INTEGER NOT NULL DEFAULT 0,
   ran_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE TABLE IF NOT EXISTS jobs (
+  id TEXT PRIMARY KEY,
+  source TEXT NOT NULL,
+  company TEXT NOT NULL,
+  title TEXT NOT NULL,
+  location TEXT NOT NULL,
+  category TEXT NOT NULL,
+  remote INTEGER NOT NULL DEFAULT 0,
+  url TEXT NOT NULL,
+  description TEXT NOT NULL,
+  updated_at TEXT NOT NULL,
+  checked_at TEXT NOT NULL,
+  active INTEGER NOT NULL DEFAULT 1
+);
+CREATE TABLE IF NOT EXISTS job_actions (
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  job_id TEXT NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+  saved INTEGER NOT NULL DEFAULT 0,
+  stage TEXT NOT NULL DEFAULT 'none',
+  updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+  PRIMARY KEY(user_id, job_id)
+);
+CREATE TABLE IF NOT EXISTS job_sync_runs (
+  source TEXT PRIMARY KEY,
+  checked_at TEXT NOT NULL,
+  count INTEGER NOT NULL DEFAULT 0,
+  error TEXT NOT NULL DEFAULT ''
+);
+CREATE INDEX IF NOT EXISTS idx_jobs_active ON jobs(active, updated_at);
 """
 
 MIGRATIONS = {
